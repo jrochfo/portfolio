@@ -4,7 +4,11 @@ Brand/motion designer's portfolio. Fully specified in Figma (wireframe
 complete, tokens defined); build phase is transcribing that spec.
 
 ## Architecture
-- Astro (minimal template), plain CSS, vanilla JS. GSAP for motion (later).
+- Astro (minimal template), plain CSS, vanilla JS. GSAP + ScrollTrigger
+  is the established motion convention (decided via a spike comparing
+  it against CSS `position: sticky`). Any pin/scrub/scroll-driven
+  animation must always provide a static, non-pinned/non-animated path
+  under `prefers-reduced-motion: reduce` — never skip this.
 - NO React, NO Tailwind — deliberate decisions, don't suggest them.
 - Design tokens as CSS custom properties in src/styles/global.css,
   defined on :root, mobile values via one media query (max-width: 768px).

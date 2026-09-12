@@ -1,0 +1,186 @@
+---
+// SPIKE — throwaway experiment, not production code.
+// Testing the pinned-title scroll pattern for the homepage centerpiece
+// module: title stays put while its "acts" scroll past underneath,
+// then releases once the module ends. Two implementations to compare.
+import Base from '../layouts/Base.astro';
+
+const acts = [
+	{ name: 'Direction', boxCount: 3 },
+	{ name: 'System', boxCount: 2 },
+	{ name: 'Rollout', boxCount: 3 },
+];
+---
+
+<Base title="Motion spike — pinned title">
+	<div class="container spike-intro">
+		<h1 class="type-h1">Pinned-title scroll spike</h1>
+		<p class="type-body">
+			Throwaway experiment, not production code. Same module built two ways —
+			scroll through both and compare.
+		</p>
+	</div>
+
+	<div class="container">
+		<h2 class="type-h2 version-label">Version A — CSS <code>position: sticky</code></h2>
+		<p class="type-caption version-note">
+			No JS. The title wrapper is sticky within the module, offset by the nav's
+			height. It sticks on contact and un-sticks the instant the module's own
+			bottom edge scrolls past — the browser owns pinning and release entirely.
+		</p>
+	</div>
+
+	<section class="spike-module" id="module-a">
+		<div class="pinned-title-wrap pinned-title-wrap--a">
+			<h2 class="type-display container pinned-title">The Stack Overflow rebrand.</h2>
+		</div>
+		<div class="acts container">
+			{acts.map((act) => (
+				<div class="act">
+					<h3 class="type-h2">{act.name}</h3>
+					{Array.from({ length: act.boxCount }).map(() => (
+						<div class="placeholder-box" />
+					))}
+				</div>
+			))}
+		</div>
+	</section>
+
+	<div class="version-gap" aria-hidden="true"></div>
+
+	<div class="container">
+		<h2 class="type-h2 version-label">Version B — GSAP ScrollTrigger</h2>
+		<p class="type-caption version-note">
+			Same layout, pinned via <code>ScrollTrigger.create({'{'} pin: true {'}'})</code>
+			instead of CSS. JS computes the start/end scroll positions and toggles the pin.
+		</p>
+	</div>
+
+	<section class="spike-module" id="module-b">
+		<div class="pinned-title-wrap pinned-title-wrap--b" id="title-wrap-b">
+			<h2 class="type-display container pinned-title">The Stack Overflow rebrand.</h2>
+		</div>
+		<div class="acts container" id="acts-b">
+			{acts.map((act) => (
+				<div class="act">
+					<h3 class="type-h2">{act.name}</h3>
+					{Array.from({ length: act.boxCount }).map(() => (
+						<div class="placeholder-box" />
+					))}
+				</div>
+			))}
+		</div>
+	</section>
+
+	<div style="height: var(--space-3xl);" aria-hidden="true"></div>
+</Base>
+
+<style>
+	.spike-intro {
+		padding-block: var(--space-l);
+	}
+
+	.spike-intro p {
+		margin-block-start: var(--space-xs);
+		max-width: 60ch;
+	}
+
+	.version-label {
+		padding-block-start: var(--space-l);
+	}
+
+	.version-note {
+		margin-block-start: var(--space-2xs);
+		max-width: 60ch;
+	}
+
+	.version-gap {
+		height: var(--space-3xl);
+	}
+
+	.spike-module {
+		position: relative;
+	}
+
+	.pinned-title-wrap {
+		background: #fff;
+		z-index: 5;
+		position: static;
+	}
+
+	/* Version A only: sticky pin, skipped entirely under reduced motion
+	   so the title just stays in normal static flow. */
+	@media (prefers-reduced-motion: no-preference) {
+		.pinned-title-wrap--a {
+			position: sticky;
+			top: var(--nav-height, 0px);
+		}
+	}
+
+	.pinned-title {
+		padding-block: var(--space-m);
+	}
+
+	.acts {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xl);
+		padding-block-end: var(--space-xl);
+	}
+
+	.act h3 {
+		margin-block-end: var(--space-s);
+	}
+
+	.placeholder-box {
+		height: 60vh;
+		background: #e5e5e5;
+		border-radius: var(--radius-card);
+		margin-block-end: var(--space-s);
+	}
+
+	.placeholder-box:last-child {
+		margin-block-end: 0;
+	}
+</style>
+
+<script>
+	import { gsap } from 'gsap';
+	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+	function navHeight() {
+		const nav = document.querySelector('.site-nav');
+		return nav ? nav.getBoundingClientRect().height : 0;
+	}
+
+	function setNavHeightVar() {
+		document.documentElement.style.setProperty('--nav-height', `${navHeight()}px`);
+	}
+
+	setNavHeightVar();
+	window.addEventListener('resize', setNavHeightVar);
+
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	// Version B only. Under reduced motion, no ScrollTrigger is created at
+	// all, so the title stays in normal static flow — same fallback as A.
+	if (!reduceMotion) {
+		gsap.registerPlugin(ScrollTrigger);
+
+		ScrollTrigger.create({
+			trigger: '#title-wrap-b',
+			start: () => `top top+=${navHeight()}`,
+			endTrigger: '#acts-b',
+			end: 'bottom bottom',
+			pin: true,
+			// false: the acts container is a sibling that already supplies
+			// its own scroll distance. The default (true) would additionally
+			// reserve a spacer sized to the whole pin duration before it,
+			// double-counting that distance as extra blank space.
+			pinSpacing: false,
+		});
+
+		window.addEventListener('load', () => ScrollTrigger.refresh());
+		window.addEventListener('resize', () => ScrollTrigger.refresh());
+	}
+</script>
