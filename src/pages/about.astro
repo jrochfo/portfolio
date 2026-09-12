@@ -1,0 +1,206 @@
+---
+import Base from '../layouts/Base.astro';
+import { Image } from 'astro:assets';
+import headshot from '../assets/about/headshot.jpg';
+---
+
+<Base title="About — Jake Rochford" navLabel="Home" navHref="/">
+	<section class="about">
+		<div class="container about-hero__grid">
+			<div class="about-hero__image">
+				<Image src={headshot} alt="Jake Rochford" />
+			</div>
+			<div class="about-hero__content">
+				<h1 class="type-h1">About</h1>
+				<div class="about-hero__bio">
+					<p class="type-body">I'm a brand and motion designer in Chicago.</p>
+					<p class="type-body">
+						For the last five years I've been at Stack Overflow, first helping
+						rebuild the brand with Koto, then running it across everything the
+						company ships: product, marketing, events, and a lot of animation.
+					</p>
+					<p class="type-body">Off the clock I run, climb, pet my dog, and animate a Twitch cat.</p>
+				</div>
+				<div class="about-hero__actions">
+					<a href="/jake-rochford-resume.pdf" class="button type-caption">Resume</a>
+					<a
+						href="https://www.linkedin.com/in/jakerochford/"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="button button--secondary type-caption"
+					>
+						LinkedIn
+					</a>
+					<button
+						type="button"
+						class="button button--secondary type-caption email-copy"
+						data-email="jake.rochford@gmail.com"
+					>
+						Email
+						<span class="email-copy__tooltip" role="status" aria-live="polite">Email copied</span>
+					</button>
+				</div>
+			</div>
+		</div>
+	</section>
+</Base>
+
+<style>
+	/* Desktop: no scroll — nav, centered hero, footer fill exactly one
+	   viewport. Scoped to this page's own CSS bundle, so it doesn't
+	   affect the homepage's body/main. */
+	:global(body) {
+		display: flex;
+		flex-direction: column;
+		min-height: 100vh;
+	}
+
+	:global(body > main) {
+		flex: 1;
+		display: flex;
+		min-height: 0;
+	}
+
+	.about {
+		flex: 1;
+		display: flex;
+		align-items: center;
+	}
+
+	.about-hero__grid {
+		/* Flexbox, not grid: the image has a fixed rendered width, and we
+		   want the gap to sit directly against it — a proportional grid
+		   track (e.g. 1fr) would reserve column space based on the full
+		   container width, leaving dead space between the (smaller)
+		   image and the gap instead of the gap being the only space. */
+		display: flex;
+		gap: var(--space-l);
+		/* Flush top alignment: headshot top lines up with the "About"
+		   heading, rather than centering the two columns on each other. */
+		align-items: flex-start;
+		/* Shrink-wrap to its own content, then center that compact unit
+		   within the container — not stretched edge-to-edge. */
+		width: fit-content;
+		margin-inline: auto;
+		/* Optical centering: nudge above true vertical center. */
+		margin-block-start: calc(var(--space-s) * -1);
+	}
+
+	.about-hero__image {
+		/* Explicit width (not just a cap) so aspect-ratio always has a
+		   definite size to work from, independent of flex sizing.
+		   Circle crop happens here, at the wrapper, rather than relying
+		   on the img to self-constrain. flex-shrink: 0 keeps it at its
+		   own size instead of the flex layout compressing it. */
+		flex-shrink: 0;
+		width: 202px;
+		aspect-ratio: 1 / 1;
+		border-radius: 50%;
+		overflow: hidden;
+	}
+
+	.about-hero__image :global(img) {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.about-hero__bio {
+		max-width: 60ch;
+		margin-block-start: var(--space-s);
+	}
+
+	.about-hero__bio p + p {
+		margin-block-start: var(--space-s);
+	}
+
+	.about-hero__actions {
+		display: flex;
+		gap: var(--space-xs);
+		margin-block-start: var(--space-m);
+	}
+
+	.email-copy {
+		position: relative;
+	}
+
+	.email-copy__tooltip {
+		position: absolute;
+		bottom: calc(100% + var(--space-2xs));
+		left: 50%;
+		transform: translateX(-50%);
+		white-space: nowrap;
+		background: #111;
+		color: #fff;
+		padding: var(--space-2xs) var(--space-xs);
+		border-radius: var(--radius-well);
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.2s ease;
+	}
+
+	.email-copy__tooltip.is-visible {
+		opacity: 1;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.email-copy__tooltip {
+			transition: none;
+		}
+	}
+
+	@media (max-width: 768px) {
+		:global(body) {
+			display: block;
+			min-height: auto;
+		}
+
+		:global(body > main) {
+			display: block;
+		}
+
+		.about {
+			display: block;
+		}
+
+		.about-hero__grid {
+			display: block;
+			width: auto;
+			margin-inline: 0;
+			margin-block-start: 0;
+		}
+
+		.about-hero__image {
+			max-width: 67px;
+			margin-block-end: var(--space-l);
+		}
+	}
+</style>
+
+<script>
+	const emailButton = document.querySelector<HTMLButtonElement>('.email-copy');
+	const tooltip = emailButton?.querySelector<HTMLElement>('.email-copy__tooltip');
+	const email = emailButton?.dataset.email;
+
+	let hideTimeout: ReturnType<typeof setTimeout>;
+
+	emailButton?.addEventListener('click', async () => {
+		let message = 'Email copied';
+
+		try {
+			await navigator.clipboard.writeText(email ?? '');
+		} catch {
+			message = email ?? '';
+		}
+
+		if (tooltip) {
+			tooltip.textContent = message;
+			tooltip.classList.add('is-visible');
+			clearTimeout(hideTimeout);
+			hideTimeout = setTimeout(() => {
+				tooltip.classList.remove('is-visible');
+			}, 1750);
+		}
+	});
+</script>

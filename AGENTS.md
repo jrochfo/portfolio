@@ -51,6 +51,10 @@ complete, tokens defined); build phase is transcribing that spec.
 - Type: Inter (placeholder), 6 levels, sizes vary by breakpoint,
   weights/line-heights constant.
 - Wireframe-fidelity grayscale for now — no color system yet.
+- Tooltips / transient overlays (e.g. the About page's "Email copied"):
+  caption type, --radius-well, solid dark fill (no translucency),
+  fade in/out only. No animation under `prefers-reduced-motion: reduce`
+  — appear/disappear instantly instead.
 
 ## Conventions
 - I'm a designer, first web build. Explain non-obvious choices briefly
