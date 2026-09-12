@@ -151,29 +151,20 @@ import headshot from '../assets/about/headshot.jpg';
 	}
 
 	@media (max-width: 768px) {
-		:global(body) {
-			display: block;
-			min-height: auto;
-		}
-
-		:global(body > main) {
-			display: block;
-		}
-
-		.about {
-			display: block;
-		}
-
+		/* body/main stay flex (see above) at every width, so the footer
+		   still sits at the viewport bottom on a short page and flows
+		   normally once content outgrows the viewport. .about keeps its
+		   desktop centering (including the optical bump) — only the
+		   image/content pair switches from side-by-side to stacked. */
 		.about-hero__grid {
 			display: block;
-			width: auto;
+			width: 100%;
 			margin-inline: 0;
-			margin-block-start: 0;
 		}
 
 		.about-hero__image {
-			max-width: 67px;
-			margin-block-end: var(--space-l);
+			max-width: 160px;
+			margin-block-end: var(--space-m);
 		}
 	}
 </style>

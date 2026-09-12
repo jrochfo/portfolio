@@ -3,7 +3,9 @@
 
 <footer class="site-footer">
 	<div class="site-footer__inner container">
-		<p class="type-caption">Designed and built from scratch in Chicago. © Jake Rochford 2026</p>
+		<p class="type-caption">
+			Designed and built from scratch in Chicago.<br class="site-footer__break" /> © Jake Rochford 2026
+		</p>
 		<a href="/about" class="type-caption">About</a>
 	</div>
 </footer>
@@ -20,5 +22,22 @@
 		align-items: center;
 		justify-content: space-between;
 		padding-block: var(--space-xl);
+	}
+
+	.site-footer__break {
+		/* Desktop: one line — suppress the break entirely. */
+		display: none;
+	}
+
+	@media (max-width: 768px) {
+		.site-footer__inner {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: var(--space-m);
+		}
+
+		.site-footer__break {
+			display: inline;
+		}
 	}
 </style>
