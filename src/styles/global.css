@@ -1,0 +1,234 @@
+/* ---------------------------------------------------------------
+   Reset
+   Light modern reset (Josh Comeau–style). Keeps native form/typography
+   behavior mostly intact but removes the inconsistencies that make
+   sizing and spacing unpredictable across browsers.
+--------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+* {
+	margin: 0;
+}
+
+html {
+	-webkit-text-size-adjust: 100%;
+	text-size-adjust: 100%;
+}
+
+body {
+	min-height: 100vh;
+	line-height: 1.5;
+	-webkit-font-smoothing: antialiased;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+	display: block;
+	max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+	font: inherit;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	overflow-wrap: break-word;
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+
+button {
+	background: none;
+	border: none;
+	cursor: pointer;
+}
+
+ul,
+ol {
+	list-style: none;
+}
+
+/* ---------------------------------------------------------------
+   Tokens (desktop values — mobile overrides at the bottom)
+
+   Spacing scale = gaps between things.
+   Container tokens = where things start.
+   Component tokens = what things are.
+   Never hard-code a value that has a token here.
+--------------------------------------------------------------- */
+
+:root {
+	/* Spacing */
+	--space-2xs: 8px;
+	--space-xs: 12px;
+	--space-s: 20px;
+	--space-m: 40px;
+	--space-l: 64px;
+	--space-xl: 96px;
+	--space-2xl: 144px;
+	--space-3xl: 240px;
+
+	/* Container
+	   Real centering pattern: a max-width plus auto inline margins,
+	   with a fixed inline padding as the gutter. The 120px figure in
+	   Figma is a simulation of that gutter on a fixed-width frame —
+	   it's not a literal token. */
+	--container-max: 1200px;
+	--container-margin: 24px;
+
+	/* Components */
+	--button-pad-x: 24px;
+	--button-pad-y: 8px;
+	--radius-well: 12px;
+	--radius-card: 20px;
+	--radius-pill: 999px;
+
+	/* Type
+	   Font sizes shift per breakpoint; weight, line-height, and
+	   letter-spacing stay constant, so only the *-size tokens are
+	   redefined in the mobile media query below. */
+	--font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+	--type-display-size: 72px;
+	--type-display-line-height: 1.05;
+	--type-display-letter-spacing: -0.03em;
+	--type-display-weight: 700;
+
+	--type-h1-size: 40px;
+	--type-h1-line-height: 1.15;
+	--type-h1-letter-spacing: -0.02em;
+	--type-h1-weight: 600;
+
+	--type-h2-size: 24px;
+	--type-h2-line-height: 1.3;
+	--type-h2-letter-spacing: -0.01em;
+	--type-h2-weight: 550;
+
+	--type-h3-size: 20px;
+	--type-h3-line-height: 1.5;
+	--type-h3-letter-spacing: 0em;
+	--type-h3-weight: 400;
+
+	--type-body-size: 16px;
+	--type-body-line-height: 1.6;
+	--type-body-letter-spacing: 0em;
+	--type-body-weight: 400;
+
+	--type-caption-size: 13px;
+	--type-caption-line-height: 1.4;
+	--type-caption-letter-spacing: 0.02em;
+	--type-caption-weight: 500;
+}
+
+@media (max-width: 768px) {
+	:root {
+		--space-m: 32px;
+		--space-xl: 64px;
+		--space-2xl: 80px;
+		--space-3xl: 120px;
+
+		--button-pad-y: 12px;
+
+		--type-display-size: 40px;
+		--type-h1-size: 28px;
+		--type-h2-size: 20px;
+		--type-h3-size: 18px;
+		/* --type-body-size and --type-caption-size are identical at
+		   this breakpoint, so they're omitted here. */
+	}
+}
+
+/* ---------------------------------------------------------------
+   Base
+--------------------------------------------------------------- */
+
+body {
+	font-family: var(--font-sans);
+	font-size: var(--type-body-size);
+	line-height: var(--type-body-line-height);
+	letter-spacing: var(--type-body-letter-spacing);
+	font-weight: var(--type-body-weight);
+	color: #111;
+	background: #fff;
+}
+
+/* ---------------------------------------------------------------
+   Layout utilities
+--------------------------------------------------------------- */
+
+.container {
+	max-width: var(--container-max);
+	margin-inline: auto;
+	padding-inline: var(--container-margin);
+}
+
+/* ---------------------------------------------------------------
+   Type utilities
+   Applied as classes rather than tied to h1/h2/h3 tags, since a
+   "display" or "h2" treatment doesn't always land on the matching
+   heading level in the markup (e.g. a page might have one visual
+   <h1> that isn't the largest text on the page). Pair a class with
+   whatever tag is semantically correct.
+--------------------------------------------------------------- */
+
+.type-display {
+	font-size: var(--type-display-size);
+	line-height: var(--type-display-line-height);
+	letter-spacing: var(--type-display-letter-spacing);
+	font-weight: var(--type-display-weight);
+}
+
+.type-h1 {
+	font-size: var(--type-h1-size);
+	line-height: var(--type-h1-line-height);
+	letter-spacing: var(--type-h1-letter-spacing);
+	font-weight: var(--type-h1-weight);
+}
+
+.type-h2 {
+	font-size: var(--type-h2-size);
+	line-height: var(--type-h2-line-height);
+	letter-spacing: var(--type-h2-letter-spacing);
+	font-weight: var(--type-h2-weight);
+}
+
+.type-h3 {
+	font-size: var(--type-h3-size);
+	line-height: var(--type-h3-line-height);
+	letter-spacing: var(--type-h3-letter-spacing);
+	font-weight: var(--type-h3-weight);
+}
+
+.type-body {
+	font-size: var(--type-body-size);
+	line-height: var(--type-body-line-height);
+	letter-spacing: var(--type-body-letter-spacing);
+	font-weight: var(--type-body-weight);
+}
+
+.type-caption {
+	font-size: var(--type-caption-size);
+	line-height: var(--type-caption-line-height);
+	letter-spacing: var(--type-caption-letter-spacing);
+	font-weight: var(--type-caption-weight);
+}

@@ -1,3 +1,28 @@
+# Project: Personal portfolio — jakerochford.com
+
+Brand/motion designer's portfolio. Fully specified in Figma (wireframe
+complete, tokens defined); build phase is transcribing that spec.
+
+## Architecture
+- Astro (minimal template), plain CSS, vanilla JS. GSAP for motion (later).
+- NO React, NO Tailwind — deliberate decisions, don't suggest them.
+- Design tokens as CSS custom properties in src/styles/global.css,
+  defined on :root, mobile values via one media query (max-width: 768px).
+- Pages: index (one-page scroll), about. More later.
+- Deploys automatically to Cloudflare Pages on push to main.
+
+## Design system rules
+- Spacing scale governs gaps between things; container tokens govern
+  where things start; component tokens govern what things are.
+  Never hard-code a value that has a token.
+- Type: Inter (placeholder), 6 levels, sizes vary by breakpoint,
+  weights/line-heights constant.
+- Wireframe-fidelity grayscale for now — no color system yet.
+
+## Conventions
+- I'm a designer, first web build. Explain non-obvious choices briefly
+  as you work. Commit at the end of each session with a clear message.
+
 ## Development
 
 When starting the dev server, use background mode:
