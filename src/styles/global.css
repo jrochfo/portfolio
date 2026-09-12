@@ -183,6 +183,57 @@ body {
 }
 
 /* ---------------------------------------------------------------
+   Homepage section spacing
+   The only place that owns the vertical gap between main's section
+   children. Sections themselves carry zero vertical padding by
+   default — never add margin/padding for this in a section's own
+   file. Default gap is --space-3xl; full-bleed bands (testimonials,
+   footer) tighten the gap on either side of them to --space-2xl,
+   since their background-color edge already does part of the
+   separation work. Hero and Close are viewport-height compositions
+   exempt from this system entirely — their internal spacing is
+   tuned by eye inside their own component.
+--------------------------------------------------------------- */
+
+main > section + section {
+	margin-block-start: var(--space-3xl);
+}
+
+main > section.section--bleed,
+main > section.section--bleed + section {
+	margin-block-start: var(--space-2xl);
+}
+
+main {
+	/* Gap before the footer — footer is a bleed band too. */
+	margin-block-end: var(--space-2xl);
+}
+
+.section--bleed {
+	padding-block: var(--space-xl);
+}
+
+/* ---------------------------------------------------------------
+   Component utilities
+--------------------------------------------------------------- */
+
+.button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--button-pad-y) var(--button-pad-x);
+	border-radius: var(--radius-pill);
+	background: #111;
+	color: #fff;
+}
+
+.button--secondary {
+	/* Placeholder neutral — no color tokens defined yet. */
+	background: #ececea;
+	color: #111;
+}
+
+/* ---------------------------------------------------------------
    Type utilities
    Applied as classes rather than tied to h1/h2/h3 tags, since a
    "display" or "h2" treatment doesn't always land on the matching

@@ -1,0 +1,32 @@
+---
+interface Props {
+	label?: string;
+	href?: string;
+}
+
+const { label = 'About', href = '/about' } = Astro.props;
+---
+
+<nav class="site-nav">
+	<div class="site-nav__inner container">
+		<a href="/" class="type-h3">Jake Rochford</a>
+		<a href={href} class="button type-caption">{label}</a>
+	</div>
+</nav>
+
+<style>
+	.site-nav {
+		position: sticky;
+		top: 0;
+		z-index: 10;
+		width: 100%;
+		background: #fff;
+	}
+
+	.site-nav__inner {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding-block: var(--space-xs);
+	}
+</style>

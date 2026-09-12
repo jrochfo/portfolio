@@ -1,11 +1,15 @@
 ---
 import '../styles/global.css';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
 
 interface Props {
 	title?: string;
+	navLabel?: string;
+	navHref?: string;
 }
 
-const { title = 'Jake Rochford' } = Astro.props;
+const { title = 'Jake Rochford', navLabel, navHref } = Astro.props;
 ---
 
 <html lang="en">
@@ -24,16 +28,12 @@ const { title = 'Jake Rochford' } = Astro.props;
 		/>
 	</head>
 	<body>
-		<nav>
-			<slot name="nav" />
-		</nav>
+		<Nav label={navLabel} href={navHref} />
 
 		<main>
 			<slot />
 		</main>
 
-		<footer>
-			<slot name="footer" />
-		</footer>
+		<Footer />
 	</body>
 </html>
