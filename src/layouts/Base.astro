@@ -37,3 +37,15 @@ const { title = 'Jake Rochford', navLabel, navHref } = Astro.props;
 		<Footer />
 	</body>
 </html>
+
+<script>
+	function setNavHeightVar() {
+		const nav = document.querySelector('.site-nav');
+		if (nav) {
+			document.documentElement.style.setProperty('--nav-height', `${nav.getBoundingClientRect().height}px`);
+		}
+	}
+
+	setNavHeightVar();
+	window.addEventListener('resize', setNavHeightVar);
+</script>

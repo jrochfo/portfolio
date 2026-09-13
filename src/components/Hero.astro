@@ -1,18 +1,209 @@
 ---
+import { Image } from 'astro:assets';
+import logoStack from '../assets/logos/Logo_Stack.svg';
+import logoKoto from '../assets/logos/Logo_Koto.svg';
+import logoFreed from '../assets/logos/Logo_Freed.svg';
+import logoTulip from '../assets/logos/Logo_Tulip.svg';
+import logoUpstatement from '../assets/logos/Logo_Upstatement.svg';
+import logoPega from '../assets/logos/Logo_Pega.svg';
+
+// Re-exported with optically centered bounding boxes, so a single
+// shared height is all that's needed — no per-mark adjustment.
+const LOGO_HEIGHT = 50;
+const logos = [
+	{ src: logoStack, alt: 'Stack Overflow' },
+	{ src: logoKoto, alt: 'Koto' },
+	{ src: logoFreed, alt: 'Freed' },
+	{ src: logoTulip, alt: 'Tulip' },
+	{ src: logoUpstatement, alt: 'Upstatement' },
+	{ src: logoPega, alt: 'Pegasystems' },
+];
 ---
 
 <section class="hero">
-	<div class="container">
-		<h1 class="type-display">Hero</h1>
+	<div class="container hero__inner">
+		<h1 class="type-display hero__headline">Brand design, built and run from the inside.</h1>
+		<p class="type-h3 hero__subhead">
+			Motion, systems, and strategy, most recently Stack Overflow's rebrand with Koto, from
+			first workshops to full rollout.
+		</p>
+		<div class="hero__actions">
+			<a href="/about" class="button type-caption">Get in touch</a>
+			<a
+				href="/jake-rochford-resume.pdf"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="button button--secondary type-caption"
+			>
+				Resume
+			</a>
+		</div>
+		<div class="hero__reel">
+			<!-- Placeholder well. Swap this div's contents for a <video>
+			     (muted, loop, playsinline) sized width:100%;height:100%;
+			     object-fit:cover — the 16:9 source will fill this
+			     21:9/4:3 frame the same way. -->
+			<div class="hero__reel-media">
+				<span class="hero__reel-placeholder type-body">(Video Reel)</span>
+			</div>
+			<button type="button" class="hero__mute" aria-label="Toggle mute" aria-pressed="true">
+				<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<polygon points="3 9 3 15 8 15 13 20 13 4 8 9 3 9" fill="currentColor" stroke="none" />
+					<line x1="16" y1="9" x2="22" y2="15" />
+					<line x1="22" y1="9" x2="16" y2="15" />
+				</svg>
+			</button>
+		</div>
+		<div class="hero__clients">
+			<p class="type-caption hero__clients-label">Working in good company</p>
+			<div class="hero__logos">
+				{logos.map((logo) => (
+					<Image src={logo.src} alt={logo.alt} height={LOGO_HEIGHT} class="hero__logo" />
+				))}
+			</div>
+		</div>
 	</div>
 </section>
 
 <style>
 	.hero {
-		/* Viewport-height composition — internal spacing tuned by eye,
-		   exempt from the main-gap system. */
-		min-height: 100vh;
+		/* Exempt from the standard section gap — it's a viewport-height
+		   composition with its own internal rhythm. */
+		min-height: calc(100svh - var(--nav-height, 0px));
 		display: flex;
 		align-items: center;
+	}
+
+	.hero__inner {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		width: 100%;
+		padding-block: var(--space-l);
+	}
+
+	.hero__headline {
+		/* Narrower than the container so it reliably wraps to
+		   "Brand design, built and run" / "from the inside." instead
+		   of letting "from" run onto the first line. */
+		max-width: 900px;
+	}
+
+	.hero__subhead {
+		max-width: 60ch;
+		margin-block-start: var(--space-s);
+	}
+
+	.hero__actions {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: var(--space-xs);
+		margin-block-start: var(--space-m);
+	}
+
+	.hero__reel {
+		position: relative;
+		width: 100%;
+		aspect-ratio: 21 / 9;
+		border-radius: var(--radius-well);
+		overflow: hidden;
+		/* Placeholder neutral — no color tokens defined yet. */
+		background: #ececea;
+		margin-block-start: var(--space-m);
+	}
+
+	.hero__reel-media {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.hero__reel-placeholder {
+		color: #111;
+		opacity: 0.5;
+	}
+
+	.hero__mute {
+		position: absolute;
+		right: var(--space-s);
+		bottom: var(--space-s);
+		width: 40px;
+		height: 40px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: var(--radius-pill);
+		background: rgba(0, 0, 0, 0.55);
+		color: #fff;
+		opacity: 0;
+		transition: opacity 0.15s ease;
+	}
+
+	.hero__reel:hover .hero__mute {
+		opacity: 1;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.hero__mute {
+			opacity: 1;
+			transition: none;
+		}
+	}
+
+	.hero__clients {
+		width: 100%;
+		margin-block-start: var(--space-m);
+	}
+
+	.hero__clients-label {
+		opacity: 0.6;
+		margin-block-end: var(--space-xs);
+	}
+
+	.hero__logos {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-s);
+	}
+
+	.hero__logo {
+		display: block;
+		width: auto;
+		/* Monochrome regardless of each source SVG's own colors. */
+		filter: brightness(0) opacity(0.45);
+	}
+
+	@media (max-width: 768px) {
+		.hero__reel {
+			aspect-ratio: 4 / 3;
+		}
+
+		.hero__mute {
+			opacity: 1;
+		}
+
+		.hero__clients-label {
+			/* Slightly more room than the desktop --space-xs gap before
+			   the logo grid starts. */
+			margin-block-end: var(--space-s);
+		}
+
+		.hero__logos {
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+			/* Equal-width columns/rows so each logo centers within its own
+			   cell — column-wise vertically, row-wise horizontally —
+			   rather than the pair just hugging together. */
+			justify-items: center;
+			align-items: center;
+			row-gap: var(--space-s);
+			column-gap: var(--space-2xs);
+		}
 	}
 </style>
