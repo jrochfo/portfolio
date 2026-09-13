@@ -1,8 +1,408 @@
 ---
+const sections = [
+	{
+		title: 'Motion',
+		claim: 'Everything I make moves.',
+		caption: 'Freed.ai — animated ads and spot illustration',
+	},
+	{
+		title: 'Systems',
+		claim: 'One system, everywhere the brand lives.',
+		caption: 'Tulip — brand refresh, guidelines, and internal tooling',
+	},
+	{
+		title: 'Strategy',
+		claim: 'Strategy, from the first workshop on.',
+		caption: 'Stack Overflow — the rebrand, below ↓',
+	},
+];
 ---
 
 <section class="what-i-do">
 	<div class="container">
-		<h2 class="type-h1">What I Do</h2>
+		<h2 class="type-h1">What I do.</h2>
+	</div>
+
+	<div class="card-strip">
+		{sections.map((section, i) => (
+			<article class="card" data-card-index={i}>
+				<div class="card__title-row">
+					<span class="card__icon" aria-hidden="true"></span>
+					<h3 class="type-h3">{section.title}</h3>
+				</div>
+				<p class="type-body card__claim">{section.claim}</p>
+				<p class="type-caption card__caption">{section.caption}</p>
+				<div class="card__well" aria-hidden="true"></div>
+			</article>
+		))}
+	</div>
+
+	<div class="container what-i-do__nav-wrap">
+		<nav class="nav-pill" aria-label="What I do sections">
+			{sections.map((section, i) => (
+				<button type="button" class="nav-pill__tab" data-tab-index={i} aria-current={i === 0 ? 'true' : undefined}>
+					<span class="type-caption">{section.title}</span>
+					<span class="nav-pill__dot" aria-hidden="true"></span>
+				</button>
+			))}
+		</nav>
 	</div>
 </section>
+
+<style>
+	.card-strip {
+		--strip-inset: max(
+			var(--container-margin),
+			calc((100vw - var(--container-max)) / 2 + var(--container-margin))
+		);
+		--card-width: calc(0.85 * (min(100vw, var(--container-max)) - 2 * var(--container-margin)));
+
+		display: flex;
+		gap: var(--space-s);
+		overflow-x: auto;
+		overscroll-behavior-x: contain;
+		scroll-snap-type: x mandatory;
+		padding-inline-start: var(--strip-inset);
+		/* Trailing slack so the last card can scroll all the way to the
+		   inset too — without this, the strip runs out of scrollable
+		   distance just short of snapping the last card into place. */
+		padding-inline-end: calc(100vw - var(--strip-inset) - var(--card-width));
+		scroll-padding-inline-start: var(--strip-inset);
+		cursor: grab;
+		margin-block-start: var(--space-m);
+
+		/* Hide the scrollbar; the strip is still scrollable/draggable. */
+		scrollbar-width: none;
+		-ms-overflow-style: none;
+	}
+
+	.card-strip::-webkit-scrollbar {
+		display: none;
+	}
+
+	.card-strip.is-dragging {
+		cursor: grabbing;
+		user-select: none;
+	}
+
+	.what-i-do__nav-wrap {
+		display: flex;
+		justify-content: center;
+		margin-block-start: var(--space-m);
+	}
+
+	.card {
+		flex: 0 0 auto;
+		width: var(--card-width);
+		/* Placeholder neutral — no color tokens defined yet. */
+		background: #f0efec;
+		border-radius: var(--radius-card);
+		padding: var(--space-xs);
+		scroll-snap-align: start;
+
+		display: grid;
+		grid-template-columns: 1fr auto;
+		grid-template-areas:
+			'title title'
+			'claim caption'
+			'well well';
+	}
+
+	.card__title-row {
+		grid-area: title;
+		display: flex;
+		align-items: center;
+		gap: var(--space-2xs);
+	}
+
+	.card__icon {
+		display: block;
+		flex-shrink: 0;
+		width: calc(var(--type-h3-size) * var(--type-h3-line-height));
+		height: calc(var(--type-h3-size) * var(--type-h3-line-height));
+		background: #fff;
+	}
+
+	.card__claim {
+		grid-area: claim;
+		align-self: baseline;
+		margin-block-start: var(--space-s);
+	}
+
+	.card__caption {
+		grid-area: caption;
+		align-self: baseline;
+		justify-self: end;
+		margin-block-start: var(--space-s);
+		white-space: nowrap;
+	}
+
+	.card__well {
+		grid-area: well;
+		margin-block-start: var(--space-xs);
+		/* Explicit width (not just implicit grid stretch) so
+		   aspect-ratio always resolves from a definite size — same fix
+		   as the About page headshot circle. Without it, the well's
+		   width can end up wider than the grid column, spilling past
+		   the card's own right padding. */
+		width: 100%;
+		aspect-ratio: 21 / 9;
+		border-radius: var(--radius-well);
+		/* Slightly lighter than the card panel behind it. */
+		background: #f7f6f4;
+	}
+
+	.nav-pill {
+		display: inline-flex;
+		align-items: center;
+		border-radius: var(--radius-pill);
+		background: #ececea;
+		padding-block: var(--button-pad-y);
+		padding-inline: var(--space-s);
+		gap: var(--space-s);
+	}
+
+	.nav-pill__tab {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2xs);
+		opacity: 0.5;
+		transition: opacity 0.15s ease;
+	}
+
+	.nav-pill__tab:hover {
+		opacity: 0.75;
+	}
+
+	.nav-pill__tab[aria-current='true'] {
+		opacity: 1;
+	}
+
+	.nav-pill__dot {
+		display: block;
+		width: 6px;
+		height: 6px;
+		border-radius: var(--radius-pill);
+		background: currentColor;
+		transition: width 0.15s ease;
+	}
+
+	.nav-pill__tab[aria-current='true'] .nav-pill__dot {
+		width: 18px;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.nav-pill__tab,
+		.nav-pill__dot {
+			transition: none;
+		}
+	}
+
+	@media (max-width: 900px) {
+		/* Below true mobile scale (768px) the card is already a single
+		   column at 80vw, so claim/caption never compete for space —
+		   but between 768–900px, the card is still the 85%-of-container
+		   desktop width with claim and caption side by side, and that's
+		   narrow enough for them to start crowding each other. Move the
+		   caption below the well earlier, at 900px, to get ahead of it. */
+		.card {
+			/* minmax(0, 1fr), not bare 1fr: a bare fr track carries an
+			   implicit content-based minimum, which was fighting the
+			   well's aspect-ratio sizing and computing the column ~6px
+			   too wide — exactly the leftover space that was eating
+			   into the card's right padding. */
+			grid-template-columns: minmax(0, 1fr);
+			grid-template-areas:
+				'title'
+				'claim'
+				'well'
+				'caption';
+		}
+
+		.card__caption {
+			justify-self: start;
+			margin-block-start: var(--space-xs);
+			white-space: normal;
+		}
+	}
+
+	@media (max-width: 768px) {
+		.card-strip {
+			--card-width: 80vw;
+		}
+
+		.card__well {
+			aspect-ratio: 1 / 1;
+		}
+	}
+</style>
+
+<script>
+	const strip = document.querySelector<HTMLElement>('.card-strip');
+	const cards = strip ? [...strip.querySelectorAll<HTMLElement>('.card')] : [];
+	const tabs = [...document.querySelectorAll<HTMLButtonElement>('.nav-pill__tab')];
+	const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+	function setActive(index: number) {
+		tabs.forEach((tab, i) => {
+			if (i === index) {
+				tab.setAttribute('aria-current', 'true');
+			} else {
+				tab.removeAttribute('aria-current');
+			}
+		});
+	}
+
+	function currentInset() {
+		if (!strip) return 0;
+		const style = getComputedStyle(strip);
+		const value = style.scrollPaddingLeft || style.scrollPaddingInlineStart;
+		return parseFloat(value) || 0;
+	}
+
+	// Offset of each card's left edge from where it "should" be if it
+	// were snapped (0 = already snapped there). Used both to find the
+	// nearest card and to compute an exact target scrollLeft for it.
+	function cardOffsets() {
+		if (!strip) return [];
+		const stripLeft = strip.getBoundingClientRect().left;
+		const inset = currentInset();
+		return cards.map((card) => card.getBoundingClientRect().left - stripLeft - inset);
+	}
+
+	function nearestIndex(offsets: number[]) {
+		let bestIndex = 0;
+		let bestAbs = Infinity;
+		offsets.forEach((offset, i) => {
+			const abs = Math.abs(offset);
+			if (abs < bestAbs) {
+				bestAbs = abs;
+				bestIndex = i;
+			}
+		});
+		return bestIndex;
+	}
+
+	function updateActiveFromScroll() {
+		if (!strip || cards.length === 0) return;
+		setActive(nearestIndex(cardOffsets()));
+	}
+
+	// Custom eased scroll (snappy start, easing into place) instead of
+	// native smooth-scroll/scroll-snap, whose easing/duration the
+	// browser controls and we can't tune. Scroll-snap gets suspended
+	// for the duration so it doesn't fight each frame's scrollLeft
+	// write, then restored once settled — still native for plain
+	// wheel/trackpad scrolling.
+	function animateScrollTo(target: number, onComplete?: () => void) {
+		if (!strip) return;
+		const start = strip.scrollLeft;
+		const change = target - start;
+
+		if (reduceMotionQuery.matches || Math.abs(change) < 1) {
+			strip.scrollLeft = target;
+			onComplete?.();
+			return;
+		}
+
+		const duration = 450;
+		const startTime = performance.now();
+		strip.style.scrollSnapType = 'none';
+
+		function step(now: number) {
+			if (!strip) return;
+			const t = Math.min((now - startTime) / duration, 1);
+			const eased = 1 - Math.pow(1 - t, 4); // ease-out-quart
+			strip.scrollLeft = start + change * eased;
+			if (t < 1) {
+				requestAnimationFrame(step);
+			} else {
+				strip.style.scrollSnapType = '';
+				onComplete?.();
+			}
+		}
+		requestAnimationFrame(step);
+	}
+
+	if (strip) {
+		let suspendActiveTracking = false;
+		let ticking = false;
+
+		strip.addEventListener('scroll', () => {
+			if (suspendActiveTracking) return;
+			if (!ticking) {
+				requestAnimationFrame(() => {
+					updateActiveFromScroll();
+					ticking = false;
+				});
+				ticking = true;
+			}
+		});
+
+		window.addEventListener('resize', updateActiveFromScroll);
+		updateActiveFromScroll();
+
+		tabs.forEach((tab, i) => {
+			tab.addEventListener('click', () => {
+				// The pill's own active state switches immediately, rather
+				// than waiting on the scroll-driven tracker to catch up
+				// once the card finishes sliding into place.
+				setActive(i);
+				suspendActiveTracking = true;
+				const target = strip.scrollLeft + cardOffsets()[i];
+				animateScrollTo(target, () => {
+					suspendActiveTracking = false;
+				});
+			});
+		});
+
+		// Any deliberate drag reads as "go to the next/previous card" —
+		// users grab-scrolling don't expect to have to drag halfway
+		// across a card before it commits, the way a plain nearest-card
+		// snap would require.
+		const DRAG_ADVANCE_THRESHOLD = 40;
+
+		let isDown = false;
+		let startX = 0;
+		let startScrollLeft = 0;
+		let dragStartIndex = 0;
+
+		strip.addEventListener('mousedown', (e) => {
+			isDown = true;
+			strip.classList.add('is-dragging');
+			// Scroll-snap fights programmatic scrollLeft changes mid-drag
+			// (each assignment gets treated as a completed scroll and
+			// corrected back toward a snap point), which is what made
+			// dragging feel like it only "snapped" instead of sliding.
+			// Suspend snapping until the drag ends, then ease into the
+			// target card ourselves instead of letting native snap
+			// handle the settle.
+			strip.style.scrollSnapType = 'none';
+			startX = e.pageX;
+			startScrollLeft = strip.scrollLeft;
+			dragStartIndex = nearestIndex(cardOffsets());
+		});
+
+		window.addEventListener('mouseup', () => {
+			if (!isDown) return;
+			isDown = false;
+			strip.classList.remove('is-dragging');
+
+			const dragDistance = strip.scrollLeft - startScrollLeft;
+			let targetIndex = dragStartIndex;
+			if (Math.abs(dragDistance) > DRAG_ADVANCE_THRESHOLD) {
+				targetIndex += Math.sign(dragDistance);
+			}
+			targetIndex = Math.max(0, Math.min(cards.length - 1, targetIndex));
+
+			const offsets = cardOffsets();
+			animateScrollTo(strip.scrollLeft + offsets[targetIndex]);
+		});
+
+		window.addEventListener('mousemove', (e) => {
+			if (!isDown) return;
+			e.preventDefault();
+			strip.scrollLeft = startScrollLeft - (e.pageX - startX);
+		});
+	}
+</script>
