@@ -1,15 +1,400 @@
 ---
+import { Image } from 'astro:assets';
+import logoPega from '../assets/testimonials/logos/Logo_Quote_Pega.svg';
+import logoTulip from '../assets/testimonials/logos/Logo_Quote_Tulip.svg';
+import logoStack from '../assets/testimonials/logos/Logo_Quote_Stack.svg';
+import logoKoto from '../assets/testimonials/logos/Logo_Quote_Koto.svg';
+import headshotMolly from '../assets/testimonials/headshots/Headshot_1_Molly.jpg';
+import headshotMadilynn from '../assets/testimonials/headshots/Headshot_2_Madilynn.jpg';
+import headshotDavid from '../assets/testimonials/headshots/Headshot_3_David.jpg';
+import headshotJoe from '../assets/testimonials/headshots/Headshot_4_Joe.jpg';
+
+// title/connector/company kept separate (rather than one string) so
+// mobile can break the credit onto a third line between title and
+// company while desktop still reads as one continuous line.
+const testimonials = [
+	{
+		logo: logoPega,
+		company: 'Pegasystems',
+		quote:
+			"I could put him in a room with a senior leader without hesitation and he'd hold his own with ease. If I had a full-time design position open, I would hire Jake immediately.",
+		name: 'Molly Sullivan',
+		title: 'Vice President, Brand',
+		connector: ', ',
+		headshot: headshotMolly,
+	},
+	{
+		logo: logoTulip,
+		company: 'Tulip',
+		quote:
+			"Jake's systematic approach was critical to Tulip's brand update. His token-based asset templates made it easy for the team to produce on-brand materials independently.",
+		name: 'Madilynn Castillo',
+		title: 'Chief Marketing Officer',
+		connector: ', ',
+		headshot: headshotMadilynn,
+	},
+	{
+		logo: logoStack,
+		company: 'Stack Overflow',
+		quote:
+			'This quotation is a placeholder for now as i get a quote from Dave and should therefore be slightly lower opacity than the others to remind me!',
+		name: 'David Longworth',
+		title: 'Senior Design Director',
+		connector: ', ',
+		headshot: headshotDavid,
+		placeholder: true,
+	},
+	{
+		logo: logoKoto,
+		company: 'Koto',
+		quote:
+			'Thanks so much for being such a great client. We had a wicked time working with you and Dave — I hope we get the chance to work together again.',
+		name: 'Joe Ling',
+		title: 'Creative Director',
+		connector: ', ',
+		headshot: headshotJoe,
+	},
+];
 ---
 
 <section class="testimonials section--bleed">
 	<div class="container">
-		<h2 class="type-h1">Testimonials</h2>
+		<h2 class="type-h1">From the people I've worked with.</h2>
 	</div>
-</section>
 
-<style>
-	.testimonials {
-		/* Placeholder neutral — no color tokens defined yet. */
-		background: #f0efec;
-	}
-</style>
+	<div class="testimonials__strip">
+		{testimonials.map((t) => (
+			<article class="testimonial-card">
+				<Image
+					src={t.logo}
+					alt={t.company}
+					height={28}
+					densities={[1, 2]}
+					class="testimonial-card__logo"
+				/>
+				<p
+					class={`type-h3 testimonial-card__quote ${t.placeholder ? 'testimonial-card__quote--placeholder' : ''}`}
+				>
+					{t.quote}
+				</p>
+				<p class="type-caption testimonial-card__credit">
+					{t.name}
+					<br />
+					{t.title}<span class="testimonial-card__credit-connector">{t.connector}</span><br
+						class="testimonial-card__credit-break"
+					/>{t.company}
+				</p>
+				<Image
+					src={t.headshot}
+					alt={t.name}
+					width={120}
+					height={120}
+					densities={[1, 2]}
+					class="testimonial-card__headshot"
+					draggable="false"
+				/>
+			</article>
+		))}
+	</div>
+
+	<style>
+		.testimonials {
+			/* Placeholder neutral — no color tokens defined yet. */
+			background: #f0efec;
+		}
+
+		.testimonials__strip {
+			/* Same formula as WhatIDo's card strip: matches the
+			   container's own left inset (so the first card lines up
+			   with the H1 above it) rather than a flat page-edge value,
+			   which would drift from the container on wide viewports. */
+			--strip-inset: max(
+				var(--container-margin),
+				calc((100vw - var(--container-max)) / 2 + var(--container-margin))
+			);
+
+			display: flex;
+			gap: var(--space-s);
+			overflow-x: auto;
+			cursor: grab;
+			margin-block-start: var(--space-m);
+
+			/* Same inset on both sides: the last card's right edge stops
+			   at the container's right edge, matching where the first
+			   card starts on the left — not the viewport edge. */
+			padding-inline: var(--strip-inset);
+			scroll-padding-inline-start: var(--strip-inset);
+
+			/* Hide the scrollbar; the strip is still scrollable/draggable. */
+			scrollbar-width: none;
+			-ms-overflow-style: none;
+		}
+
+		.testimonials__strip::-webkit-scrollbar {
+			display: none;
+		}
+
+		.testimonials__strip.is-dragging {
+			cursor: grabbing;
+			user-select: none;
+		}
+
+		.testimonial-card {
+			position: relative;
+			flex: 0 0 auto;
+			width: 525px;
+			aspect-ratio: 5 / 3;
+			/* Contrasts against the section's gray band. */
+			background: #fff;
+			border-radius: var(--radius-card);
+			padding: var(--space-s);
+			display: flex;
+			flex-direction: column;
+			/* Only takes effect once the strip's scroll-snap-type is
+			   active (mobile) — harmless no-op on desktop. */
+			scroll-snap-align: start;
+		}
+
+		.testimonial-card__logo {
+			flex-shrink: 0;
+			width: auto;
+			/* Flex column's default stretch would otherwise center/stretch
+			   a replaced element like an img instead of left-aligning it. */
+			align-self: flex-start;
+		}
+
+		.testimonial-card__quote {
+			max-width: 70%;
+			margin-block-start: var(--space-s);
+		}
+
+		.testimonial-card__quote--placeholder {
+			opacity: 0.5;
+		}
+
+		.testimonial-card__credit {
+			/* Anchored to the corner, like the headshot, rather than
+			   flowing after the quote — its distance from the quote
+			   above will vary slightly with quote length, but it
+			   always sits flush at the card's bottom-left. */
+			position: absolute;
+			left: var(--space-s);
+			bottom: var(--space-s);
+		}
+
+		.testimonial-card__credit-break {
+			/* Desktop: one continuous line — suppress the break. */
+			display: none;
+		}
+
+		.testimonial-card__headshot {
+			position: absolute;
+			right: var(--space-s);
+			bottom: var(--space-s);
+			width: 120px;
+			height: 120px;
+			border-radius: var(--radius-well);
+			object-fit: cover;
+		}
+
+		@media (max-width: 768px) {
+			.testimonials__strip {
+				scroll-snap-type: x mandatory;
+			}
+
+			.testimonial-card {
+				width: 80vw;
+				aspect-ratio: 3 / 4;
+			}
+
+			.testimonial-card__quote {
+				margin-block-start: var(--space-m);
+			}
+
+			.testimonial-card__credit-break {
+				display: inline;
+			}
+
+			.testimonial-card__credit-connector {
+				display: none;
+			}
+		}
+	</style>
+
+	<script>
+		const strip = document.querySelector<HTMLElement>('.testimonials__strip');
+		const cards = strip ? [...strip.querySelectorAll<HTMLElement>('.testimonial-card')] : [];
+		const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+		const mobileQuery = window.matchMedia('(max-width: 768px)');
+
+		function currentInset() {
+			if (!strip) return 0;
+			const style = getComputedStyle(strip);
+			const value = style.scrollPaddingLeft || style.scrollPaddingInlineStart;
+			return parseFloat(value) || 0;
+		}
+
+		// Offset of each card's left edge from where it "should" be if
+		// snapped there (0 = already snapped). Same technique as
+		// WhatIDo's card strip.
+		function cardOffsets() {
+			if (!strip) return [];
+			const stripLeft = strip.getBoundingClientRect().left;
+			const inset = currentInset();
+			return cards.map((card) => card.getBoundingClientRect().left - stripLeft - inset);
+		}
+
+		function nearestIndex(offsets: number[]) {
+			let bestIndex = 0;
+			let bestAbs = Infinity;
+			offsets.forEach((offset, i) => {
+				const abs = Math.abs(offset);
+				if (abs < bestAbs) {
+					bestAbs = abs;
+					bestIndex = i;
+				}
+			});
+			return bestIndex;
+		}
+
+		// Custom eased scroll (snappy start, easing into place), same as
+		// WhatIDo — scroll-snap is suspended for the duration so it
+		// doesn't fight per-frame scrollLeft writes, then restored.
+		function animateScrollTo(target: number) {
+			if (!strip) return;
+			const start = strip.scrollLeft;
+			const change = target - start;
+
+			if (reduceMotionQuery.matches || Math.abs(change) < 1) {
+				strip.scrollLeft = target;
+				return;
+			}
+
+			const duration = 450;
+			const startTime = performance.now();
+			strip.style.scrollSnapType = 'none';
+
+			function step(now: number) {
+				if (!strip) return;
+				const t = Math.min((now - startTime) / duration, 1);
+				const eased = 1 - Math.pow(1 - t, 4);
+				strip.scrollLeft = start + change * eased;
+				if (t < 1) {
+					requestAnimationFrame(step);
+				} else {
+					strip.style.scrollSnapType = '';
+				}
+			}
+			requestAnimationFrame(step);
+		}
+
+		// Desktop: each card has its own resting alignment — first flush
+		// left, last flush right, the two in between centered in the
+		// viewport — rather than every card uniformly left-justifying
+		// like WhatIDo/mobile. A drag release eases toward whichever of
+		// these four positions is nearest (or next, past the threshold).
+		type Alignment = 'start' | 'center' | 'end';
+		const DESKTOP_ALIGNMENTS: Alignment[] = ['start', 'center', 'center', 'end'];
+
+		// Absolute position of a card's left edge within the strip's
+		// scrollable content — independent of current scroll position,
+		// same technique as cardOffsets() below.
+		function cardContentLeft(card: HTMLElement) {
+			if (!strip) return 0;
+			const stripLeft = strip.getBoundingClientRect().left;
+			return strip.scrollLeft + (card.getBoundingClientRect().left - stripLeft);
+		}
+
+		function desktopTargetFor(index: number) {
+			if (!strip) return 0;
+			const card = cards[index];
+			const contentLeft = cardContentLeft(card);
+			const cardWidth = card.getBoundingClientRect().width;
+			const inset = currentInset();
+			const viewportWidth = window.innerWidth;
+			const alignment = DESKTOP_ALIGNMENTS[index] ?? 'center';
+
+			if (alignment === 'start') return contentLeft - inset;
+			if (alignment === 'end') return contentLeft + cardWidth - (viewportWidth - inset);
+			return contentLeft + cardWidth / 2 - viewportWidth / 2;
+		}
+
+		function nearestDesktopTargetIndex() {
+			if (!strip) return 0;
+			let bestIndex = 0;
+			let bestAbs = Infinity;
+			cards.forEach((_, i) => {
+				const abs = Math.abs(desktopTargetFor(i) - strip!.scrollLeft);
+				if (abs < bestAbs) {
+					bestAbs = abs;
+					bestIndex = i;
+				}
+			});
+			return bestIndex;
+		}
+
+		if (strip) {
+			const DRAG_ADVANCE_THRESHOLD = 24;
+
+			let isDown = false;
+			let startX = 0;
+			let startScrollLeft = 0;
+			let dragStartIndex = 0;
+
+			strip.addEventListener('mousedown', (e) => {
+				isDown = true;
+				strip.classList.add('is-dragging');
+				startX = e.pageX;
+				startScrollLeft = strip.scrollLeft;
+
+				if (mobileQuery.matches) {
+					// Mobile snaps left-justified like WhatIDo's card strip.
+					strip.style.scrollSnapType = 'none';
+					dragStartIndex = nearestIndex(cardOffsets());
+				} else {
+					dragStartIndex = nearestDesktopTargetIndex();
+				}
+			});
+
+			window.addEventListener('mouseup', () => {
+				if (!isDown) return;
+				isDown = false;
+				strip.classList.remove('is-dragging');
+
+				const dragDistance = strip.scrollLeft - startScrollLeft;
+				let targetIndex = dragStartIndex;
+
+				if (Math.abs(dragDistance) > DRAG_ADVANCE_THRESHOLD) {
+					if (mobileQuery.matches) {
+						targetIndex = dragStartIndex + Math.sign(dragDistance);
+					} else {
+						// Snap to whichever target the drag actually ended
+						// nearest to, rather than always advancing by one —
+						// a big drag can skip straight to the last card in
+						// that direction instead of overshooting past it
+						// and then jittering back to just the next one.
+						targetIndex = nearestDesktopTargetIndex();
+						if (targetIndex === dragStartIndex) {
+							targetIndex = dragStartIndex + Math.sign(dragDistance);
+						}
+					}
+				}
+
+				targetIndex = Math.max(0, Math.min(cards.length - 1, targetIndex));
+
+				if (mobileQuery.matches) {
+					const offsets = cardOffsets();
+					animateScrollTo(strip.scrollLeft + offsets[targetIndex]);
+				} else {
+					animateScrollTo(desktopTargetFor(targetIndex));
+				}
+			});
+
+			window.addEventListener('mousemove', (e) => {
+				if (!isDown) return;
+				e.preventDefault();
+				strip.scrollLeft = startScrollLeft - (e.pageX - startX);
+			});
+		}
+	</script>
+</section>
