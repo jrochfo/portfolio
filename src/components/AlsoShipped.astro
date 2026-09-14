@@ -1,8 +1,71 @@
 ---
+const items = [
+	{
+		title: 'The Key',
+		description: 'An April Fools joke turned real, sellable product.',
+	},
+	{
+		title: "Stack's Guide to AI",
+		description: 'Long-form microsite on understanding GenAI.',
+	},
+	{
+		title: 'OverflowAI',
+		description: 'AI feature launch, product and promo animation.',
+	},
+	{
+		title: 'Stack Overflow Meetup (SOMU)',
+		description: 'Internal meetup, brand and collateral, end to end.',
+	},
+];
 ---
 
 <section class="also-shipped">
 	<div class="container">
-		<h2 class="type-h1">Also Shipped</h2>
+		<h2 class="type-h1">Also Shipped.</h2>
+	</div>
+
+	<div class="container also-shipped__grid">
+		{items.map((item) => (
+			<article class="ship-card">
+				<h3 class="type-h3">{item.title}</h3>
+				<p class="type-body ship-card__desc">{item.description}</p>
+				<div class="ship-card__well" aria-hidden="true"></div>
+			</article>
+		))}
 	</div>
 </section>
+
+<style>
+	.also-shipped__grid {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: var(--space-s);
+		margin-block-start: var(--space-m);
+	}
+
+	.ship-card {
+		/* Same card styling as What I Do — no icon, no caption, square
+		   well instead of 21:9. */
+		background: #f0efec;
+		border-radius: var(--radius-card);
+		padding: var(--space-xs);
+	}
+
+	.ship-card__desc {
+		margin-block-start: var(--space-s);
+	}
+
+	.ship-card__well {
+		margin-block-start: var(--space-xs);
+		aspect-ratio: 4 / 3;
+		border-radius: var(--radius-well);
+		/* Slightly lighter than the card panel behind it. */
+		background: #f7f6f4;
+	}
+
+	@media (max-width: 768px) {
+		.also-shipped__grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>
