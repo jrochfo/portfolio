@@ -47,9 +47,8 @@ const sections = [
 			))}
 		</nav>
 	</div>
-</section>
 
-<style>
+	<style>
 	.card-strip {
 		--strip-inset: max(
 			var(--container-margin),
@@ -360,7 +359,7 @@ const sections = [
 		// users grab-scrolling don't expect to have to drag halfway
 		// across a card before it commits, the way a plain nearest-card
 		// snap would require.
-		const DRAG_ADVANCE_THRESHOLD = 40;
+		const DRAG_ADVANCE_THRESHOLD = 24;
 
 		let isDown = false;
 		let startX = 0;
@@ -390,8 +389,16 @@ const sections = [
 
 			const dragDistance = strip.scrollLeft - startScrollLeft;
 			let targetIndex = dragStartIndex;
+
 			if (Math.abs(dragDistance) > DRAG_ADVANCE_THRESHOLD) {
-				targetIndex += Math.sign(dragDistance);
+				// Snap to whichever card the drag actually ended nearest
+				// to, rather than always advancing by one — a big drag
+				// can skip straight to a far card in one motion instead
+				// of overshooting past it and jittering back.
+				targetIndex = nearestIndex(cardOffsets());
+				if (targetIndex === dragStartIndex) {
+					targetIndex = dragStartIndex + Math.sign(dragDistance);
+				}
 			}
 			targetIndex = Math.max(0, Math.min(cards.length - 1, targetIndex));
 
@@ -406,3 +413,4 @@ const sections = [
 		});
 	}
 </script>
+</section>
