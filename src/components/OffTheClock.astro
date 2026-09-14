@@ -1,8 +1,422 @@
 ---
+// Clockwise from top-right — also the mobile swipe order and the
+// desktop z-index resting order (lowest to highest).
+interface Item {
+	id: string;
+	// Dev-only placeholder label rendered inside the well itself,
+	// standing in for the real static-image/looping-video swap until
+	// real media exists — matches the mockup's own placeholder text.
+	placeholder: string;
+	caption: string;
+	x: number; // desktop center position, % of .otc-stack
+	y: number;
+	rot: number; // degrees
+}
+
+const items: Item[] = [
+	{
+		id: 'noggen',
+		placeholder: '(Noggen sizzle video)',
+		caption: 'Noggen, a display typeface in progress',
+		x: 58,
+		y: 19,
+		rot: -5,
+	},
+	{
+		id: 'charcoal',
+		placeholder: '(Charcoal drawings sizzle video)',
+		caption: 'Charcoal & Ink drawings',
+		x: 75,
+		y: 49,
+		rot: -6,
+	},
+	{
+		id: 'pottery',
+		placeholder: '(Pottery sizzle video)',
+		caption: 'Recent pottery',
+		x: 55,
+		y: 83,
+		rot: -4,
+	},
+	{
+		id: 'thesis',
+		placeholder: '(Thesis sizzle video)',
+		caption: 'Senior Thesis exhibition catalogue and branding',
+		x: 21,
+		y: 65,
+		rot: -7,
+	},
+	{
+		id: 'raycat',
+		placeholder: '(Raycat sizzle video)',
+		caption: 'Branding and vtuber design for a Twitch streamer',
+		x: 24,
+		y: 30,
+		rot: 5,
+	},
+];
 ---
 
 <section class="off-the-clock">
 	<div class="container">
-		<h2 class="type-h1">Off The Clock</h2>
+		<h2 class="type-h1">Off the clock.</h2>
+		<p class="type-h3 off-the-clock__subhead">
+			A typeface, a Twitch cat, some pottery. Not everything needs a business case.
+		</p>
+
+		<div class="otc-stack" role="group" aria-label="Personal projects">
+			{items.map((item, i) => (
+				<div
+					class="otc-item"
+					data-index={i}
+					style={`--x:${item.x}%; --y:${item.y}%; --rot:${item.rot}deg; --z:${i + 1};`}
+				>
+					<div class="otc-well">
+						<span class="type-caption otc-well__placeholder" aria-hidden="true">
+							{item.placeholder}
+						</span>
+					</div>
+					<p class="type-body otc-caption">{item.caption}</p>
+				</div>
+			))}
+		</div>
+
+		<p class="type-body otc-caption-mobile" aria-live="polite">{items[0].caption}</p>
 	</div>
+
+	<style>
+		.off-the-clock__subhead {
+			margin-block-start: var(--space-s);
+		}
+
+		.otc-stack {
+			position: relative;
+			width: 100%;
+			aspect-ratio: 5 / 4;
+			margin-block-start: var(--space-l);
+		}
+
+		.otc-caption-mobile {
+			display: none;
+		}
+
+		.otc-item {
+			position: absolute;
+			top: var(--y);
+			left: var(--x);
+			width: 36%;
+			transform: translate(-50%, -50%) rotate(var(--rot));
+			z-index: var(--z);
+		}
+
+		.otc-well {
+			aspect-ratio: 4 / 3;
+			border-radius: var(--radius-well);
+			background: #ececea;
+			box-shadow: 0 4px 5px rgba(17, 17, 17, 0.08);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding-inline: var(--space-s);
+			text-align: center;
+			transition:
+				transform 0.25s ease,
+				box-shadow 0.25s ease,
+				opacity 0.25s ease,
+				filter 0.25s ease;
+		}
+
+		.otc-well__placeholder {
+			opacity: 0.55;
+		}
+
+		.otc-caption {
+			margin-block-start: var(--space-s);
+			text-align: center;
+			opacity: 0;
+			transition: opacity 0.2s ease;
+		}
+
+		/* Hovering a well lifts it toward the viewer and reveals its
+		   caption — momentary, reverts on mouseleave. Only the z-index
+		   (set via JS below) is sticky, so the last-hovered well stays
+		   visually on top of the pile even after the mouse moves away,
+		   the way picking up and setting down a photo leaves it on top
+		   of the stack. */
+		.otc-item:hover .otc-well {
+			transform: translateY(-14px) scale(1.05);
+			box-shadow: 0 20px 32px rgba(17, 17, 17, 0.18);
+		}
+
+		.otc-item:hover .otc-caption {
+			opacity: 1;
+		}
+
+		/* Every well but the hovered one softens behind it. */
+		.otc-stack:has(.otc-item:hover) .otc-item:not(:hover) .otc-well {
+			filter: blur(2px);
+		}
+
+		@media (max-width: 768px) {
+			.otc-stack {
+				aspect-ratio: 4 / 3;
+				max-width: min(78vw, 340px);
+				margin-inline: auto;
+				/* Swipe drives its own horizontal gesture; vertical page
+				   scroll stays completely native — the browser handles
+				   that split itself, no JS needs to guess or intervene. */
+				touch-action: pan-y;
+			}
+
+			.otc-item {
+				top: 50%;
+				left: 50%;
+				width: 100%;
+				/* Desktop's scattered --x/--y/--rot are replaced by the
+				   rank-based stack values the swipe script maintains. */
+				transform: translate(-50%, -50%) translateY(var(--stack-offset-y, 0px))
+					rotate(var(--stack-rot, 0deg)) scale(var(--stack-scale, 1));
+				opacity: var(--stack-opacity, 1);
+				z-index: var(--stack-z, var(--z));
+				transition:
+					transform 0.35s ease,
+					opacity 0.35s ease;
+			}
+
+			/* No hover on touch — the well never lifts/dims on its own. */
+			.otc-item:hover .otc-well {
+				transform: none;
+				box-shadow: 0 4px 5px rgba(17, 17, 17, 0.08);
+			}
+
+			.otc-stack:has(.otc-item:hover) .otc-item:not(:hover) .otc-well {
+				opacity: 1;
+				filter: none;
+			}
+
+			.otc-item .otc-caption {
+				display: none;
+			}
+
+			.otc-caption-mobile {
+				display: block;
+				margin-block-start: var(--space-l);
+				text-align: center;
+				transition: opacity 0.18s ease;
+			}
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			.otc-well {
+				transition:
+					opacity 0.2s ease,
+					filter 0.2s ease;
+			}
+
+			.otc-item:hover .otc-well {
+				transform: none;
+			}
+		}
+	</style>
+
+	<script>
+		const stack = document.querySelector<HTMLElement>('.otc-stack');
+		const items = stack ? [...stack.querySelectorAll<HTMLElement>('.otc-item')] : [];
+		const mobileCaption = document.querySelector<HTMLElement>('.otc-caption-mobile');
+		const captionsByIndex = items.map(
+			(item) => item.querySelector<HTMLElement>('.otc-caption')?.textContent ?? '',
+		);
+
+		if (stack && items.length > 0) {
+			// Desktop: hovering a well promotes it above everything
+			// hovered so far — a monotonic counter, never reset, is what
+			// makes the promotion stick after the mouse leaves.
+			let topCounter = items.length;
+			items.forEach((item) => {
+				item.addEventListener('mouseenter', () => {
+					topCounter += 1;
+					item.style.setProperty('--z', String(topCounter));
+				});
+			});
+
+			// Mobile: dragging the front well (either direction) tracks
+			// the finger in real time, like picking the card up — past a
+			// distance threshold at release it's tossed to the back of
+			// the deck and the next well is revealed; short of that, it
+			// springs back to rest. Loops back to the first after the
+			// last.
+			const mobileQuery = window.matchMedia('(max-width: 768px)');
+			const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+			let order = items.map((_, i) => i);
+
+			const RANKS = [
+				{ offsetY: 0, rot: 0, scale: 1, opacity: 1 },
+				{ offsetY: 10, rot: -3, scale: 0.96, opacity: 1 },
+				{ offsetY: 18, rot: 4, scale: 0.93, opacity: 1 },
+				{ offsetY: 22, rot: -2, scale: 0.9, opacity: 0 },
+				{ offsetY: 22, rot: 2, scale: 0.9, opacity: 0 },
+			];
+
+			// Once tossed, the card continues drifting slowly and calmly
+			// (long transform duration) but visually disappears much
+			// sooner (short opacity duration) — it reads as "gone" well
+			// before its flight finishes, which is what actually sells
+			// the motion rather than a fast, jarring exit.
+			const FLY_MS = 600;
+			const FADE_MS = 200;
+			const CAPTION_FADE_MS = 160;
+			const SPRING_MS = 260;
+			// Distance to drag before release commits to a toss instead
+			// of springing back.
+			const COMMIT_THRESHOLD = 90;
+			// How far the card rotates per pixel dragged, like it's
+			// pivoting in a hand — capped so a long drag doesn't spin it
+			// past a natural angle.
+			const DRAG_ROTATION_PER_PX = 0.06;
+			const DRAG_ROTATION_MAX = 18;
+
+			function layoutMobile(skipIndex?: number) {
+				order.forEach((itemIndex, rank) => {
+					if (itemIndex === skipIndex) return;
+					const item = items[itemIndex];
+					const style = RANKS[rank] ?? RANKS[RANKS.length - 1];
+					item.style.setProperty('--stack-offset-y', `${style.offsetY}px`);
+					item.style.setProperty('--stack-rot', `${style.rot}deg`);
+					item.style.setProperty('--stack-scale', String(style.scale));
+					item.style.setProperty('--stack-opacity', String(style.opacity));
+					item.style.setProperty('--stack-z', String(RANKS.length - rank));
+				});
+			}
+
+			function setCaption(text: string, animate: boolean) {
+				if (!mobileCaption) return;
+				if (!animate) {
+					mobileCaption.textContent = text;
+					return;
+				}
+				mobileCaption.style.opacity = '0';
+				window.setTimeout(() => {
+					mobileCaption.textContent = text;
+					mobileCaption.style.opacity = '1';
+				}, CAPTION_FADE_MS);
+			}
+
+			function clamp(value: number, min: number, max: number) {
+				return Math.max(min, Math.min(max, value));
+			}
+
+			layoutMobile();
+
+			let drag: { pointerId: number; startX: number; startY: number; itemIndex: number } | null =
+				null;
+
+			function completeToss(item: HTMLElement, dir: number) {
+				const frontIndex = order[0];
+				// Reorder right away so the other cards promote into
+				// place immediately, in parallel with the tossed card's
+				// own independent flight continuing out from wherever
+				// the drag released it — rather than waiting for that
+				// flight to finish before the next card visibly rises.
+				order = [...order.slice(1), frontIndex];
+				layoutMobile(frontIndex);
+				setCaption(captionsByIndex[order[0]], true);
+
+				item.style.transition = `transform ${FLY_MS}ms ease-out, opacity ${FADE_MS}ms ease-out`;
+				item.style.transform = `translate(-50%, -50%) translateX(${dir * 120}%) rotate(${dir * 8}deg)`;
+				item.style.opacity = '0';
+
+				window.setTimeout(() => {
+					item.style.transition = '';
+					item.style.transform = '';
+					item.style.opacity = '';
+					// Now safe to fold it into the shared rank system at
+					// its new (back) position — it's already invisible.
+					layoutMobile();
+				}, FLY_MS);
+			}
+
+			function springBack(item: HTMLElement) {
+				item.style.transition = `transform ${SPRING_MS}ms ease-out, opacity ${SPRING_MS}ms ease-out`;
+				item.style.transform = 'translate(-50%, -50%)';
+				item.style.opacity = '1';
+				window.setTimeout(() => {
+					item.style.transition = '';
+					item.style.transform = '';
+					item.style.opacity = '';
+				}, SPRING_MS);
+			}
+
+			stack.addEventListener('pointerdown', (e) => {
+				if (!mobileQuery.matches || drag) return;
+				const itemIndex = order[0];
+				const item = items[itemIndex];
+				drag = { pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, itemIndex };
+				// No transition while actively dragging — it needs to
+				// track the finger 1:1, not ease toward it.
+				item.style.transition = 'none';
+				stack.setPointerCapture(e.pointerId);
+			});
+
+			stack.addEventListener('pointermove', (e) => {
+				if (!drag || e.pointerId !== drag.pointerId) return;
+				const item = items[drag.itemIndex];
+				const dx = e.clientX - drag.startX;
+				const dy = e.clientY - drag.startY;
+				const rot = clamp(dx * DRAG_ROTATION_PER_PX, -DRAG_ROTATION_MAX, DRAG_ROTATION_MAX);
+				item.style.transform = `translate(-50%, -50%) translate(${dx}px, ${dy * 0.15}px) rotate(${rot}deg)`;
+				// Fades partway as it nears the commit threshold — the
+				// rest of the fade happens on the toss itself — so
+				// letting go early already reads as "this is about to
+				// leave" before it actually commits.
+				const progress = clamp(Math.abs(dx) / COMMIT_THRESHOLD, 0, 1);
+				item.style.opacity = String(1 - progress * 0.4);
+			});
+
+			function endDrag(e: PointerEvent) {
+				if (!drag || e.pointerId !== drag.pointerId) return;
+				const item = items[drag.itemIndex];
+				const dx = e.clientX - drag.startX;
+
+				if (reduceMotionQuery.matches) {
+					drag = null;
+					if (Math.abs(dx) > COMMIT_THRESHOLD) {
+						order = [...order.slice(1), order[0]];
+						layoutMobile();
+						setCaption(captionsByIndex[order[0]], false);
+					} else {
+						item.style.transition = '';
+						item.style.transform = '';
+						item.style.opacity = '';
+					}
+					return;
+				}
+
+				if (Math.abs(dx) > COMMIT_THRESHOLD) {
+					completeToss(item, dx > 0 ? 1 : -1);
+				} else {
+					springBack(item);
+				}
+				drag = null;
+			}
+
+			stack.addEventListener('pointerup', endDrag);
+
+			// A cancel (the browser taking over for a scroll, etc.) always
+			// springs back — its coordinates aren't reliable enough to
+			// run through the same commit-threshold check as a real
+			// release.
+			stack.addEventListener('pointercancel', (e) => {
+				if (!drag || e.pointerId !== drag.pointerId) return;
+				const item = items[drag.itemIndex];
+				drag = null;
+				if (reduceMotionQuery.matches) {
+					item.style.transition = '';
+					item.style.transform = '';
+					item.style.opacity = '';
+					return;
+				}
+				springBack(item);
+			});
+		}
+	</script>
 </section>
