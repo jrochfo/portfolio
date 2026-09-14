@@ -1,0 +1,5 @@
+Name: Eraser
+ID: 13
+Category: Stationery
+Variant: Standard
+Description: Rub and erase. But it makes a mess.

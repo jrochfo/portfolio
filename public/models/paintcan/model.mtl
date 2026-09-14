@@ -1,0 +1,5 @@
+# Red Paint
+newmtl material_0
+Kd 1 1 1
+d 1
+map_Kd textures/texture_0_051d_2300_2315.png

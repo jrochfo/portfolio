@@ -1,0 +1,5 @@
+# #2 Pencil
+newmtl material_0
+Kd 1 1 1
+d 1
+map_Kd textures/texture_0_038f_2300_2308.png

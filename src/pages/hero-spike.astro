@@ -1,0 +1,632 @@
+---
+// SPIKE — throwaway experiment, not production code.
+// Testing a live-reloading 3D model (same toolbox + texture-watcher
+// setup as /toolbox) embedded in a copy of the Hero section, sitting
+// behind the display headline. This does not touch the real Hero
+// component, global.css, or any live page — everything here is
+// local to this one spike file.
+import Base from '../layouts/Base.astro';
+import { Image } from 'astro:assets';
+import logoStack from '../assets/logos/Logo_Stack.svg';
+import logoKoto from '../assets/logos/Logo_Koto.svg';
+import logoFreed from '../assets/logos/Logo_Freed.svg';
+import logoTulip from '../assets/logos/Logo_Tulip.svg';
+import logoUpstatement from '../assets/logos/Logo_Upstatement.svg';
+import logoPega from '../assets/logos/Logo_Pega.svg';
+
+const LOGO_HEIGHT = 50;
+const logos = [
+	{ src: logoStack, alt: 'Stack Overflow' },
+	{ src: logoKoto, alt: 'Koto' },
+	{ src: logoFreed, alt: 'Freed' },
+	{ src: logoTulip, alt: 'Tulip' },
+	{ src: logoUpstatement, alt: 'Upstatement' },
+	{ src: logoPega, alt: 'Pegasystems', duotone: true },
+];
+---
+
+<Base title="Hero 3D spike">
+	<section class="hero">
+		<div class="container hero__inner">
+			<div id="hero-model-viewer" class="hero__model-viewer"></div>
+			<h1 class="type-display hero__headline">Brand design, built and run from the inside.</h1>
+			<p class="type-h3 hero__subhead">
+				Motion, systems, and strategy, most recently Stack Overflow's rebrand with Koto, from
+				first workshops to full rollout.
+			</p>
+			<div class="hero__actions">
+				<a href="/about" class="button type-caption">Get in touch</a>
+				<a
+					href="/jake-rochford-resume.pdf"
+					target="_blank"
+					rel="noopener noreferrer"
+					class="button button--secondary type-caption"
+				>
+					Resume
+				</a>
+			</div>
+			<div class="hero__reel">
+				<div class="hero__reel-media">
+					<span class="hero__reel-placeholder type-body">(Video Reel)</span>
+				</div>
+				<button type="button" class="hero__mute" aria-label="Toggle mute" aria-pressed="true">
+					<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<polygon points="3 9 3 15 8 15 13 20 13 4 8 9 3 9" fill="currentColor" stroke="none" />
+						<line x1="16" y1="9" x2="22" y2="15" />
+						<line x1="22" y1="9" x2="16" y2="15" />
+					</svg>
+				</button>
+			</div>
+			<div class="hero__clients">
+				<p class="type-caption hero__clients-label">Working in good company</p>
+				<div class="hero__logos">
+					{logos.map((logo) => (
+						<Image
+							src={logo.src}
+							alt={logo.alt}
+							height={LOGO_HEIGHT}
+							class={`hero__logo ${logo.duotone ? 'hero__logo--duotone' : ''}`}
+						/>
+					))}
+				</div>
+			</div>
+		</div>
+	</section>
+</Base>
+
+<style>
+	.hero {
+		min-height: calc(100svh - var(--nav-height, 0px));
+		display: flex;
+		align-items: center;
+	}
+
+	.hero__inner {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		width: 100%;
+		/* Bumped up from the real Hero's --space-l to make room for the
+		   model sitting above the headline. */
+		padding-block-start: 0;
+	}
+
+	.hero__model-viewer {
+		width: 380px;
+		height: 300px;
+		/* hero__inner's own top padding is already 0 — this adds a
+		   little breathing room back in below the nav. */
+		margin-block-start: 20px;
+		/* Pulls the headline up into the model's own box, so the title
+		   renders in front of the model's lower portion instead of
+		   fully below it. */
+		margin-block-end: -70px;
+		position: relative;
+		z-index: 0;
+		/* No background — the model floats directly on the page, only
+		   its soft cast shadow visible beneath it. */
+		touch-action: none;
+	}
+
+	.hero__model-viewer :global(canvas) {
+		display: block;
+	}
+
+	.hero__headline {
+		/* Sits in front of the model where the two overlap. */
+		position: relative;
+		z-index: 1;
+		max-width: 900px;
+	}
+
+	.hero__subhead {
+		max-width: 60ch;
+		margin-block-start: var(--space-s);
+	}
+
+	.hero__actions {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: var(--space-xs);
+		margin-block-start: var(--space-m);
+	}
+
+	.hero__reel {
+		position: relative;
+		width: 100%;
+		aspect-ratio: 21 / 9;
+		border-radius: var(--radius-well);
+		overflow: hidden;
+		background: #ececea;
+		margin-block-start: var(--space-m);
+	}
+
+	.hero__reel-media {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.hero__reel-placeholder {
+		color: #111;
+		opacity: 0.5;
+	}
+
+	.hero__mute {
+		position: absolute;
+		right: var(--space-s);
+		bottom: var(--space-s);
+		width: 40px;
+		height: 40px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: var(--radius-pill);
+		background: rgba(0, 0, 0, 0.55);
+		color: #fff;
+		opacity: 0;
+		transition: opacity 0.15s ease;
+	}
+
+	.hero__reel:hover .hero__mute {
+		opacity: 1;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.hero__mute {
+			opacity: 1;
+			transition: none;
+		}
+	}
+
+	.hero__clients {
+		width: 100%;
+		margin-block-start: var(--space-m);
+	}
+
+	.hero__clients-label {
+		opacity: 0.6;
+		margin-block-end: var(--space-xs);
+	}
+
+	.hero__logos {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-s);
+	}
+
+	.hero__logo {
+		display: block;
+		width: auto;
+		filter: brightness(0) opacity(0.45);
+	}
+
+	.hero__logo--duotone {
+		filter: grayscale(1) opacity(0.45);
+	}
+
+	@media (max-width: 768px) {
+		.hero__reel {
+			aspect-ratio: 4 / 3;
+		}
+
+		.hero__mute {
+			opacity: 1;
+		}
+
+		.hero__clients-label {
+			margin-block-end: var(--space-s);
+		}
+
+		.hero__logos {
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+			justify-items: center;
+			align-items: center;
+			row-gap: var(--space-s);
+			column-gap: var(--space-2xs);
+		}
+	}
+</style>
+
+<script>
+	import * as THREE from 'three';
+	import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+	import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
+	import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+
+	const container = document.querySelector<HTMLDivElement>('#hero-model-viewer');
+
+	// Click cycles to the next model in the folder, wrapping back to the
+	// first after the last. Each has the same live texture-watching as
+	// the toolbox did on its own.
+	// scale is a hand-tuned multiplier per model, not derived from any
+	// formula — each raw OBJ is exported in its own arbitrary units
+	// (the toolbox file spans ~40 units, the paint can ~12.5, the
+	// eraser ~6), and no automatic rule ("same max dimension," "same
+	// height") reliably produces a consistent-looking result across
+	// different shapes. These starting values reproduce how the three
+	// models currently look; adjust per model by eye from here.
+	// tiltJitter nudges each model a degree or two off the shared base
+	// tilt, so they don't all sit at the exact same angle — small
+	// per-model variation, not a from-scratch per-model value. tilt is
+	// an escape hatch from that shared system entirely, for a model
+	// whose natural pose is genuinely different (the pencil, held at
+	// the steep angle it'd be written with) rather than a small nudge
+	// off the others' resting angle.
+	const MODELS: {
+		path: string;
+		texture: string;
+		scale: number;
+		tiltJitter: { x: number; z: number };
+		tilt?: { x: number; z: number };
+	}[] = [
+		{
+			path: '/models/toolbox/',
+			texture: '/models/toolbox/textures/texture_0_035f_2300_2315.png',
+			scale: 0.0611,
+			tiltJitter: { x: 1, z: -1 },
+		},
+		{
+			path: '/models/pencil/',
+			texture: '/models/pencil/textures/texture_0_038f_2300_2308.png',
+			scale: 0.22,
+			tiltJitter: { x: -2, z: 2 },
+			tilt: { x: -38, z: 12 },
+		},
+		{
+			path: '/models/eraser/',
+			texture: '/models/eraser/textures/texture_0_000d_2300_2320.png',
+			scale: 0.31,
+			tiltJitter: { x: 1.5, z: 1 },
+		},
+		{
+			path: '/models/ink/',
+			texture: '/models/ink/textures/texture_0_0053_2300_2320.png',
+			scale: 0.19,
+			tiltJitter: { x: -1.5, z: 1.5 },
+		},
+	];
+
+	// How far above the ground plane every model hovers, and the base
+	// tilt shared by all of them (each nudged slightly by its own
+	// tiltJitter above) — a shared rule, not a per-model value, so
+	// switching models keeps the same "floating askew" read.
+	const HOVER_HEIGHT = 0.1;
+	const BASE_TILT_X = THREE.MathUtils.degToRad(4);
+	const BASE_TILT_Z = THREE.MathUtils.degToRad(7);
+
+	// Levitating the models raised the whole composition (ground +
+	// object) higher in the canvas than the camera framing was tuned
+	// for. Rather than touch the camera (position, elevation angle, or
+	// OrbitControls target — all still exactly as before), the ground
+	// and every model are shifted down by this same fixed amount, which
+	// recenters the comp in frame without affecting the fixed 3/4 view.
+	const WORLD_Y_OFFSET = -0.2;
+
+	if (container) {
+		const width = container.clientWidth;
+		const height = container.clientHeight;
+
+		// Fixed 3/4 elevation (30° above the horizon) — orbit only spins
+		// horizontally around the model, it never tilts up/down to it.
+		const distance = 4;
+		const elevationRad = THREE.MathUtils.degToRad(25);
+
+		const scene = new THREE.Scene();
+		const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+		camera.position.set(
+			0,
+			distance * Math.sin(elevationRad),
+			distance * Math.cos(elevationRad),
+		);
+
+		const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+		renderer.setSize(width, height);
+		renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+		renderer.shadowMap.enabled = true;
+		renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+		container.appendChild(renderer.domElement);
+
+		// Softer, more even lighting rig — one light still casts the
+		// shadow, but it's toned down and backed up by fill + rim lights
+		// from other sides so no single side of the model goes dark.
+		scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+
+		const topLight = new THREE.DirectionalLight(0xffffff, 1.1);
+		topLight.position.set(0.6, 6, 1.4);
+		topLight.target.position.set(0, 0, 0);
+		topLight.castShadow = true;
+		topLight.shadow.mapSize.set(1024, 1024);
+		topLight.shadow.camera.near = 0.1;
+		topLight.shadow.camera.far = 20;
+		topLight.shadow.camera.left = -3;
+		topLight.shadow.camera.right = 3;
+		topLight.shadow.camera.top = 3;
+		topLight.shadow.camera.bottom = -3;
+		topLight.shadow.bias = -0.0015;
+		scene.add(topLight);
+		scene.add(topLight.target);
+
+		// Fill light from roughly the opposite side, no shadow — lifts
+		// the side the key light leaves dark.
+		const fillLight = new THREE.DirectionalLight(0xffffff, 0.6);
+		fillLight.position.set(-1.4, 2, -1);
+		fillLight.target.position.set(0, 0, 0);
+		scene.add(fillLight);
+		scene.add(fillLight.target);
+
+		// Rim light from behind, no shadow — keeps the far edge from
+		// disappearing into the background.
+		const rimLight = new THREE.DirectionalLight(0xffffff, 0.5);
+		rimLight.position.set(0, 1.5, -3);
+		rimLight.target.position.set(0, 0, 0);
+		scene.add(rimLight);
+		scene.add(rimLight.target);
+
+		const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+		const controls = new OrbitControls(camera, renderer.domElement);
+		controls.enableZoom = false;
+		controls.enablePan = false;
+		controls.enableDamping = true;
+		controls.dampingFactor = 0.08;
+		controls.autoRotate = !reduceMotionQuery.matches;
+		controls.autoRotateSpeed = 1.2;
+		// Lock the vertical tilt to the same fixed elevation the camera
+		// starts at — min and max pinned to one value means only the
+		// horizontal (azimuthal) angle is left free to drag.
+		controls.minPolarAngle = Math.PI / 2 - elevationRad;
+		controls.maxPolarAngle = Math.PI / 2 - elevationRad;
+		// OrbitControls has its own built-in grab/grabbing cursor
+		// handling (it sets the canvas's cursor style directly), which
+		// otherwise overrides any CSS cursor rule we'd write ourselves.
+		controls.cursorStyle = 'grab';
+
+		// One fixed, permanent ground plane at world Y=0. Models now
+		// hover above it rather than sitting flush on it, so the shadow
+		// reads as a soft cast shadow beneath a floating object instead
+		// of a contact shadow — a touch lighter than the old grounded
+		// version for that reason.
+		const ground = new THREE.Mesh(
+			new THREE.PlaneGeometry(6, 6),
+			new THREE.ShadowMaterial({ opacity: 0.18 }),
+		);
+		ground.rotation.x = -Math.PI / 2;
+		ground.position.y = WORLD_Y_OFFSET;
+		ground.receiveShadow = true;
+		scene.add(ground);
+
+		let liveMaterials: THREE.Material[] = [];
+		let currentModelGroup: THREE.Object3D | null = null;
+		let currentTexturePath = '';
+		let currentModelIndex = 0;
+		let isSwitchingModel = false;
+
+		function disposeObject3D(object: THREE.Object3D) {
+			object.traverse((child) => {
+				if (child instanceof THREE.Mesh) {
+					child.geometry.dispose();
+					const mats = Array.isArray(child.material) ? child.material : [child.material];
+					mats.forEach((mat) => {
+						const anyMat = mat as THREE.MeshPhongMaterial;
+						anyMat.map?.dispose();
+						anyMat.dispose();
+					});
+				}
+			});
+		}
+
+		function loadModel(index: number) {
+			isSwitchingModel = true;
+			const modelDef = MODELS[index];
+			// Forget the previous file's timestamp — it's a different
+			// path now, so the first poll after switching should just
+			// record a baseline, not treat it as a change.
+			currentTexturePath = modelDef.texture;
+			lastModified = null;
+
+			const mtlLoader = new MTLLoader();
+			mtlLoader.setPath(modelDef.path);
+			mtlLoader.load('model.mtl', (materials) => {
+				materials.preload();
+
+				const objLoader = new OBJLoader();
+				objLoader.setMaterials(materials);
+				objLoader.setPath(modelDef.path);
+				objLoader.load('model.obj', (obj) => {
+					// The camera/controls are untouched here on purpose —
+					// the new model starts spinning from wherever the
+					// orbit currently is, not reset to a default angle.
+					if (currentModelGroup) {
+						scene.remove(currentModelGroup);
+						disposeObject3D(currentModelGroup);
+					}
+					liveMaterials = [];
+
+					const box = new THREE.Box3().setFromObject(obj);
+					const center = box.getCenter(new THREE.Vector3());
+					const scale = modelDef.scale;
+					obj.scale.setScalar(scale);
+					// Center X/Z from the untilted box first (close enough —
+					// rotation shifts this slightly, but not enough to
+					// notice). Y is resolved in two passes: rotate first,
+					// then re-measure the ROTATED box to find where the
+					// bottom actually ends up, since a steep tilt (the
+					// pencil) moves the true lowest point well past what
+					// the untilted box would predict — anchoring off the
+					// untilted box let it sink through the ground plane.
+					obj.position.x = -center.x * scale;
+					obj.position.z = -center.z * scale;
+					obj.position.y = 0;
+					if (modelDef.tilt) {
+						obj.rotation.x = THREE.MathUtils.degToRad(modelDef.tilt.x);
+						obj.rotation.z = THREE.MathUtils.degToRad(modelDef.tilt.z);
+					} else {
+						obj.rotation.x = BASE_TILT_X + THREE.MathUtils.degToRad(modelDef.tiltJitter.x);
+						obj.rotation.z = BASE_TILT_Z + THREE.MathUtils.degToRad(modelDef.tiltJitter.z);
+					}
+					obj.updateMatrixWorld(true);
+					const rotatedBox = new THREE.Box3().setFromObject(obj);
+					obj.position.y = WORLD_Y_OFFSET + HOVER_HEIGHT - rotatedBox.min.y;
+
+					obj.traverse((child) => {
+						if (child instanceof THREE.Mesh) {
+							child.castShadow = true;
+							const mats = Array.isArray(child.material) ? child.material : [child.material];
+							liveMaterials.push(...mats);
+						}
+					});
+
+					scene.add(obj);
+					currentModelGroup = obj;
+
+					isSwitchingModel = false;
+				});
+			});
+		}
+
+		function cycleModel() {
+			if (isSwitchingModel) return;
+			currentModelIndex = (currentModelIndex + 1) % MODELS.length;
+			loadModel(currentModelIndex);
+		}
+
+		// Click (not drag) cycles to the next model. Distinguished from
+		// OrbitControls' own drag-to-rotate by how far the pointer
+		// actually moved between down and up — small movement reads as
+		// a click, anything more is a rotate gesture.
+		const CLICK_MOVE_THRESHOLD = 5;
+		let pointerDownX = 0;
+		let pointerDownY = 0;
+		let pointerMoved = false;
+
+		renderer.domElement.addEventListener('pointerdown', (e) => {
+			pointerDownX = e.clientX;
+			pointerDownY = e.clientY;
+			pointerMoved = false;
+		});
+
+		renderer.domElement.addEventListener('pointermove', (e) => {
+			if (pointerMoved) return;
+			const dx = e.clientX - pointerDownX;
+			const dy = e.clientY - pointerDownY;
+			if (Math.hypot(dx, dy) > CLICK_MOVE_THRESHOLD) {
+				pointerMoved = true;
+			}
+		});
+
+		renderer.domElement.addEventListener('pointerup', () => {
+			if (!pointerMoved) cycleModel();
+		});
+
+		const textureLoader = new THREE.TextureLoader();
+		let lastModified: string | null = null;
+
+		function reloadTexture() {
+			if (!currentTexturePath || liveMaterials.length === 0) return;
+			textureLoader.load(`${currentTexturePath}?t=${Date.now()}`, (newTexture) => {
+				newTexture.colorSpace = THREE.SRGBColorSpace;
+				liveMaterials.forEach((mat) => {
+					const anyMat = mat as THREE.MeshPhongMaterial;
+					const previous = anyMat.map;
+					anyMat.map = newTexture;
+					anyMat.needsUpdate = true;
+					previous?.dispose();
+				});
+			});
+		}
+
+		async function checkTextureUpdate() {
+			if (!currentTexturePath) return;
+			try {
+				const res = await fetch(currentTexturePath, { method: 'HEAD', cache: 'no-store' });
+				const modified = res.headers.get('last-modified');
+				if (modified && modified !== lastModified) {
+					const isFirstCheck = lastModified === null;
+					lastModified = modified;
+					if (!isFirstCheck) reloadTexture();
+				}
+			} catch {
+				// Dev-only convenience — ignore fetch errors.
+			}
+		}
+
+		loadModel(currentModelIndex);
+
+		let watchInterval: number | null = null;
+
+		function startWatching() {
+			if (watchInterval === null) {
+				watchInterval = window.setInterval(checkTextureUpdate, 1000);
+			}
+		}
+
+		function stopWatching() {
+			if (watchInterval !== null) {
+				clearInterval(watchInterval);
+				watchInterval = null;
+			}
+		}
+
+		let animationId: number | null = null;
+
+		function renderLoop() {
+			controls.update();
+			renderer.render(scene, camera);
+			animationId = requestAnimationFrame(renderLoop);
+		}
+
+		function startLoop() {
+			if (animationId === null) {
+				animationId = requestAnimationFrame(renderLoop);
+			}
+			startWatching();
+		}
+
+		function stopLoop() {
+			if (animationId !== null) {
+				cancelAnimationFrame(animationId);
+				animationId = null;
+			}
+			stopWatching();
+		}
+
+		let isIntersecting = false;
+
+		const observer = new IntersectionObserver(
+			([entry]) => {
+				isIntersecting = entry.isIntersecting;
+				if (isIntersecting && document.visibilityState === 'visible') {
+					startLoop();
+				} else {
+					stopLoop();
+				}
+			},
+			{ threshold: 0.01 },
+		);
+		observer.observe(container);
+
+		document.addEventListener('visibilitychange', () => {
+			if (document.visibilityState === 'visible' && isIntersecting) {
+				startLoop();
+			} else {
+				stopLoop();
+			}
+		});
+
+		window.addEventListener('resize', () => {
+			const w = container.clientWidth;
+			const h = container.clientHeight;
+			camera.aspect = w / h;
+			camera.updateProjectionMatrix();
+			renderer.setSize(w, h);
+		});
+	}
+</script>

@@ -1,0 +1,5 @@
+Name: India Ink
+ID: 83
+Category: Stationery
+Variant: Standard
+Description: Black liquid for writing stuff. Squids puke this, but they are not writing.

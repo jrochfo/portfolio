@@ -1,0 +1,5 @@
+Name: #2 Pencil
+ID: 911
+Category: Stationery
+Variant: Standard
+Description: When you get stuck during exams, roll it around and try to guess the answer.
