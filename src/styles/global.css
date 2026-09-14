@@ -103,6 +103,34 @@ ol {
 	--radius-card: 20px;
 	--radius-pill: 999px;
 
+	/* Color
+	   Wireframe-fidelity grayscale values for now — this is the token
+	   *layer*, not the final palette. Roles that are only coincidentally
+	   the same value today (e.g. a card panel and a full-bleed section
+	   band) still get separate tokens, so a real palette can tell them
+	   apart later without a find-and-replace. Same rule as everywhere
+	   else: never hard-code a value that has a token here. */
+	--color-bg: #fff; /* page background; also anything that must exactly
+	                      match it (nav, the pinned-title bar) */
+	--color-ink: #111; /* primary text; also solid dark fills (buttons,
+	                        tooltips) paired with --color-bg as their text */
+	--color-ink-rgb: 17, 17, 17; /* same value as --color-ink, as an
+	                                 r,g,b triplet for rgba() (shadows) */
+
+	--color-surface: #fff; /* elevated surface that contrasts against a
+	                            gray band or panel (testimonial card,
+	                            the WhatIDo icon chip) */
+	--color-panel: #f0efec; /* card/panel background */
+	--color-panel-well: #f7f6f4; /* media well nested inside a panel —
+	                                  lighter than the panel around it */
+	--color-band: #f0efec; /* full-bleed section band background
+	                            (testimonials, footer) */
+	--color-neutral: #ececea; /* standalone media well on the page
+	                               background, and neutral chips
+	                               (secondary button, nav pill) */
+	--color-scrim: rgba(0, 0, 0, 0.55); /* dark overlay for icon/text
+	                                        legibility over media */
+
 	/* Type
 	   Font sizes shift per breakpoint; weight, line-height, and
 	   letter-spacing stay constant, so only the *-size tokens are
@@ -168,8 +196,8 @@ body {
 	line-height: var(--type-body-line-height);
 	letter-spacing: var(--type-body-letter-spacing);
 	font-weight: var(--type-body-weight);
-	color: #111;
-	background: #fff;
+	color: var(--color-ink);
+	background: var(--color-bg);
 }
 
 /* ---------------------------------------------------------------
@@ -223,14 +251,13 @@ main {
 	justify-content: center;
 	padding: var(--button-pad-y) var(--button-pad-x);
 	border-radius: var(--radius-pill);
-	background: #111;
-	color: #fff;
+	background: var(--color-ink);
+	color: var(--color-bg);
 }
 
 .button--secondary {
-	/* Placeholder neutral — no color tokens defined yet. */
-	background: #ececea;
-	color: #111;
+	background: var(--color-neutral);
+	color: var(--color-ink);
 }
 
 /* ---------------------------------------------------------------

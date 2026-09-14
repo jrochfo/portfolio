@@ -58,7 +58,12 @@ complete, tokens defined); build phase is transcribing that spec.
   rows and montages use xs, layout-level column gaps use 24px.
 - Type: Inter (placeholder), 6 levels, sizes vary by breakpoint,
   weights/line-heights constant.
-- Wireframe-fidelity grayscale for now — no color system yet.
+- Color: tokenized (--color-* in global.css), but still wireframe-
+  fidelity grayscale values — this is the token *layer*, not the
+  final palette. Roles that are only coincidentally the same value
+  today (e.g. a card panel and a full-bleed section band) still get
+  separate tokens, so the real palette can tell them apart later
+  without a find-and-replace.
 - Tooltips / transient overlays (e.g. the About page's "Email copied"):
   caption type, --radius-well, solid dark fill (no translucency),
   fade in/out only. No animation under `prefers-reduced-motion: reduce`

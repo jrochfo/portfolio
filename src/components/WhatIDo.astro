@@ -93,8 +93,7 @@ const sections = [
 	.card {
 		flex: 0 0 auto;
 		width: var(--card-width);
-		/* Placeholder neutral — no color tokens defined yet. */
-		background: #f0efec;
+		background: var(--color-panel);
 		border-radius: var(--radius-card);
 		padding: var(--space-xs);
 		scroll-snap-align: start;
@@ -119,7 +118,7 @@ const sections = [
 		flex-shrink: 0;
 		width: calc(var(--type-h3-size) * var(--type-h3-line-height));
 		height: calc(var(--type-h3-size) * var(--type-h3-line-height));
-		background: #fff;
+		background: var(--color-surface);
 	}
 
 	.card__claim {
@@ -148,14 +147,14 @@ const sections = [
 		aspect-ratio: 21 / 9;
 		border-radius: var(--radius-well);
 		/* Slightly lighter than the card panel behind it. */
-		background: #f7f6f4;
+		background: var(--color-panel-well);
 	}
 
 	.nav-pill {
 		display: inline-flex;
 		align-items: center;
 		border-radius: var(--radius-pill);
-		background: #ececea;
+		background: var(--color-neutral);
 		padding-block: var(--button-pad-y);
 		padding-inline: var(--space-s);
 		gap: var(--space-s);

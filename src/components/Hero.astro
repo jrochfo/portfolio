@@ -121,8 +121,7 @@ const logos = [
 		aspect-ratio: 21 / 9;
 		border-radius: var(--radius-well);
 		overflow: hidden;
-		/* Placeholder neutral — no color tokens defined yet. */
-		background: #ececea;
+		background: var(--color-neutral);
 		margin-block-start: var(--space-m);
 	}
 
@@ -135,7 +134,7 @@ const logos = [
 	}
 
 	.hero__reel-placeholder {
-		color: #111;
+		color: var(--color-ink);
 		opacity: 0.5;
 	}
 
@@ -149,8 +148,8 @@ const logos = [
 		align-items: center;
 		justify-content: center;
 		border-radius: var(--radius-pill);
-		background: rgba(0, 0, 0, 0.55);
-		color: #fff;
+		background: var(--color-scrim);
+		color: var(--color-bg);
 		opacity: 0;
 		transition: opacity 0.15s ease;
 	}
