@@ -16,7 +16,11 @@ const logos = [
 	{ src: logoFreed, alt: 'Freed' },
 	{ src: logoTulip, alt: 'Tulip' },
 	{ src: logoUpstatement, alt: 'Upstatement' },
-	{ src: logoPega, alt: 'Pegasystems' },
+	// Pega's mark is duotone (two distinct gray fills for its two wings) —
+	// brightness(0) crushes any opaque color to pure black regardless of
+	// original luminance, flattening that distinction. Grayscale instead,
+	// which maps by luminance and keeps the two tones apart.
+	{ src: logoPega, alt: 'Pegasystems', duotone: true },
 ];
 ---
 
@@ -58,7 +62,12 @@ const logos = [
 			<p class="type-caption hero__clients-label">Working in good company</p>
 			<div class="hero__logos">
 				{logos.map((logo) => (
-					<Image src={logo.src} alt={logo.alt} height={LOGO_HEIGHT} class="hero__logo" />
+					<Image
+						src={logo.src}
+						alt={logo.alt}
+						height={LOGO_HEIGHT}
+						class={`hero__logo ${logo.duotone ? 'hero__logo--duotone' : ''}`}
+					/>
 				))}
 			</div>
 		</div>
@@ -80,7 +89,10 @@ const logos = [
 		align-items: center;
 		text-align: center;
 		width: 100%;
-		padding-block: var(--space-l);
+		/* No bottom padding: the standard --space-3xl section gap is
+		   the entire gap into the next section, rather than stacking
+		   on top of it. */
+		padding-block-start: var(--space-l);
 	}
 
 	.hero__headline {
@@ -177,6 +189,13 @@ const logos = [
 		width: auto;
 		/* Monochrome regardless of each source SVG's own colors. */
 		filter: brightness(0) opacity(0.45);
+	}
+
+	.hero__logo--duotone {
+		/* brightness(0) crushes every opaque fill to identical pure
+		   black, which erases a duotone mark's two distinct grays.
+		   grayscale() maps by luminance instead, keeping them apart. */
+		filter: grayscale(1) opacity(0.45);
 	}
 
 	@media (max-width: 768px) {
