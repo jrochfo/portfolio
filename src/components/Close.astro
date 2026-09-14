@@ -2,8 +2,20 @@
 ---
 
 <section class="close">
-	<div class="container">
-		<h2 class="type-h1">Close</h2>
+	<div class="container close__inner">
+		<h2 class="type-display close__headline">That's the tour.</h2>
+		<p class="type-h3 close__subhead">If it looks like a fit, I'd love to talk.</p>
+		<div class="close__actions">
+			<a href="/about" class="button type-caption">Get in touch</a>
+			<a
+				href="/jake-rochford-resume.pdf"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="button button--secondary type-caption"
+			>
+				Resume
+			</a>
+		</div>
 	</div>
 </section>
 
@@ -11,8 +23,28 @@
 	.close {
 		/* Viewport-height composition — internal spacing tuned by eye,
 		   exempt from the main-gap system. */
-		min-height: 100vh;
+		min-height: 70vh;
 		display: flex;
 		align-items: center;
+	}
+
+	.close__inner {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		width: 100%;
+	}
+
+	.close__subhead {
+		margin-block-start: var(--space-s);
+	}
+
+	.close__actions {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: var(--space-xs);
+		margin-block-start: var(--space-m);
 	}
 </style>
