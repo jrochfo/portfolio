@@ -17,12 +17,20 @@ complete, tokens defined); build phase is transcribing that spec.
 
 ## Homepage architecture
 - One component per section, in src/components/: Hero.astro,
-  WhatIDo.astro, Walkthrough.astro, AlsoShipped.astro,
+  WhatIDo.astro, Rebrand.astro, AlsoShipped.astro,
   Testimonials.astro, OffTheClock.astro, Close.astro. index.astro
   composes them in that order, inside the base layout, as `<main>`
   containing one `<section>` per component (each with a proper
   heading) — nav/footer are already handled by the layout.
 - Built one section at a time across sessions; one commit per section.
+- A component's own `<script>` must be nested inside its `<section>`
+  (before the closing tag), not placed after it. Astro renders
+  `<script>` at its literal template position (unlike `<style>`, which
+  it always extracts) — a script left after `</section>` becomes a
+  sibling of the section inside `<main>`, which breaks the
+  `main > section + section` gap selector for whatever section follows
+  it. Bit us once already (Rebrand lost its top gap because WhatIDo's
+  script sat between the two sections).
 
 ## Design system rules
 - Spacing scale governs gaps between things; container tokens govern

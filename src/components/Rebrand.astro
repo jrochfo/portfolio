@@ -1,8 +1,159 @@
 ---
+const acts = [
+	{
+		title: 'Direction',
+		description:
+			'Vision and strategy with the C-suite and Koto. workshops in London and alignment across every leadership team.',
+	},
+	{
+		title: 'System',
+		description:
+			'An evolution built to hold up across product, marketing, and millions of developers.',
+	},
+	{
+		title: 'Rollout',
+		description: 'A year of deployment: product surfaces, decks, events, social, motion.',
+	},
+];
 ---
 
-<section class="walkthrough">
-	<div class="container">
-		<h2 class="type-h1">Walkthrough</h2>
+<section class="rebrand">
+	<div class="rebrand__pinned-title">
+		<div class="container">
+			<h1 class="type-h1">The Stack Overflow rebrand.</h1>
+		</div>
 	</div>
+
+	<div class="rebrand__body container">
+		<p class="type-h3 rebrand__description">
+			Fifteen years in, with AI upending how developers work, Stack Overflow needed more than
+			a refresh. We helped Stack prove that in an increasingly automated world, verified
+			knowledge (from actual human brains) is still king.
+		</p>
+
+		<div class="rebrand__acts">
+			{acts.map((act) => (
+				<article class="act">
+					<h2 class="type-h2">{act.title}</h2>
+					<p class="type-body act__desc">{act.description}</p>
+					<div class="act__gallery">
+						<div class="act__gallery-item" aria-hidden="true"></div>
+						<div class="act__gallery-item" aria-hidden="true"></div>
+						<div class="act__gallery-item" aria-hidden="true"></div>
+						<div class="act__gallery-item" aria-hidden="true"></div>
+					</div>
+				</article>
+			))}
+		</div>
+	</div>
+
+	<style>
+	.rebrand {
+		position: relative;
+		/* Bottom slightly less than top — equal padding around a single
+		   line of type reads as too much air underneath it. */
+		--title-padding-top: var(--space-s);
+		--title-padding-bottom: calc(var(--space-s) * 0.8);
+	}
+
+	.rebrand__pinned-title {
+		/* Already out of normal flow, so pinning it (GSAP switches this
+		   to position: fixed for the pin duration) never shifts layout —
+		   .rebrand__body's padding-block-start reserves its height
+		   instead, deliberately, rather than relying on GSAP's
+		   pinSpacing to do it (that's what caused the doubled-space bug
+		   in the spike). */
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		z-index: 5;
+		background: #fff;
+		padding-block: var(--title-padding-top) var(--title-padding-bottom);
+	}
+
+	.rebrand__body {
+		padding-block-start: calc(
+			var(--type-h1-size) * var(--type-h1-line-height) + var(--title-padding-top) +
+				var(--title-padding-bottom) + var(--space-s)
+		);
+	}
+
+	.rebrand__acts {
+		margin-block-start: var(--space-2xl);
+	}
+
+	.act + .act {
+		margin-block-start: var(--space-2xl);
+	}
+
+	.act__desc {
+		margin-block-start: var(--space-s);
+	}
+
+	.act__gallery {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: var(--space-xs);
+		margin-block-start: var(--space-m);
+	}
+
+	.act__gallery-item {
+		aspect-ratio: 1 / 1;
+		border-radius: var(--radius-well);
+		/* Placeholder neutral — no color tokens defined yet. */
+		background: #ececea;
+	}
+
+</style>
+
+<script>
+	import { gsap } from 'gsap';
+	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+	const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+	// Reduced motion: skip creating the ScrollTrigger entirely. The
+	// title is already position: absolute at the section's top, so
+	// without JS pinning it just scrolls normally with the page —
+	// same static fallback used everywhere else.
+	if (!reduceMotionQuery.matches) {
+		gsap.registerPlugin(ScrollTrigger);
+
+		function navHeight() {
+			const nav = document.querySelector('.site-nav');
+			// Deliberately 1px short of the nav's real (fractional) height,
+			// not rounded up to it: the nav's z-index (10) is higher than
+			// the title's (5), so overlap is completely hidden behind the
+			// nav, while any gap — even sub-pixel, which varies by zoom
+			// and device pixel ratio — can reveal a sliver of scrolling
+			// content underneath.
+			return nav ? Math.floor(nav.getBoundingClientRect().height) - 1 : 0;
+		}
+
+		function titleHeight() {
+			const title = document.querySelector('.rebrand__pinned-title');
+			return title ? Math.ceil(title.getBoundingClientRect().height) : 0;
+		}
+
+		ScrollTrigger.create({
+			trigger: '.rebrand__pinned-title',
+			start: () => `top top+=${navHeight()}`,
+			endTrigger: '.rebrand',
+			// 'bottom bottom' would release the pin a full viewport-height
+			// before the section's actual end — correct for a pinned
+			// element that fills the viewport, but this title bar is only
+			// ~150px tall, so that read as unpinning mid-way through the
+			// last act. Releasing at the section's bottom minus the
+			// title's own height means it stays pinned right up until the
+			// title would otherwise start covering the next section.
+			end: () => `bottom top+=${titleHeight()}`,
+			pin: true,
+			pinSpacing: false,
+		});
+
+		window.addEventListener('load', () => ScrollTrigger.refresh());
+		window.addEventListener('resize', () => ScrollTrigger.refresh());
+	}
+</script>
 </section>
