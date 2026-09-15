@@ -2,9 +2,12 @@
 // DEV-ONLY. Rendered conditionally by Base.astro
 // ({import.meta.env.DEV && <FontAudition />}), so the whole component —
 // markup, styles, and script — is dead-code-eliminated from production
-// builds, not just hidden. TODO: delete this component and its
-// Google Fonts <link> in Base.astro once final faces are chosen and
-// self-hosted.
+// builds, not just hidden. Kept intentionally even with type locked
+// (see FONT_AUDITION_ENABLED in Base.astro) — useful again for any
+// future type change, e.g. upgrading from free Google Fonts to a
+// purchased foundry family. Re-audition will need its own Google
+// Fonts <link> in Base.astro for whatever candidates that round
+// tests, if the candidates are Google Fonts.
 ---
 
 <div id="font-audition" class="font-audition">
