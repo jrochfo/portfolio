@@ -1,5 +1,0 @@
-Name: Red Paint
-ID: 1309
-Category: Tools
-Variant: Standard
-Description: It doesn't taste very good at all.

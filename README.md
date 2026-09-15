@@ -1,43 +1,47 @@
-# Astro Starter Kit: Minimal
+# jakerochford.com
 
-```sh
-npm create astro@latest -- --template minimal
-```
+Jake Rochford's personal portfolio. Astro, plain CSS, vanilla JS — no
+React, no Tailwind, by design. Full design-system rules and build
+conventions live in [AGENTS.md](./AGENTS.md).
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
+## Structure
 
 ```text
 /
 ├── public/
+│   └── models/          3D models (OBJ/MTL + textures) for the Hero/About viewers
 ├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+│   ├── assets/           fonts, icons, logos, headshots — imported and optimized by Astro
+│   ├── components/       one component per homepage section, plus nav/footer
+│   ├── layouts/          Base.astro — the shared <head>, nav, footer shell
+│   ├── pages/             index.astro (homepage) and about.astro
+│   └── styles/            global.css — design tokens and base styles
+└── astro.config.mjs
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Commands
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+Run from the project root:
 
-Any static assets, like images, can be placed in the `public/` directory.
+| Command                | Action                                      |
+| :---------------------- | :------------------------------------------- |
+| `npm install`            | Install dependencies                         |
+| `npx astro dev`           | Start the local dev server at `localhost:4321` (use `--background` — see AGENTS.md) |
+| `npx astro build`         | Build the production site to `./dist/`       |
+| `npx astro preview`       | Preview the production build locally         |
 
-## 🧞 Commands
+## Dev-only tools
 
-All commands are run from the root of the project, from a terminal:
+Two auditioning panels live in the codebase but render only outside
+production builds (`import.meta.env.DEV`), gated by flags in
+`Base.astro`:
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+- **FontAudition** — swap type families live, for any future
+  typography change
+- **ColorExploration** — Temperature/Compression/Ink/Accent controls
+  over the OKLCH-based color tokens in `global.css`, with a copyable
+  hex/token readout
 
-## 👀 Want to learn more?
+## Deploy
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+Cloudflare Pages, automatically on push to `main`.

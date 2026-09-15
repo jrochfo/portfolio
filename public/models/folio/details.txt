@@ -1,5 +1,0 @@
-Name: Portfolio
-ID: 101
-Category: Luggage
-Variant: Standard
-Description: You can carry it with one hand. Very useful. The papers inside look very important.

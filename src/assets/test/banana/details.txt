@@ -1,5 +1,0 @@
-Name: Banana Bunch
-ID: 840
-Category: Fruit
-Variant: Standard
-Description: People usually don't eat these all at once.
