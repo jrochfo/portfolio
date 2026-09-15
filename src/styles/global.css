@@ -69,6 +69,38 @@ ol {
 }
 
 /* ---------------------------------------------------------------
+   Fonts (self-hosted)
+
+   Fraunces: variable, axes confirmed via the font's own fvar table
+   (fonttools) — opsz 9–144 (default 9, a text optical size — display
+   sizes need this driven up via font-optical-sizing/font-variation-
+   settings, not left at default), wght 100–900, SOFT 0–100 (default
+   0), WONK 0–1 (default 1 — the font's own default is the "wonky"
+   end, not neutral, so it's set explicitly wherever Fraunces is used
+   rather than left at its default).
+
+   Schibsted Grotesk: variable, wght 400–900, continuous (confirmed
+   via the same fvar check) — 550 is a true interpolated value, not a
+   snap to a named instance.
+--------------------------------------------------------------- */
+
+@font-face {
+	font-family: 'Fraunces';
+	src: url('../assets/fonts/Fraunces/Fraunces-Variable.woff2') format('woff2');
+	font-weight: 100 900;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Schibsted Grotesk';
+	src: url('../assets/fonts/Schibsted_Grotesk/SchibstedGrotesk-Variable.woff2') format('woff2');
+	font-weight: 400 900;
+	font-style: normal;
+	font-display: swap;
+}
+
+/* ---------------------------------------------------------------
    Tokens (desktop values — mobile overrides at the bottom)
 
    Spacing scale = gaps between things.
@@ -103,43 +135,96 @@ ol {
 	--radius-card: 20px;
 	--radius-pill: 999px;
 
-	/* Color
-	   Wireframe-fidelity grayscale values for now — this is the token
-	   *layer*, not the final palette. Roles that are only coincidentally
-	   the same value today (e.g. a card panel and a full-bleed section
-	   band) still get separate tokens, so a real palette can tell them
-	   apart later without a find-and-replace. Same rule as everywhere
-	   else: never hard-code a value that has a token here. */
-	--color-bg: #fff; /* page background; also anything that must exactly
-	                      match it (nav, the pinned-title bar) */
-	--color-ink: #111; /* primary text; also solid dark fills (buttons,
-	                        tooltips) paired with --color-bg as their text */
-	--color-ink-rgb: 17, 17, 17; /* same value as --color-ink, as an
-	                                 r,g,b triplet for rgba() (shadows) */
+	/* Color — exploration architecture
+	   Formula-driven from five control values, written live by the
+	   dev-only color panel (src/components/ColorExploration.astro,
+	   disabled outside dev — see Base.astro). Every other --color-*
+	   token below is DERIVED from these; once a favorite is found,
+	   only these five values (plus the chosen accent) need to change,
+	   never the formulas or the tokens that use them. OKLCH, not HSL —
+	   its lightness axis is perceptually uniform, so the hue control
+	   doesn't quietly distort contrast as it sweeps warm to cool.
+	   Current values are still wireframe-pragmatic defaults (Temperature
+	   near-neutral, Compression modest, no accent) — nothing here is
+	   the final palette; that's the whole point of the panel. */
+	--neutral-hue: 55; /* degrees; ~50-70 warm/paper, ~30-45 warm gray,
+	                        chroma 0 = neutral regardless of hue,
+	                        ~220-245 cool blue-gray */
+	--neutral-chroma: 0.012; /* tint strength; 0 = neutral gray */
+	--compression: 0.35; /* 0 = surface barely distinguishable from
+	                          field, 1 = a clear step deeper */
+	--ink-lightness: 0.15; /* 0.04 ~ "pure black", else 0.10/0.15/0.20 */
+	--ink-chroma-mix: 1; /* 0 = desaturate ink (pure black), 1 = full
+	                          temperature hue in the ink */
 
-	--color-surface: #fff; /* elevated surface that contrasts against a
-	                            gray band or panel (testimonial card,
-	                            the WhatIDo icon chip) */
-	--color-panel: #f0efec; /* card/panel background */
-	--color-panel-well: #f7f6f4; /* media well nested inside a panel —
-	                                  lighter than the panel around it */
-	--color-band: #f0efec; /* full-bleed section band background
-	                            (testimonials, footer) */
-	--color-neutral: #ececea; /* standalone media well on the page
-	                               background, and neutral chips
-	                               (secondary button, nav pill) */
+	--color-bg: oklch(0.99 var(--neutral-chroma) var(--neutral-hue)); /* page
+	   background; also anything that must exactly match it (nav, the
+	   pinned-title bar) */
+	--color-ink: oklch(
+		var(--ink-lightness) calc(var(--neutral-chroma) * var(--ink-chroma-mix) * 3) var(--neutral-hue)
+	); /* primary text; also solid dark fills (buttons, tooltips) paired
+	      with --color-bg as their text */
+
+	--color-surface: var(--color-bg); /* elevated surface that contrasts
+	   against a gray band or panel (testimonial card, the WhatIDo icon
+	   chip) — same value as bg by definition, kept as its own token
+	   since the ROLE differs (see the color-token commit for why) */
+	--color-panel: oklch(calc(0.99 - var(--compression) * 0.05) var(--neutral-chroma) var(--neutral-hue)); /* card/panel background */
+	--color-panel-well: oklch(calc(0.99 - var(--compression) * 0.03) var(--neutral-chroma) var(--neutral-hue)); /* media
+	   well nested inside a panel — lighter than the panel around it */
+	--color-band: oklch(calc(0.99 - var(--compression) * 0.05) var(--neutral-chroma) var(--neutral-hue)); /* full-bleed
+	   section band background (testimonials, footer) */
+	--color-neutral: oklch(calc(0.99 - var(--compression) * 0.07) var(--neutral-chroma) var(--neutral-hue)); /* standalone
+	   media well on the page background, and neutral chips (secondary
+	   button, nav pill) */
+	--color-line: oklch(calc(0.99 - var(--compression) * 0.12 - 0.05) var(--neutral-chroma) var(--neutral-hue)); /* hairline
+	   borders/dividers — reads a bit more distinct than the surface
+	   fill alone, so it stays visible even at low compression */
+
+	--color-ink-muted: oklch(
+		calc(var(--ink-lightness) + 0.4) calc(var(--neutral-chroma) * var(--ink-chroma-mix) * 2) var(--neutral-hue)
+	); /* secondary/caption-style text — a lighter derivative of ink,
+	      same hue family (Temperature and Ink together determine it) */
+
 	--color-scrim: rgba(0, 0, 0, 0.55); /* dark overlay for icon/text
-	                                        legibility over media */
+	   legibility over arbitrary video content — deliberately NOT tied
+	   to the palette; it needs to work over unpredictable footage */
+
+	/* Accent — resolved directly by the panel to a real color, or to a
+	   copy of --color-ink itself when "None" is chosen, so every
+	   consumer can reference var(--color-accent) unconditionally
+	   without needing to know whether an accent is active. */
+	--color-accent: var(--color-ink);
 
 	/* Type
 	   Font sizes shift per breakpoint; weight, line-height, and
 	   letter-spacing stay constant, so only the *-size tokens are
-	   redefined in the mobile media query below. */
-	--font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+	   redefined in the mobile media query below.
 
+	   Two-property split (permanent architecture — this is the locked
+	   type decision, not just the audition test that established it):
+	   --font-text drives h2, h3, body, and caption; --font-display
+	   drives the Display style and h1 (via --font-h1, which the
+	   dev-only audition panel — src/components/FontAudition.astro,
+	   currently disabled, see Base.astro — can still repoint for a
+	   future audition round). */
+	--font-text: 'Schibsted Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+	--font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+	--font-h1: var(--font-display);
+
+	/* SOFT/WONK are Fraunces-only axes (harmless no-op on any element
+	   currently rendering in --font-text instead, e.g. .type-h1 under
+	   the "Display only" scope). Locked at 0/0 by eye — WONK's
+	   alternate letterforms (its own default is 1, not 0) read too
+	   casual/saccharine for this site; plain SOFT 0 read best too. */
+	--font-display-variation: 'SOFT' 0, 'WONK' 0;
+
+	/* Tracking locked by eye against the hero line and "That's the
+	   tour." — Display landed just slightly less negative than its
+	   original Inter-tuned -0.03em; h1 held at its original -0.02em. */
 	--type-display-size: 72px;
 	--type-display-line-height: 1.05;
-	--type-display-letter-spacing: -0.03em;
+	--type-display-letter-spacing: -0.025em;
 	--type-display-weight: 700;
 
 	--type-h1-size: 40px;
@@ -147,6 +232,10 @@ ol {
 	--type-h1-letter-spacing: -0.02em;
 	--type-h1-weight: 600;
 
+	/* 550 is a true interpolated value for Schibsted Grotesk, not a
+	   snap to a named instance — its wght axis is continuous 400–900
+	   (confirmed via the font's own fvar table), so no fallback is
+	   needed here. */
 	--type-h2-size: 24px;
 	--type-h2-line-height: 1.3;
 	--type-h2-letter-spacing: -0.01em;
@@ -191,13 +280,35 @@ ol {
 --------------------------------------------------------------- */
 
 body {
-	font-family: var(--font-sans);
+	font-family: var(--font-text);
 	font-size: var(--type-body-size);
 	line-height: var(--type-body-line-height);
 	letter-spacing: var(--type-body-letter-spacing);
 	font-weight: var(--type-body-weight);
 	color: var(--color-ink);
 	background: var(--color-bg);
+}
+
+/* Accent — the only three jobs the accent slot does (plus the nav-pill
+   active tab, styled locally in WhatIDo.astro). --color-accent
+   resolves to a real color OR a live copy of --color-ink when the
+   color panel's Accent control is set to "None", so these rules never
+   need to know which case is active. */
+:focus-visible {
+	outline: 2px solid var(--color-accent);
+	outline-offset: 2px;
+}
+
+::selection {
+	background: var(--color-accent);
+	color: var(--color-bg);
+}
+
+a:not(.button):hover,
+a:not(.button):focus-visible {
+	text-decoration: underline;
+	text-decoration-color: var(--color-accent);
+	text-underline-offset: 0.15em;
 }
 
 /* ---------------------------------------------------------------
@@ -253,11 +364,32 @@ main {
 	border-radius: var(--radius-pill);
 	background: var(--color-ink);
 	color: var(--color-bg);
+	transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+
+/* Accent fill on hover — the boldest use of the accent slot, reserved
+   for the primary action rather than resting chrome. The opacity dip
+   rides along so hover still reads even when Accent is "None" (where
+   --color-accent is just a copy of --color-ink, same as resting). */
+.button:hover,
+.button:focus-visible {
+	background: var(--color-accent);
+	opacity: 0.85;
 }
 
 .button--secondary {
 	background: var(--color-neutral);
 	color: var(--color-ink);
+}
+
+/* Quieter than primary: fill steps to --color-line (one notch deeper,
+   no accent) and only the text picks up the accent — same "text turns
+   accent on interaction" language as the plain-link hover/underline. */
+.button--secondary:hover,
+.button--secondary:focus-visible {
+	background: var(--color-line);
+	color: var(--color-accent);
+	opacity: 1;
 }
 
 /* ---------------------------------------------------------------
@@ -270,20 +402,36 @@ main {
 --------------------------------------------------------------- */
 
 .type-display {
+	font-family: var(--font-display);
 	font-size: var(--type-display-size);
 	line-height: var(--type-display-line-height);
 	letter-spacing: var(--type-display-letter-spacing);
 	font-weight: var(--type-display-weight);
+	/* Maps rendered size to Fraunces' opsz axis automatically (high
+	   optical size at Display's 72px) — explicit for clarity, since
+	   this is also the browser default. */
+	font-optical-sizing: auto;
+	font-variation-settings: var(--font-display-variation);
 }
 
 .type-h1 {
+	/* --font-h1 points at --font-text or --font-display depending on
+	   the audition panel's "Display scope" toggle (currently locked
+	   to --font-display — Fraunces for h1 too). */
+	font-family: var(--font-h1);
 	font-size: var(--type-h1-size);
 	line-height: var(--type-h1-line-height);
 	letter-spacing: var(--type-h1-letter-spacing);
 	font-weight: var(--type-h1-weight);
+	/* Lower optical size than Display's, automatically, at h1's
+	   smaller 40px. Harmless no-op if --font-h1 ever points at
+	   --font-text instead (Schibsted Grotesk has neither axis). */
+	font-optical-sizing: auto;
+	font-variation-settings: var(--font-display-variation);
 }
 
 .type-h2 {
+	font-family: var(--font-text);
 	font-size: var(--type-h2-size);
 	line-height: var(--type-h2-line-height);
 	letter-spacing: var(--type-h2-letter-spacing);
@@ -291,6 +439,7 @@ main {
 }
 
 .type-h3 {
+	font-family: var(--font-text);
 	font-size: var(--type-h3-size);
 	line-height: var(--type-h3-line-height);
 	letter-spacing: var(--type-h3-letter-spacing);
@@ -298,6 +447,7 @@ main {
 }
 
 .type-body {
+	font-family: var(--font-text);
 	font-size: var(--type-body-size);
 	line-height: var(--type-body-line-height);
 	letter-spacing: var(--type-body-letter-spacing);
@@ -305,6 +455,7 @@ main {
 }
 
 .type-caption {
+	font-family: var(--font-text);
 	font-size: var(--type-caption-size);
 	line-height: var(--type-caption-line-height);
 	letter-spacing: var(--type-caption-letter-spacing);

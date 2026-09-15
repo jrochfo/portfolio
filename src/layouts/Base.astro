@@ -2,14 +2,37 @@
 import '../styles/global.css';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
+import FontAudition from '../components/FontAudition.astro';
+import FontVariationTuner from '../components/FontVariationTuner.astro';
+import ColorExploration from '../components/ColorExploration.astro';
 
 interface Props {
 	title?: string;
 	navLabel?: string;
 	navHref?: string;
+	navIcon?: 'toolbox' | 'pencil' | 'eraser' | 'ink' | 'stamp';
 }
 
-const { title = 'Jake Rochford', navLabel, navHref } = Astro.props;
+const { title = 'Jake Rochford', navLabel, navHref, navIcon } = Astro.props;
+
+// Type decision is locked (Fraunces + Schibsted Grotesk, both
+// self-hosted — see the Fonts section of global.css), so the
+// audition panel is off. Flip true for a future audition round —
+// it'll need its own Google Fonts <link> for whatever candidates
+// that round tests; the previous one was removed with this switch,
+// not preserved, since a new round would test different families
+// anyway.
+const FONT_AUDITION_ENABLED = false;
+
+// SOFT/WONK locked at 0/0 (the font's own defaults are 0/1 — WONK's
+// alternate letterforms read too casual, plain SOFT read best too).
+// Tuner off; flip true to revisit.
+const FONT_VARIATION_TUNER_ENABLED = false;
+
+// Neutral/ink/accent tokens are mid-exploration (see the Color section
+// of global.css) — panel on until a working palette is chosen and
+// committed as literal values.
+const COLOR_EXPLORATION_ENABLED = true;
 ---
 
 <html lang="en">
@@ -19,22 +42,21 @@ const { title = 'Jake Rochford', navLabel, navHref } = Astro.props;
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
-
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link
-			rel="stylesheet"
-			href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
-		/>
+		<!-- Fraunces + Schibsted Grotesk are self-hosted (see the Fonts
+		     section of global.css) — no Google Fonts links needed. -->
 	</head>
 	<body>
-		<Nav label={navLabel} href={navHref} />
+		<Nav label={navLabel} href={navHref} icon={navIcon} />
 
 		<main>
 			<slot />
 		</main>
 
 		<Footer />
+
+		{FONT_AUDITION_ENABLED && import.meta.env.DEV && <FontAudition />}
+		{FONT_VARIATION_TUNER_ENABLED && import.meta.env.DEV && <FontVariationTuner />}
+		{COLOR_EXPLORATION_ENABLED && import.meta.env.DEV && <ColorExploration />}
 	</body>
 </html>
 

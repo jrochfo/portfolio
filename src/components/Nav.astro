@@ -1,15 +1,44 @@
 ---
+import iconToolbox from '../assets/icons/Icon-toolbox.svg';
+import iconPencil from '../assets/icons/Icon-pencil.svg';
+import iconEraser from '../assets/icons/Icon-eraser.svg';
+import iconInk from '../assets/icons/Icon-ink.svg';
+import iconStamp from '../assets/icons/Icon-stamp.svg';
+
 interface Props {
 	label?: string;
 	href?: string;
+	icon?: 'toolbox' | 'pencil' | 'eraser' | 'ink' | 'stamp';
 }
 
-const { label = 'About', href = '/about' } = Astro.props;
+const { label = 'About', href = '/about', icon = 'toolbox' } = Astro.props;
+
+// Toolbox is the Hero model viewer's own default (first) model — the
+// nav icon starts matching it, then swaps on 'hero-model-change'
+// (fired by Hero's own script; harmless no-op on pages without it,
+// like About, which instead sets its own fixed default via the
+// `icon` prop below).
+const modelIcons = {
+	toolbox: iconToolbox.src,
+	pencil: iconPencil.src,
+	eraser: iconEraser.src,
+	ink: iconInk.src,
+	stamp: iconStamp.src,
+};
 ---
 
 <nav class="site-nav">
 	<div class="site-nav__inner container">
-		<a href="/" class="type-h3">Jake Rochford</a>
+		<a href="/" class="site-nav__brand">
+			<img
+				id="site-nav-icon"
+				class="site-nav__icon"
+				src={modelIcons[icon]}
+				data-icons={JSON.stringify(modelIcons)}
+				alt=""
+			/>
+			<span class="type-h3">Jake Rochford</span>
+		</a>
 		<a href={href} class="button type-caption">{label}</a>
 	</div>
 </nav>
@@ -21,6 +50,7 @@ const { label = 'About', href = '/about' } = Astro.props;
 		z-index: 10;
 		width: 100%;
 		background: var(--color-bg);
+		border-bottom: 1px solid var(--color-line);
 	}
 
 	.site-nav__inner {
@@ -29,4 +59,33 @@ const { label = 'About', href = '/about' } = Astro.props;
 		justify-content: space-between;
 		padding-block: var(--space-xs);
 	}
+
+	.site-nav__brand {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2xs);
+	}
+
+	.site-nav__icon {
+		display: block;
+		flex-shrink: 0;
+		width: 24px;
+		height: 24px;
+		object-fit: contain;
+	}
 </style>
+
+<script>
+	// Hero's model viewer dispatches this on load and on every click-to-
+	// cycle; on pages without a Hero (About), it just never fires and
+	// the icon stays at its default (toolbox).
+	const icon = document.querySelector<HTMLImageElement>('#site-nav-icon');
+	const icons = icon ? JSON.parse(icon.dataset.icons ?? '{}') : {};
+
+	window.addEventListener('hero-model-change', (e) => {
+		const model = (e as CustomEvent<{ model: string }>).detail?.model;
+		if (icon && model && icons[model]) {
+			icon.src = icons[model];
+		}
+	});
+</script>

@@ -1,54 +1,50 @@
 ---
 import Base from '../layouts/Base.astro';
-import { Image } from 'astro:assets';
-import headshot from '../assets/about/headshot.jpg';
 ---
 
-<Base title="About — Jake Rochford" navLabel="Home" navHref="/">
+<Base title="About — Jake Rochford" navLabel="Home" navHref="/" navIcon="stamp">
 	<section class="about">
-		<div class="container about-hero__grid">
-			<div class="about-hero__image">
-				<Image src={headshot} alt="Jake Rochford" />
+		<div class="container about__inner">
+			<div id="about-model-viewer" class="about__model-viewer"></div>
+			<h1 class="type-display about__headline">About</h1>
+			<div class="about__bio">
+				<p class="type-h3">I'm a brand and motion designer in Chicago.</p>
+				<p class="type-h3">
+					For the last five years I've been at Stack Overflow, first helping rebuild the brand
+					with Koto, then running it across everything the company ships: product, marketing,
+					events, and a lot of animation.
+				</p>
+				<p class="type-h3">Off the clock I run, climb, pet my dog, and animate a Twitch cat.</p>
 			</div>
-			<div class="about-hero__content">
-				<h1 class="type-h1">About</h1>
-				<div class="about-hero__bio">
-					<p class="type-body">I'm a brand and motion designer in Chicago.</p>
-					<p class="type-body">
-						For the last five years I've been at Stack Overflow, first helping
-						rebuild the brand with Koto, then running it across everything the
-						company ships: product, marketing, events, and a lot of animation.
-					</p>
-					<p class="type-body">Off the clock I run, climb, pet my dog, and animate a Twitch cat.</p>
-				</div>
-				<div class="about-hero__actions">
-					<a href="/jake-rochford-resume.pdf" class="button type-caption">Resume</a>
-					<a
-						href="https://www.linkedin.com/in/jakerochford/"
-						target="_blank"
-						rel="noopener noreferrer"
-						class="button button--secondary type-caption"
-					>
-						LinkedIn
-					</a>
-					<button
-						type="button"
-						class="button button--secondary type-caption email-copy"
-						data-email="jake.rochford@gmail.com"
-					>
-						Email
-						<span class="email-copy__tooltip" role="status" aria-live="polite">Email copied</span>
-					</button>
-				</div>
+			<div class="about__actions">
+				<a href="/jake-rochford-resume.pdf" class="button type-caption">Resume</a>
+				<a
+					href="https://www.linkedin.com/in/jakerochford/"
+					target="_blank"
+					rel="noopener noreferrer"
+					class="button button--secondary type-caption"
+				>
+					LinkedIn
+				</a>
+				<button
+					type="button"
+					class="button button--secondary type-caption email-copy"
+					data-email="jake.rochford@gmail.com"
+				>
+					Email
+					<span class="email-copy__tooltip" role="status" aria-live="polite">Email copied</span>
+				</button>
 			</div>
 		</div>
 	</section>
 </Base>
 
 <style>
-	/* Desktop: no scroll — nav, centered hero, footer fill exactly one
-	   viewport. Scoped to this page's own CSS bundle, so it doesn't
-	   affect the homepage's body/main. */
+	/* Sticky-footer pattern: body becomes the flex column, main grows
+	   to fill whatever space the (short) content doesn't use, which
+	   pins the footer to the bottom of the viewport — without forcing
+	   .about itself to reserve a full viewport and leave a gap between
+	   its own (top-anchored) content and the footer. */
 	:global(body) {
 		display: flex;
 		flex-direction: column;
@@ -64,59 +60,55 @@ import headshot from '../assets/about/headshot.jpg';
 	.about {
 		flex: 1;
 		display: flex;
-		align-items: center;
-	}
-
-	.about-hero__grid {
-		/* Flexbox, not grid: the image has a fixed rendered width, and we
-		   want the gap to sit directly against it — a proportional grid
-		   track (e.g. 1fr) would reserve column space based on the full
-		   container width, leaving dead space between the (smaller)
-		   image and the gap instead of the gap being the only space. */
-		display: flex;
-		gap: var(--space-l);
-		/* Flush top alignment: headshot top lines up with the "About"
-		   heading, rather than centering the two columns on each other. */
 		align-items: flex-start;
-		/* Shrink-wrap to its own content, then center that compact unit
-		   within the container — not stretched edge-to-edge. */
-		width: fit-content;
-		margin-inline: auto;
-		/* Optical centering: nudge above true vertical center. */
-		margin-block-start: calc(var(--space-s) * -1);
 	}
 
-	.about-hero__image {
-		/* Explicit width (not just a cap) so aspect-ratio always has a
-		   definite size to work from, independent of flex sizing.
-		   Circle crop happens here, at the wrapper, rather than relying
-		   on the img to self-constrain. flex-shrink: 0 keeps it at its
-		   own size instead of the flex layout compressing it. */
-		flex-shrink: 0;
-		width: 202px;
-		aspect-ratio: 1 / 1;
-		border-radius: 50%;
-		overflow: hidden;
-	}
-
-	.about-hero__image :global(img) {
-		display: block;
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-	}
-
-	.about-hero__bio {
-		max-width: 60ch;
-		margin-block-start: var(--space-s);
-	}
-
-	.about-hero__bio p + p {
-		margin-block-start: var(--space-s);
-	}
-
-	.about-hero__actions {
+	.about__inner {
 		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		width: 100%;
+		/* Same as Hero: no top padding — the model viewer sits right
+		   above the headline and wants to be close to the nav. */
+		padding-block-start: 0;
+	}
+
+	.about__model-viewer {
+		width: 380px;
+		height: 300px;
+		margin-block-start: 20px;
+		margin-block-end: -70px;
+		position: relative;
+		z-index: 0;
+		touch-action: none;
+	}
+
+	.about__model-viewer :global(canvas) {
+		display: block;
+	}
+
+	.about__headline {
+		position: relative;
+		z-index: 1;
+	}
+
+	.about__bio {
+		/* Wider than Hero's subhead (also 60ch) — this copy is longer
+		   and was wrapping into awkward single-word orphan lines at
+		   the same width. */
+		max-width: 70ch;
+		margin-block-start: var(--space-s);
+	}
+
+	.about__bio p + p {
+		margin-block-start: var(--space-s);
+	}
+
+	.about__actions {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
 		gap: var(--space-xs);
 		margin-block-start: var(--space-m);
 	}
@@ -149,27 +141,204 @@ import headshot from '../assets/about/headshot.jpg';
 			transition: none;
 		}
 	}
-
-	@media (max-width: 768px) {
-		/* body/main stay flex (see above) at every width, so the footer
-		   still sits at the viewport bottom on a short page and flows
-		   normally once content outgrows the viewport. .about keeps its
-		   desktop centering (including the optical bump) — only the
-		   image/content pair switches from side-by-side to stacked. */
-		.about-hero__grid {
-			display: block;
-			width: 100%;
-			margin-inline: 0;
-		}
-
-		.about-hero__image {
-			max-width: 160px;
-			margin-block-end: var(--space-m);
-		}
-	}
 </style>
 
 <script>
+	import * as THREE from 'three';
+	import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+	import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
+	import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+
+	const container = document.querySelector<HTMLDivElement>('#about-model-viewer');
+
+	const MODEL_PATH = '/models/stamp/';
+	// The stamp's raw geometry is nearly flat — [2.25, 0.01, 2.7] — like
+	// a rubber stamp lying face-down, so unlike the other models its
+	// dominant dimensions are X/Z (footprint), not Y (height). Scaled
+	// off that footprint instead.
+	const MODEL_SCALE = 0.55;
+
+	const HOVER_HEIGHT = 0.1;
+	// The stamp is a postage stamp, nearly flat (see MODEL_SCALE's
+	// comment) — the small ~4-7° tilt used elsewhere barely lifts a
+	// flat object off the plane, so it read as lying down instead of
+	// standing. Pitched up steeply on X instead, like a leaned
+	// postcard, with a bit of Z for a natural off-square cant.
+	const BASE_TILT_X = THREE.MathUtils.degToRad(35);
+	const BASE_TILT_Z = THREE.MathUtils.degToRad(8);
+	const WORLD_Y_OFFSET = -0.2;
+
+	if (container) {
+		const width = container.clientWidth;
+		const height = container.clientHeight;
+
+		const distance = 4;
+		const elevationRad = THREE.MathUtils.degToRad(25);
+
+		const scene = new THREE.Scene();
+		const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+		camera.position.set(
+			0,
+			distance * Math.sin(elevationRad),
+			distance * Math.cos(elevationRad),
+		);
+
+		const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+		renderer.setSize(width, height);
+		renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+		renderer.shadowMap.enabled = true;
+		renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+		container.appendChild(renderer.domElement);
+
+		scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+
+		const topLight = new THREE.DirectionalLight(0xffffff, 1.1);
+		topLight.position.set(0.6, 6, 1.4);
+		topLight.target.position.set(0, 0, 0);
+		topLight.castShadow = true;
+		topLight.shadow.mapSize.set(1024, 1024);
+		topLight.shadow.camera.near = 0.1;
+		topLight.shadow.camera.far = 20;
+		topLight.shadow.camera.left = -3;
+		topLight.shadow.camera.right = 3;
+		topLight.shadow.camera.top = 3;
+		topLight.shadow.camera.bottom = -3;
+		topLight.shadow.bias = -0.0015;
+		scene.add(topLight);
+		scene.add(topLight.target);
+
+		const fillLight = new THREE.DirectionalLight(0xffffff, 0.6);
+		fillLight.position.set(-1.4, 2, -1);
+		fillLight.target.position.set(0, 0, 0);
+		scene.add(fillLight);
+		scene.add(fillLight.target);
+
+		const rimLight = new THREE.DirectionalLight(0xffffff, 0.5);
+		rimLight.position.set(0, 1.5, -3);
+		rimLight.target.position.set(0, 0, 0);
+		scene.add(rimLight);
+		scene.add(rimLight.target);
+
+		const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+		const controls = new OrbitControls(camera, renderer.domElement);
+		controls.enableZoom = false;
+		controls.enablePan = false;
+		controls.enableDamping = true;
+		controls.dampingFactor = 0.08;
+		controls.autoRotate = !reduceMotionQuery.matches;
+		controls.autoRotateSpeed = 1.2;
+		controls.minPolarAngle = Math.PI / 2 - elevationRad;
+		controls.maxPolarAngle = Math.PI / 2 - elevationRad;
+		controls.cursorStyle = 'grab';
+
+		const ground = new THREE.Mesh(
+			new THREE.PlaneGeometry(6, 6),
+			new THREE.ShadowMaterial({ opacity: 0.18 }),
+		);
+		ground.rotation.x = -Math.PI / 2;
+		ground.position.y = WORLD_Y_OFFSET;
+		ground.receiveShadow = true;
+		scene.add(ground);
+
+		const mtlLoader = new MTLLoader();
+		mtlLoader.setPath(MODEL_PATH);
+		mtlLoader.load('model.mtl', (materials) => {
+			materials.preload();
+
+			const objLoader = new OBJLoader();
+			objLoader.setMaterials(materials);
+			objLoader.setPath(MODEL_PATH);
+			objLoader.load('model.obj', (obj) => {
+				const box = new THREE.Box3().setFromObject(obj);
+				const center = box.getCenter(new THREE.Vector3());
+				obj.scale.setScalar(MODEL_SCALE);
+				obj.position.x = -center.x * MODEL_SCALE;
+				obj.position.z = -center.z * MODEL_SCALE;
+				obj.position.y = 0;
+				obj.rotation.x = BASE_TILT_X;
+				obj.rotation.z = BASE_TILT_Z;
+				obj.updateMatrixWorld(true);
+				const rotatedBox = new THREE.Box3().setFromObject(obj);
+				obj.position.y = WORLD_Y_OFFSET + HOVER_HEIGHT - rotatedBox.min.y;
+
+				obj.traverse((child) => {
+					if (child instanceof THREE.Mesh) {
+						child.castShadow = true;
+						// The stamp's texture has its perforated edge baked
+						// into the alpha channel, but the .mtl's `d 1` (fully
+						// opaque) means Three.js doesn't enable transparency
+						// by default — the alpha channel gets silently
+						// ignored and the texture renders as a plain
+						// rectangle. alphaTest (a hard cutoff) gives crisp
+						// cutout holes instead of soft/blended edges.
+						const mats = Array.isArray(child.material) ? child.material : [child.material];
+						mats.forEach((mat) => {
+							const anyMat = mat as THREE.MeshPhongMaterial;
+							anyMat.transparent = true;
+							anyMat.alphaTest = 0.5;
+							anyMat.side = THREE.DoubleSide;
+						});
+					}
+				});
+
+				scene.add(obj);
+			});
+		});
+
+		let animationId: number | null = null;
+
+		function renderLoop() {
+			controls.update();
+			renderer.render(scene, camera);
+			animationId = requestAnimationFrame(renderLoop);
+		}
+
+		function startLoop() {
+			if (animationId === null) {
+				animationId = requestAnimationFrame(renderLoop);
+			}
+		}
+
+		function stopLoop() {
+			if (animationId !== null) {
+				cancelAnimationFrame(animationId);
+				animationId = null;
+			}
+		}
+
+		let isIntersecting = false;
+
+		const observer = new IntersectionObserver(
+			([entry]) => {
+				isIntersecting = entry.isIntersecting;
+				if (isIntersecting && document.visibilityState === 'visible') {
+					startLoop();
+				} else {
+					stopLoop();
+				}
+			},
+			{ threshold: 0.01 },
+		);
+		observer.observe(container);
+
+		document.addEventListener('visibilitychange', () => {
+			if (document.visibilityState === 'visible' && isIntersecting) {
+				startLoop();
+			} else {
+				stopLoop();
+			}
+		});
+
+		window.addEventListener('resize', () => {
+			const w = container.clientWidth;
+			const h = container.clientHeight;
+			camera.aspect = w / h;
+			camera.updateProjectionMatrix();
+			renderer.setSize(w, h);
+		});
+	}
+
 	const emailButton = document.querySelector<HTMLButtonElement>('.email-copy');
 	const tooltip = emailButton?.querySelector<HTMLElement>('.email-copy__tooltip');
 	const email = emailButton?.dataset.email;

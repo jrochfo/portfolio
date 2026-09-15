@@ -1,0 +1,473 @@
+---
+// DEV-ONLY. Rendered conditionally by Base.astro
+// ({import.meta.env.DEV && <ColorExploration />}), so the whole
+// component — markup, styles, and script — is dead-code-eliminated
+// from production builds, not just hidden.
+//
+// Four independent controls drive the entire OKLCH-formula token
+// system defined in global.css (Temperature/Compression/Ink control
+// the neutral ramp; Accent is resolved directly here). Nothing this
+// panel does is "final" — it's a tool for landing on a favorite
+// combination, then handing the resolved token values off to be
+// committed as literal values in global.css.
+---
+
+<div id="color-exploration" class="color-exploration">
+	<p class="color-exploration__label">Color exploration</p>
+
+	<div class="color-exploration__group">
+		<div class="color-exploration__group-title">Temperature</div>
+		<label class="color-exploration__field">
+			<span>Hue <output id="ce-hue-value"></output></span>
+			<input type="range" id="ce-hue" min="0" max="280" step="1" />
+		</label>
+		<label class="color-exploration__field">
+			<span>Tint strength <output id="ce-chroma-value"></output></span>
+			<input type="range" id="ce-chroma" min="0" max="0.04" step="0.001" />
+		</label>
+		<p class="color-exploration__hint" id="ce-hue-label"></p>
+	</div>
+
+	<div class="color-exploration__group">
+		<div class="color-exploration__group-title">Compression</div>
+		<label class="color-exploration__field">
+			<span>Field → surface <output id="ce-compression-value"></output></span>
+			<input type="range" id="ce-compression" min="0" max="1" step="0.01" />
+		</label>
+	</div>
+
+	<div class="color-exploration__group">
+		<div class="color-exploration__group-title">Ink</div>
+		<div class="color-exploration__toggle" role="radiogroup" aria-label="Ink">
+			<button type="button" data-ink="pure-black">Pure black</button>
+			<button type="button" data-ink="warm-10">Warm 10%</button>
+			<button type="button" data-ink="warm-15">Warm 15%</button>
+			<button type="button" data-ink="warm-20">Warm 20%</button>
+		</div>
+	</div>
+
+	<div class="color-exploration__group">
+		<div class="color-exploration__group-title">Accent</div>
+		<div class="color-exploration__toggle color-exploration__toggle--accent" role="radiogroup" aria-label="Accent">
+			<button type="button" data-accent="none">None</button>
+			<button type="button" data-accent="ochre"
+				><span class="color-exploration__swatch" style="background: oklch(0.62 0.12 80);"></span>Ochre</button
+			>
+			<button type="button" data-accent="rust"
+				><span class="color-exploration__swatch" style="background: oklch(0.55 0.14 40);"></span>Rust</button
+			>
+			<button type="button" data-accent="moss"
+				><span class="color-exploration__swatch" style="background: oklch(0.5 0.09 145);"></span>Moss</button
+			>
+		</div>
+	</div>
+
+	<div class="color-exploration__group">
+		<div class="color-exploration__group-title">Tokens (click to copy)</div>
+		<ul class="color-exploration__tokens" id="ce-tokens"></ul>
+		<p class="color-exploration__copied" id="ce-copied" aria-live="polite"></p>
+	</div>
+</div>
+
+<style>
+	.color-exploration {
+		position: fixed;
+		left: 12px;
+		bottom: 12px;
+		z-index: 9999;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		padding: 12px;
+		width: 260px;
+		max-height: calc(100vh - 24px);
+		overflow-y: auto;
+		border-radius: 10px;
+		background: #fff;
+		border: 1px solid #d8d7d2;
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+		font-family: system-ui, -apple-system, sans-serif;
+		font-size: 12px;
+		color: #111;
+	}
+
+	.color-exploration__label {
+		margin: 0;
+		font-size: 10px;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: #767570;
+	}
+
+	.color-exploration__group {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		padding-block-start: 8px;
+		border-top: 1px solid #eeece7;
+	}
+
+	.color-exploration__group:first-of-type {
+		padding-block-start: 0;
+		border-top: none;
+	}
+
+	.color-exploration__group-title {
+		font-size: 10px;
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: #767570;
+	}
+
+	.color-exploration__field {
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
+	}
+
+	.color-exploration__field span {
+		display: flex;
+		justify-content: space-between;
+		font-size: 11px;
+		color: #444;
+	}
+
+	.color-exploration__field output {
+		font-variant-numeric: tabular-nums;
+		color: #767570;
+	}
+
+	.color-exploration input[type='range'] {
+		width: 100%;
+	}
+
+	.color-exploration__hint {
+		margin: 0;
+		font-size: 10px;
+		color: #9b9a95;
+		font-style: italic;
+	}
+
+	.color-exploration__toggle {
+		display: flex;
+		flex-wrap: wrap;
+		border-radius: 6px;
+		border: 1px solid #d8d7d2;
+		overflow: hidden;
+	}
+
+	.color-exploration__toggle button {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 5px;
+		font: inherit;
+		font-size: 11px;
+		padding: 6px 4px;
+		background: #fff;
+		color: #111;
+		cursor: pointer;
+		white-space: nowrap;
+	}
+
+	.color-exploration__toggle button + button {
+		border-left: 1px solid #d8d7d2;
+	}
+
+	.color-exploration__toggle button[aria-pressed='true'] {
+		background: #111;
+		color: #fff;
+	}
+
+	.color-exploration__swatch {
+		display: block;
+		width: 9px;
+		height: 9px;
+		border-radius: 50%;
+		flex-shrink: 0;
+	}
+
+	.color-exploration__tokens {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	/* :global() on the dynamic parts below — the li/button/span rows
+	   are created client-side (document.createElement/innerHTML in the
+	   script), so Astro's scoped-CSS attribute (added only to elements
+	   present in this file's own template — just the outer <ul> here)
+	   never lands on them; an unscoped selector is the only way these
+	   rules actually match. */
+	.color-exploration__tokens :global(li button) {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		width: 100%;
+		font: inherit;
+		font-size: 10.5px;
+		font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+		padding: 3px 4px;
+		border-radius: 4px;
+		background: none;
+		border: none;
+		color: #333;
+		cursor: pointer;
+		text-align: left;
+	}
+
+	.color-exploration__tokens :global(li button:hover) {
+		background: #f2f1ec;
+	}
+
+	.color-exploration__tokens :global(.ce-swatch) {
+		display: block;
+		width: 12px;
+		height: 12px;
+		border-radius: 3px;
+		border: 1px solid rgba(0, 0, 0, 0.12);
+		flex-shrink: 0;
+	}
+
+	.color-exploration__tokens :global(.ce-name) {
+		color: #767570;
+	}
+
+	.color-exploration__tokens :global(.ce-hex) {
+		margin-left: auto;
+	}
+
+	.color-exploration__copied {
+		margin: 0;
+		min-height: 12px;
+		font-size: 10px;
+		color: #767570;
+	}
+</style>
+
+<script>
+	type InkKey = 'pure-black' | 'warm-10' | 'warm-15' | 'warm-20';
+	type AccentKey = 'none' | 'ochre' | 'rust' | 'moss';
+
+	const INK_CONFIG: Record<InkKey, { lightness: number; chromaMix: number }> = {
+		'pure-black': { lightness: 0.04, chromaMix: 0 },
+		'warm-10': { lightness: 0.1, chromaMix: 1 },
+		'warm-15': { lightness: 0.15, chromaMix: 1 },
+		'warm-20': { lightness: 0.2, chromaMix: 1 },
+	};
+
+	// Fixed accent hues — deliberately NOT tied to --neutral-hue. These
+	// are real color decisions (ochre/rust/a wildcard), not neutrals.
+	const ACCENT_CONFIG: Record<Exclude<AccentKey, 'none'>, string> = {
+		ochre: 'oklch(0.62 0.12 80)',
+		rust: 'oklch(0.55 0.14 40)',
+		moss: 'oklch(0.5 0.09 145)',
+	};
+
+	const TOKENS: { label: string; varName: string }[] = [
+		{ label: 'Page field', varName: '--color-bg' },
+		{ label: 'Panel/band', varName: '--color-panel' },
+		{ label: 'Neutral well', varName: '--color-neutral' },
+		{ label: 'Line', varName: '--color-line' },
+		{ label: 'Ink', varName: '--color-ink' },
+		{ label: 'Ink muted', varName: '--color-ink-muted' },
+		{ label: 'Accent', varName: '--color-accent' },
+	];
+
+	const STORAGE_KEYS = {
+		hue: 'jr-color-hue',
+		chroma: 'jr-color-chroma',
+		compression: 'jr-color-compression',
+		ink: 'jr-color-ink',
+		accent: 'jr-color-accent',
+	};
+
+	const DEFAULTS = {
+		hue: 55,
+		chroma: 0.012,
+		compression: 0.35,
+		ink: 'warm-15' as InkKey,
+		accent: 'none' as AccentKey,
+	};
+
+	const root = document.documentElement;
+
+	const hueInput = document.querySelector<HTMLInputElement>('#ce-hue');
+	const chromaInput = document.querySelector<HTMLInputElement>('#ce-chroma');
+	const compressionInput = document.querySelector<HTMLInputElement>('#ce-compression');
+	const hueValueOut = document.querySelector<HTMLOutputElement>('#ce-hue-value');
+	const chromaValueOut = document.querySelector<HTMLOutputElement>('#ce-chroma-value');
+	const compressionValueOut = document.querySelector<HTMLOutputElement>('#ce-compression-value');
+	const hueLabelEl = document.querySelector<HTMLParagraphElement>('#ce-hue-label');
+	const inkButtons = document.querySelectorAll<HTMLButtonElement>('[data-ink]');
+	const accentButtons = document.querySelectorAll<HTMLButtonElement>('[data-accent]');
+	const tokensList = document.querySelector<HTMLUListElement>('#ce-tokens');
+	const copiedEl = document.querySelector<HTMLParagraphElement>('#ce-copied');
+
+	function hueLabel(hue: number, chroma: number): string {
+		if (chroma < 0.003) return 'Neutral';
+		if (hue >= 200 && hue <= 260) return 'Cool blue-gray';
+		if (hue >= 45 && hue < 75) return 'Warm paper';
+		if (hue >= 20 && hue < 45) return 'Warm gray';
+		return 'Custom';
+	}
+
+	function applyTemperature(hue: number, chroma: number) {
+		root.style.setProperty('--neutral-hue', String(hue));
+		root.style.setProperty('--neutral-chroma', String(chroma));
+		if (hueValueOut) hueValueOut.textContent = `${hue}°`;
+		if (chromaValueOut) chromaValueOut.textContent = chroma.toFixed(3);
+		if (hueLabelEl) hueLabelEl.textContent = hueLabel(hue, chroma);
+	}
+
+	function applyCompression(value: number) {
+		root.style.setProperty('--compression', String(value));
+		if (compressionValueOut) compressionValueOut.textContent = value.toFixed(2);
+	}
+
+	function applyInk(key: InkKey) {
+		const config = INK_CONFIG[key];
+		root.style.setProperty('--ink-lightness', String(config.lightness));
+		root.style.setProperty('--ink-chroma-mix', String(config.chromaMix));
+		inkButtons.forEach((btn) => {
+			btn.setAttribute('aria-pressed', String(btn.dataset.ink === key));
+		});
+		// --color-accent is kept as a literal `var(--color-ink)` reference
+		// (not a resolved value) whenever Accent is "None", so it tracks
+		// ink changes automatically — no need to re-apply it here.
+	}
+
+	function applyAccent(key: AccentKey) {
+		root.style.setProperty('--color-accent', key === 'none' ? 'var(--color-ink)' : ACCENT_CONFIG[key]);
+		accentButtons.forEach((btn) => {
+			btn.setAttribute('aria-pressed', String(btn.dataset.accent === key));
+		});
+	}
+
+	// --- Token readout -----------------------------------------------
+	// Reuses the browser's own cascade as the source of truth (rather
+	// than re-implementing the OKLCH formulas in JS): a hidden probe
+	// element gets `color: var(--token)`, which resolves var()/calc()
+	// against the live cascade. getComputedStyle's *serialization* of
+	// that, though, is another oklch() string (Chrome keeps color
+	// functions in their original space rather than converting to
+	// rgb()) — so the actual sRGB byte values come from rasterizing it
+	// on a 1x1 canvas and reading the pixel back.
+	const probe = document.createElement('div');
+	probe.style.position = 'absolute';
+	probe.style.width = '0';
+	probe.style.height = '0';
+	probe.style.overflow = 'hidden';
+	probe.style.pointerEvents = 'none';
+	document.body.appendChild(probe);
+
+	const swatchCanvas = document.createElement('canvas');
+	swatchCanvas.width = 1;
+	swatchCanvas.height = 1;
+	const swatchCtx = swatchCanvas.getContext('2d', { willReadFrequently: true });
+
+	function resolveHex(varName: string): string {
+		probe.style.color = `var(${varName})`;
+		const computed = getComputedStyle(probe).color;
+		if (!swatchCtx) return '#000000';
+		swatchCtx.fillStyle = computed;
+		swatchCtx.fillRect(0, 0, 1, 1);
+		const [r, g, b] = swatchCtx.getImageData(0, 0, 1, 1).data;
+		return `#${[r, g, b].map((n) => n.toString(16).padStart(2, '0')).join('')}`;
+	}
+
+	function renderTokens() {
+		if (!tokensList) return;
+		tokensList.innerHTML = '';
+		TOKENS.forEach(({ label, varName }) => {
+			const hex = resolveHex(varName);
+			const li = document.createElement('li');
+			const btn = document.createElement('button');
+			btn.type = 'button';
+			btn.innerHTML = `<span class="ce-swatch" style="background:${hex}"></span><span class="ce-name">${varName}</span><span class="ce-hex">${hex}</span>`;
+			btn.addEventListener('click', async () => {
+				const text = `${varName}: ${hex};`;
+				try {
+					await navigator.clipboard.writeText(text);
+					if (copiedEl) copiedEl.textContent = `Copied ${varName}`;
+				} catch {
+					if (copiedEl) copiedEl.textContent = text;
+				}
+				window.setTimeout(() => {
+					if (copiedEl) copiedEl.textContent = '';
+				}, 1750);
+			});
+			li.appendChild(btn);
+			tokensList.appendChild(li);
+		});
+	}
+
+	function refresh() {
+		renderTokens();
+	}
+
+	// --- Restore from localStorage ------------------------------------
+	const savedHue = Number(localStorage.getItem(STORAGE_KEYS.hue) ?? DEFAULTS.hue);
+	const savedChroma = Number(localStorage.getItem(STORAGE_KEYS.chroma) ?? DEFAULTS.chroma);
+	const savedCompression = Number(localStorage.getItem(STORAGE_KEYS.compression) ?? DEFAULTS.compression);
+	const savedInk = (localStorage.getItem(STORAGE_KEYS.ink) as InkKey | null) ?? DEFAULTS.ink;
+	const savedAccent = (localStorage.getItem(STORAGE_KEYS.accent) as AccentKey | null) ?? DEFAULTS.accent;
+
+	if (hueInput) hueInput.value = String(savedHue);
+	if (chromaInput) chromaInput.value = String(savedChroma);
+	if (compressionInput) compressionInput.value = String(savedCompression);
+
+	applyTemperature(savedHue, savedChroma);
+	applyCompression(savedCompression);
+	applyInk(savedInk);
+	applyAccent(savedAccent);
+	refresh();
+
+	// --- Listeners ------------------------------------------------------
+	hueInput?.addEventListener('input', () => {
+		const hue = Number(hueInput.value);
+		const chroma = Number(chromaInput?.value ?? DEFAULTS.chroma);
+		applyTemperature(hue, chroma);
+		localStorage.setItem(STORAGE_KEYS.hue, String(hue));
+		refresh();
+	});
+
+	chromaInput?.addEventListener('input', () => {
+		const hue = Number(hueInput?.value ?? DEFAULTS.hue);
+		const chroma = Number(chromaInput.value);
+		applyTemperature(hue, chroma);
+		localStorage.setItem(STORAGE_KEYS.chroma, String(chroma));
+		refresh();
+	});
+
+	compressionInput?.addEventListener('input', () => {
+		const value = Number(compressionInput.value);
+		applyCompression(value);
+		localStorage.setItem(STORAGE_KEYS.compression, String(value));
+		refresh();
+	});
+
+	inkButtons.forEach((btn) => {
+		btn.addEventListener('click', () => {
+			const key = (btn.dataset.ink as InkKey) ?? DEFAULTS.ink;
+			applyInk(key);
+			localStorage.setItem(STORAGE_KEYS.ink, key);
+			refresh();
+		});
+	});
+
+	accentButtons.forEach((btn) => {
+		btn.addEventListener('click', () => {
+			const key = (btn.dataset.accent as AccentKey) ?? DEFAULTS.accent;
+			applyAccent(key);
+			localStorage.setItem(STORAGE_KEYS.accent, key);
+			refresh();
+		});
+	});
+</script>

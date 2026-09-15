@@ -56,14 +56,33 @@ complete, tokens defined); build phase is transcribing that spec.
   Component-internal image gaps use --space-xs (12px), which is
   deliberately distinct from the 24px layout gutter: packed image
   rows and montages use xs, layout-level column gaps use 24px.
-- Type: Inter (placeholder), 6 levels, sizes vary by breakpoint,
-  weights/line-heights constant.
-- Color: tokenized (--color-* in global.css), but still wireframe-
-  fidelity grayscale values — this is the token *layer*, not the
-  final palette. Roles that are only coincidentally the same value
-  today (e.g. a card panel and a full-bleed section band) still get
-  separate tokens, so the real palette can tell them apart later
-  without a find-and-replace.
+- Type: locked. Fraunces (self-hosted variable, opsz/wght/SOFT/WONK
+  axes) for Display and h1; Schibsted Grotesk (self-hosted variable,
+  wght) for h2, h3, body, and caption — split as --font-display and
+  --font-text in global.css. 6 levels, sizes vary by breakpoint,
+  weights/line-heights constant. A dev-only audition panel
+  (src/components/FontAudition.astro) is still in the codebase,
+  disabled via FONT_AUDITION_ENABLED in Base.astro, for testing future
+  type changes the same way.
+- Color: mid-exploration. The neutral ramp (--color-bg/panel/band/
+  neutral/line/ink/ink-muted) is formula-driven from five control
+  variables (--neutral-hue, --neutral-chroma, --compression,
+  --ink-lightness, --ink-chroma-mix) in OKLCH, so a small set of
+  values determines the whole system — see the Color section of
+  global.css for the formulas. A dev-only panel
+  (src/components/ColorExploration.astro, enabled via
+  COLOR_EXPLORATION_ENABLED in Base.astro) exposes four live controls
+  — Temperature, Compression, Ink, Accent — for auditioning palettes;
+  land on a favorite there, then commit its values as the literal
+  defaults and turn the panel off. --color-accent is the one slot with
+  a real color choice pending (candidates: Ochre/Rust/Moss, or "None");
+  it currently drives the nav-pill active tab, WhatIDo card icons,
+  focus rings, ::selection, link-hover underlines, and button hover
+  states. Nothing here is final — it's still the token *layer*, tuned
+  further once real content (video, images) is in place. Roles that
+  are only coincidentally the same value today (e.g. a card panel and
+  a full-bleed section band) still get separate tokens, so the real
+  palette can tell them apart later without a find-and-replace.
 - Tooltips / transient overlays (e.g. the About page's "Email copied"):
   caption type, --radius-well, solid dark fill (no translucency),
   fade in/out only. No animation under `prefers-reduced-motion: reduce`

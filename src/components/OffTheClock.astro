@@ -113,7 +113,7 @@ const items: Item[] = [
 			aspect-ratio: 4 / 3;
 			border-radius: var(--radius-well);
 			background: var(--color-neutral);
-			box-shadow: 0 4px 5px rgba(var(--color-ink-rgb), 0.08);
+			box-shadow: 0 4px 5px oklch(from var(--color-ink) l c h / 0.08);
 			display: flex;
 			align-items: center;
 			justify-content: center;
@@ -145,7 +145,7 @@ const items: Item[] = [
 		   of the stack. */
 		.otc-item:hover .otc-well {
 			transform: translateY(-14px) scale(1.05);
-			box-shadow: 0 20px 32px rgba(var(--color-ink-rgb), 0.18);
+			box-shadow: 0 20px 32px oklch(from var(--color-ink) l c h / 0.18);
 		}
 
 		.otc-item:hover .otc-caption {
@@ -186,7 +186,7 @@ const items: Item[] = [
 			/* No hover on touch — the well never lifts/dims on its own. */
 			.otc-item:hover .otc-well {
 				transform: none;
-				box-shadow: 0 4px 5px rgba(var(--color-ink-rgb), 0.08);
+				box-shadow: 0 4px 5px oklch(from var(--color-ink) l c h / 0.08);
 			}
 
 			.otc-stack:has(.otc-item:hover) .otc-item:not(:hover) .otc-well {

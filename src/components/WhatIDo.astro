@@ -1,19 +1,26 @@
 ---
+import iconMotion from '../assets/icons/Icon_motion.svg';
+import iconSystems from '../assets/icons/Icon_systems.svg';
+import iconStrategy from '../assets/icons/Icon_strategy.svg';
+
 const sections = [
 	{
 		title: 'Motion',
 		claim: 'Everything I make moves.',
 		caption: 'Freed.ai — animated ads and spot illustration',
+		icon: iconMotion,
 	},
 	{
 		title: 'Systems',
 		claim: 'One system, everywhere the brand lives.',
 		caption: 'Tulip — brand refresh, guidelines, and internal tooling',
+		icon: iconSystems,
 	},
 	{
 		title: 'Strategy',
 		claim: 'Strategy, from the first workshop on.',
 		caption: 'Stack Overflow — the rebrand, below ↓',
+		icon: iconStrategy,
 	},
 ];
 ---
@@ -27,7 +34,7 @@ const sections = [
 		{sections.map((section, i) => (
 			<article class="card" data-card-index={i}>
 				<div class="card__title-row">
-					<span class="card__icon" aria-hidden="true"></span>
+					<span class="card__icon" style={`--icon-src: url(${section.icon.src})`} aria-hidden="true"></span>
 					<h3 class="type-h3">{section.title}</h3>
 				</div>
 				<p class="type-body card__claim">{section.claim}</p>
@@ -116,9 +123,17 @@ const sections = [
 	.card__icon {
 		display: block;
 		flex-shrink: 0;
-		width: calc(var(--type-h3-size) * var(--type-h3-line-height));
-		height: calc(var(--type-h3-size) * var(--type-h3-line-height));
-		background: var(--color-surface);
+		width: 24px;
+		height: 24px;
+		background-color: var(--color-accent);
+		-webkit-mask-image: var(--icon-src);
+		mask-image: var(--icon-src);
+		-webkit-mask-repeat: no-repeat;
+		mask-repeat: no-repeat;
+		-webkit-mask-position: center;
+		mask-position: center;
+		-webkit-mask-size: contain;
+		mask-size: contain;
 	}
 
 	.card__claim {
@@ -174,6 +189,8 @@ const sections = [
 
 	.nav-pill__tab[aria-current='true'] {
 		opacity: 1;
+		color: var(--color-accent);
+		font-weight: 600;
 	}
 
 	.nav-pill__dot {

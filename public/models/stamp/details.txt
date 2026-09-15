@@ -1,0 +1,5 @@
+Name: Stamp
+ID: 878
+Category: Post
+Variant: Standard
+Description: Stick these on letters. Some are very rare and expensive, so check before you lick!
