@@ -1,58 +1,108 @@
 ---
+import { getImage } from 'astro:assets';
+
+import pottery1 from '../assets/work/off-the-clock/pottery/pottery-1.jpg';
+import pottery2 from '../assets/work/off-the-clock/pottery/pottery-2.jpg';
+import pottery3 from '../assets/work/off-the-clock/pottery/pottery-3.jpg';
+
+import thesis1 from '../assets/work/off-the-clock/thesis/thesis-1.jpg';
+import thesis2 from '../assets/work/off-the-clock/thesis/thesis-2.jpg';
+import thesis3 from '../assets/work/off-the-clock/thesis/thesis-3.jpg';
+import thesis4 from '../assets/work/off-the-clock/thesis/thesis-4.jpg';
+import thesis5 from '../assets/work/off-the-clock/thesis/thesis-5.jpg';
+
+import ae1 from '../assets/work/off-the-clock/type/ae-1.png';
+import ae2 from '../assets/work/off-the-clock/type/ae-2.png';
+import ae3 from '../assets/work/off-the-clock/type/ae-3.png';
+import qoph1 from '../assets/work/off-the-clock/type/qoph-1.png';
+import qoph2 from '../assets/work/off-the-clock/type/qoph-2.png';
+import qoph3 from '../assets/work/off-the-clock/type/qoph-3.png';
+
+import raycatPoster from '../assets/work/off-the-clock/raycat/posters/raycat-poster.jpg';
+import charcoalPoster from '../assets/work/off-the-clock/charcoal-Ink/posters/charcoal-ink-poster.jpg';
+
+interface VideoMedia {
+	type: 'video';
+	mp4: string;
+	webm: string;
+	poster: string;
+}
+
+interface ImageSequenceMedia {
+	type: 'images';
+	frames: string[];
+	width: number;
+	height: number;
+}
+
+type Media = VideoMedia | ImageSequenceMedia;
+
+// Single format (webp — near-universal support at this point, same
+// reasoning as Also Shipped's fallback tier) rather than the full
+// avif/webp/fallback triad used there: this is a lightweight hover
+// flip through a few frames, not primary content worth a lightbox, so
+// one well-compressed format per frame is a reasonable simplification.
+async function imageSequence(images: ImageMetadata[]): Promise<ImageSequenceMedia> {
+	const resolved = await Promise.all(images.map((image) => getImage({ src: image, format: 'webp' })));
+	return { type: 'images', frames: resolved.map((r) => r.src), width: images[0].width, height: images[0].height };
+}
+
+async function video(name: string, poster: ImageMetadata): Promise<VideoMedia> {
+	const resolvedPoster = await getImage({ src: poster, format: 'webp' });
+	return { type: 'video', mp4: `/video/off-the-clock/${name}.mp4`, webm: `/video/off-the-clock/${name}.webm`, poster: resolvedPoster.src };
+}
+
 // Clockwise from top-right — also the mobile swipe order and the
 // desktop z-index resting order (lowest to highest).
 interface Item {
 	id: string;
-	// Dev-only placeholder label rendered inside the well itself,
-	// standing in for the real static-image/looping-video swap until
-	// real media exists — matches the mockup's own placeholder text.
-	placeholder: string;
 	caption: string;
 	x: number; // desktop center position, % of .otc-stack
 	y: number;
 	rot: number; // degrees
+	media: Media;
 }
 
 const items: Item[] = [
 	{
-		id: 'noggen',
-		placeholder: '(Noggen sizzle video)',
-		caption: 'Noggen, a display typeface in progress',
-		x: 58,
-		y: 19,
-		rot: -5,
+		id: 'type',
+		caption: 'Æ, a display face, and Qoph, a serif',
+		x: 21,
+		y: 65,
+		rot: -7,
+		media: await imageSequence([ae1, ae2, ae3, qoph1, qoph2, qoph3]),
 	},
 	{
 		id: 'charcoal',
-		placeholder: '(Charcoal drawings sizzle video)',
 		caption: 'Charcoal & Ink drawings',
 		x: 75,
 		y: 49,
 		rot: -6,
+		media: await video('charcoal-ink', charcoalPoster),
 	},
 	{
 		id: 'pottery',
-		placeholder: '(Pottery sizzle video)',
 		caption: 'Recent pottery',
 		x: 55,
 		y: 83,
 		rot: -4,
+		media: await imageSequence([pottery1, pottery2, pottery3]),
 	},
 	{
 		id: 'thesis',
-		placeholder: '(Thesis sizzle video)',
 		caption: 'Senior Thesis exhibition catalogue and branding',
-		x: 21,
-		y: 65,
-		rot: -7,
+		x: 58,
+		y: 19,
+		rot: -5,
+		media: await imageSequence([thesis1, thesis2, thesis3, thesis4, thesis5]),
 	},
 	{
 		id: 'raycat',
-		placeholder: '(Raycat sizzle video)',
 		caption: 'Branding and vtuber design for a Twitch streamer',
 		x: 24,
 		y: 30,
 		rot: 5,
+		media: await video('raycat', raycatPoster),
 	},
 ];
 ---
@@ -72,9 +122,49 @@ const items: Item[] = [
 					style={`--x:${item.x}%; --y:${item.y}%; --rot:${item.rot}deg; --z:${i + 1};`}
 				>
 					<div class="otc-well">
-						<span class="type-caption otc-well__placeholder" aria-hidden="true">
-							{item.placeholder}
-						</span>
+						{item.media.type === 'video' ? (
+							<video
+								class="otc-media"
+								muted
+								loop
+								playsinline
+								preload="none"
+								data-poster={item.media.poster}
+								data-mp4={item.media.mp4}
+								data-webm={item.media.webm}
+							/>
+						) : (
+							<div class="otc-media otc-sequence">
+								<div class="otc-sequence__track">
+									{item.media.frames.map((frame, frameIndex) => (
+										<img
+											class="otc-sequence__frame"
+											data-src={frame}
+											data-frame-index={frameIndex}
+											alt=""
+											width={item.media.width}
+											height={item.media.height}
+										/>
+									))}
+									{/* A trailing clone of frame 0 — sliding onto it at
+									   the end of the cycle looks identical to actually
+									   reaching frame 0, so the loop-back can be an
+									   invisible instant snap rather than a jump backward
+									   through every frame. Rendered here in the template,
+									   not cloned at runtime, so it needs none of the
+									   scoped-CSS workarounds the carousel's own runtime
+									   phantom clones do. */}
+									<img
+										class="otc-sequence__frame"
+										data-src={item.media.frames[0]}
+										aria-hidden="true"
+										alt=""
+										width={item.media.width}
+										height={item.media.height}
+									/>
+								</div>
+							</div>
+						)}
 					</div>
 					<p class="type-body otc-caption">{item.caption}</p>
 				</div>
@@ -110,15 +200,12 @@ const items: Item[] = [
 		}
 
 		.otc-well {
+			position: relative;
 			aspect-ratio: 4 / 3;
 			border-radius: var(--radius-well);
 			background: var(--color-neutral);
 			box-shadow: 0 4px 5px oklch(from var(--color-ink) l c h / 0.08);
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			padding-inline: var(--space-s);
-			text-align: center;
+			overflow: hidden;
 			transition:
 				transform 0.25s ease,
 				box-shadow 0.25s ease,
@@ -126,13 +213,76 @@ const items: Item[] = [
 				filter 0.25s ease;
 		}
 
-		.otc-well__placeholder {
-			opacity: 0.55;
+		.otc-media {
+			position: absolute;
+			inset: 0;
+			display: block;
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			/* Browsers make img/video natively draggable by default,
+			   which fights the mobile toss gesture's own pointer capture
+			   — same fix already applied to Also Shipped's carousel
+			   media. */
+			-webkit-user-drag: none;
+			user-select: none;
+		}
+
+		.otc-sequence {
+			overflow: hidden;
+		}
+
+		.otc-sequence__track {
+			display: flex;
+			width: 100%;
+			height: 100%;
+			/* transform (and its transition) are driven entirely by JS —
+			   see wireImageSequenceWell — since the hold/slide timing is
+			   automatic rather than tied to any CSS-only trigger. */
+		}
+
+		.otc-sequence__frame {
+			flex: 0 0 100%;
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			display: block;
+			-webkit-user-drag: none;
+			user-select: none;
+		}
+
+		/* Centers the caption chip below (text-align on an inline-block
+		   child doesn't center the child itself) without affecting
+		   .otc-well, which doesn't care about its ancestor's text-align. */
+		.otc-item {
+			text-align: center;
 		}
 
 		.otc-caption {
+			/* Without this, the caption loses the paint-order fight to
+			   .otc-well on hover: a `transform` (even with position:
+			   static) promotes an element into the "positioned" paint
+			   category, which always paints above plain in-flow content
+			   regardless of DOM order — so once the well transforms on
+			   hover, it jumped above the caption after it despite coming
+			   first. Giving the caption the same promotion puts them
+			   back on equal footing, where DOM order (caption after
+			   well) correctly wins. */
+			position: relative;
+			display: inline-block;
 			margin-block-start: var(--space-s);
+			padding: var(--space-2xs) var(--space-s);
+			border-radius: var(--radius-well);
+			/* An opaque chip, not a stroke/shadow on bare text — these
+			   wells scatter and overlap, so a caption can land over a
+			   neighboring well's own busy photo content behind it. A
+			   solid surface reads reliably regardless of what's under
+			   it; a stroke only helps against some of the colors a photo
+			   can actually contain. */
+			background: var(--color-bg);
+			box-shadow: 0 4px 12px oklch(from var(--color-ink) l c h / 0.12);
 			text-align: center;
+			white-space: nowrap;
 			opacity: 0;
 			transition: opacity 0.2s ease;
 		}
@@ -220,6 +370,8 @@ const items: Item[] = [
 	</style>
 
 	<script>
+		import { wireImageLazyLoad } from '../scripts/lazyMedia';
+
 		const stack = document.querySelector<HTMLElement>('.otc-stack');
 		const items = stack ? [...stack.querySelectorAll<HTMLElement>('.otc-item')] : [];
 		const mobileCaption = document.querySelector<HTMLElement>('.otc-caption-mobile');
@@ -227,15 +379,148 @@ const items: Item[] = [
 			(item) => item.querySelector<HTMLElement>('.otc-caption')?.textContent ?? '',
 		);
 
+		const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+		const mobileQuery = window.matchMedia('(max-width: 768px)');
+
+		// --- Per-well media: video hover-plays (desktop) or plays
+		// whenever it's the front card (mobile, no hover to trigger it);
+		// an image sequence "scrubs" the same way — a flat, instant swap
+		// between pre-loaded frames every 2s, no crossfade. Both reset to
+		// their resting frame (poster / first image) when they stop, and
+		// neither ever autoplays under reduced motion.
+		interface MediaController {
+			play(): void;
+			stop(): void;
+		}
+
+		function wireVideoWell(video: HTMLVideoElement): MediaController {
+			function ensureLoaded() {
+				if (video.dataset.loaded) return;
+				const webm = video.dataset.webm;
+				const mp4 = video.dataset.mp4;
+				if (webm) {
+					const source = document.createElement('source');
+					source.src = webm;
+					source.type = 'video/webm';
+					video.appendChild(source);
+				}
+				if (mp4) {
+					const source = document.createElement('source');
+					source.src = mp4;
+					source.type = 'video/mp4';
+					video.appendChild(source);
+				}
+				video.load();
+				video.dataset.loaded = 'true';
+			}
+
+			return {
+				play() {
+					if (reduceMotionQuery.matches) return;
+					ensureLoaded();
+					video.play().catch(() => {});
+				},
+				stop() {
+					video.pause();
+					video.currentTime = 0;
+				},
+			};
+		}
+
+		// Eased slide-left, not a flat cut: hold 1.8s, then a 1s eased
+		// transform to the next frame, repeating. The track includes one
+		// extra trailing frame — a clone of frame 0 (rendered directly in
+		// the template) — so sliding onto "one past the last real frame"
+		// looks identical to reaching frame 0 again; a `generation`
+		// counter lets any timer that was scheduled before a stop()/play()
+		// recognize it's stale and bail out, rather than tracking and
+		// cancelling two separately-timed setTimeouts by hand.
+		function wireImageSequenceWell(sequenceEl: HTMLElement): MediaController {
+			const track = sequenceEl.querySelector<HTMLElement>('.otc-sequence__track');
+			const frameCount = sequenceEl.querySelectorAll('.otc-sequence__frame').length;
+			const realFrameCount = frameCount - 1; // excludes the trailing clone
+
+			const HOLD_MS = 1800;
+			const SLIDE_MS = 1000;
+
+			let index = 0;
+			let generation = 0;
+			let outerTimer: ReturnType<typeof setTimeout> | null = null;
+			let innerTimer: ReturnType<typeof setTimeout> | null = null;
+
+			function goToInstant(i: number) {
+				if (!track) return;
+				track.style.transition = 'none';
+				track.style.transform = `translateX(-${i * 100}%)`;
+				track.getBoundingClientRect(); // force reflow before any later transitioned change
+			}
+
+			function clearTimers() {
+				if (outerTimer !== null) {
+					clearTimeout(outerTimer);
+					outerTimer = null;
+				}
+				if (innerTimer !== null) {
+					clearTimeout(innerTimer);
+					innerTimer = null;
+				}
+			}
+
+			function scheduleNext(myGeneration: number) {
+				outerTimer = window.setTimeout(() => {
+					if (myGeneration !== generation || !track) return;
+					index += 1;
+					track.style.transition = `transform ${SLIDE_MS}ms ease`;
+					track.style.transform = `translateX(-${index * 100}%)`;
+
+					innerTimer = window.setTimeout(() => {
+						if (myGeneration !== generation) return;
+						if (index >= realFrameCount) {
+							index = 0;
+							goToInstant(0);
+						}
+						scheduleNext(myGeneration);
+					}, SLIDE_MS);
+				}, HOLD_MS);
+			}
+
+			return {
+				play() {
+					if (reduceMotionQuery.matches || realFrameCount <= 1 || outerTimer !== null || innerTimer !== null) return;
+					generation += 1;
+					scheduleNext(generation);
+				},
+				stop() {
+					generation += 1;
+					clearTimers();
+					index = 0;
+					goToInstant(0);
+				},
+			};
+		}
+
+		const mediaControllers: MediaController[] = items.map((item) => {
+			const video = item.querySelector<HTMLVideoElement>('video.otc-media');
+			if (video) return wireVideoWell(video);
+			const sequenceEl = item.querySelector<HTMLElement>('.otc-sequence');
+			return wireImageSequenceWell(sequenceEl!);
+		});
+
+		if (stack) wireImageLazyLoad(stack);
+
 		if (stack && items.length > 0) {
 			// Desktop: hovering a well promotes it above everything
 			// hovered so far — a monotonic counter, never reset, is what
 			// makes the promotion stick after the mouse leaves.
 			let topCounter = items.length;
-			items.forEach((item) => {
+			items.forEach((item, i) => {
 				item.addEventListener('mouseenter', () => {
 					topCounter += 1;
 					item.style.setProperty('--z', String(topCounter));
+					if (!mobileQuery.matches) mediaControllers[i].play();
+				});
+				item.addEventListener('mouseleave', () => {
+					if (!mobileQuery.matches) mediaControllers[i].stop();
 				});
 			});
 
@@ -245,9 +530,9 @@ const items: Item[] = [
 			// the deck and the next well is revealed; short of that, it
 			// springs back to rest. Loops back to the first after the
 			// last.
-			const mobileQuery = window.matchMedia('(max-width: 768px)');
-			const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 			let order = items.map((_, i) => i);
+
+			if (mobileQuery.matches) mediaControllers[order[0]].play();
 
 			const RANKS = [
 				{ offsetY: 0, rot: 0, scale: 1, opacity: 1 },
@@ -312,6 +597,7 @@ const items: Item[] = [
 
 			function completeToss(item: HTMLElement, dir: number) {
 				const frontIndex = order[0];
+				mediaControllers[frontIndex].stop();
 				// Reorder right away so the other cards promote into
 				// place immediately, in parallel with the tossed card's
 				// own independent flight continuing out from wherever
@@ -320,6 +606,7 @@ const items: Item[] = [
 				order = [...order.slice(1), frontIndex];
 				layoutMobile(frontIndex);
 				setCaption(captionsByIndex[order[0]], true);
+				mediaControllers[order[0]].play();
 
 				item.style.transition = `transform ${FLY_MS}ms ease-out, opacity ${FADE_MS}ms ease-out`;
 				item.style.transform = `translate(-50%, -50%) translateX(${dir * 120}%) rotate(${dir * 8}deg)`;
@@ -380,9 +667,12 @@ const items: Item[] = [
 				if (reduceMotionQuery.matches) {
 					drag = null;
 					if (Math.abs(dx) > COMMIT_THRESHOLD) {
+						const frontIndex = order[0];
+						mediaControllers[frontIndex].stop();
 						order = [...order.slice(1), order[0]];
 						layoutMobile();
 						setCaption(captionsByIndex[order[0]], false);
+						mediaControllers[order[0]].play();
 					} else {
 						item.style.transition = '';
 						item.style.transform = '';

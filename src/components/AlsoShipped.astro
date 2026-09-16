@@ -526,6 +526,7 @@ const items: Project[] = await Promise.all([
 
 <script>
 	import { createCarousel, type CarouselHandle } from '../scripts/carousel';
+	import { wireImageLazyLoad } from '../scripts/lazyMedia';
 
 	const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -639,41 +640,6 @@ const items: Project[] = await Promise.all([
 				});
 			},
 		};
-	}
-
-	// Defers image/poster loading until a carousel is actually near the
-	// viewport — the same proximity-triggered technique already used for
-	// video sources, just for the <img>/<source>/poster data-*
-	// placeholders rendered above instead of a real src/srcset/poster.
-	// rootMargin gives it a 200px head start so loading finishes before
-	// the slide is actually scrolled into view, rather than popping in.
-	function wireImageLazyLoad(carouselEl: HTMLElement) {
-		const images = [...carouselEl.querySelectorAll<HTMLImageElement>('img[data-src]')];
-		const sources = [...carouselEl.querySelectorAll<HTMLSourceElement>('source[data-srcset]')];
-		const videosWithPoster = [...carouselEl.querySelectorAll<HTMLVideoElement>('video[data-poster]')];
-
-		if (images.length === 0 && sources.length === 0 && videosWithPoster.length === 0) return;
-
-		const observer = new IntersectionObserver(
-			([entry]) => {
-				if (!entry.isIntersecting) return;
-				sources.forEach((source) => {
-					const srcset = source.dataset.srcset;
-					if (srcset) source.srcset = srcset;
-				});
-				images.forEach((img) => {
-					const src = img.dataset.src;
-					if (src) img.src = src;
-				});
-				videosWithPoster.forEach((video) => {
-					const poster = video.dataset.poster;
-					if (poster) video.poster = poster;
-				});
-				observer.disconnect();
-			},
-			{ rootMargin: '200px' },
-		);
-		observer.observe(carouselEl);
 	}
 
 	function wireCardCarousel(card: HTMLElement) {
