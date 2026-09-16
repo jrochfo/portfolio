@@ -1,5 +1,5 @@
 ---
-import { Picture } from 'astro:assets';
+import { getImage } from 'astro:assets';
 
 import iconPlay from '../assets/icons/functions/play.svg';
 import iconPause from '../assets/icons/functions/pause.svg';
@@ -35,7 +35,11 @@ import somu6 from '../assets/work/also-shipped/somu23/somu-6.jpg';
 
 interface ImageSlide {
 	type: 'image';
-	image: ImageMetadata;
+	avif: string;
+	webp: string;
+	fallback: string;
+	width: number;
+	height: number;
 	alt: string;
 }
 
@@ -43,44 +47,73 @@ interface VideoSlide {
 	type: 'video';
 	mp4: string;
 	webm: string;
-	poster: ImageMetadata;
+	poster: string;
 	alt: string;
 }
 
 type Slide = ImageSlide | VideoSlide;
 
-function video(name: string, poster: ImageMetadata, alt: string): VideoSlide {
-	return { type: 'video', mp4: `/video/also-shipped/${name}.mp4`, webm: `/video/also-shipped/${name}.webm`, poster, alt };
+// Pre-generates the same avif/webp/original-format URLs the <Picture>
+// component would (getImage() is the function it calls internally) —
+// but rendered as data-* placeholders in the template instead of real
+// src/srcset, so nothing actually fetches until a slide's carousel
+// scrolls near the viewport (see wireImageLazyLoad in the script
+// below). <Picture>'s own loading="lazy" turned out unreliable in this
+// exact layout (absolutely-positioned slides in a horizontally
+// scrolling strip — some images silently never fetched at all), and
+// loading="eager" fixed that correctness bug at the cost of every
+// image on the page loading immediately regardless of scroll position
+// (measured: 3.4MB on a fresh visit, before ever scrolling to this
+// section). This is the real fix — same technique already proven for
+// video, just applied to images too.
+async function imageSlide(image: ImageMetadata, alt: string): Promise<ImageSlide> {
+	const [avif, webp, fallback] = await Promise.all([
+		getImage({ src: image, format: 'avif' }),
+		getImage({ src: image, format: 'webp' }),
+		getImage({ src: image }),
+	]);
+	return { type: 'image', avif: avif.src, webp: webp.src, fallback: fallback.src, width: image.width, height: image.height, alt };
 }
 
-const items: { title: string; description: string; slug: string; media: Slide[] }[] = [
-	{
+function video(name: string, poster: ImageMetadata, alt: string): VideoSlide {
+	return { type: 'video', mp4: `/video/also-shipped/${name}.mp4`, webm: `/video/also-shipped/${name}.webm`, poster: poster.src, alt };
+}
+
+interface Project {
+	title: string;
+	description: string;
+	slug: string;
+	media: Slide[];
+}
+
+const items: Project[] = await Promise.all([
+	(async (): Promise<Project> => ({
 		title: 'The Key',
 		description: 'An April Fools joke turned real, sellable product.',
 		slug: 'the-key',
-		media: [
-			{ type: 'image', image: key1, alt: 'The Key' },
-			{ type: 'image', image: key2, alt: 'The Key' },
-			{ type: 'image', image: key3, alt: 'The Key' },
-			{ type: 'image', image: key4, alt: 'The Key' },
-			{ type: 'image', image: key5, alt: 'The Key' },
-			{ type: 'image', image: key6, alt: 'The Key' },
-		],
-	},
-	{
+		media: await Promise.all([
+			imageSlide(key1, 'The Key'),
+			imageSlide(key2, 'The Key'),
+			imageSlide(key3, 'The Key'),
+			imageSlide(key4, 'The Key'),
+			imageSlide(key5, 'The Key'),
+			imageSlide(key6, 'The Key'),
+		]),
+	}))(),
+	(async (): Promise<Project> => ({
 		title: "Stack's Guide to AI",
 		description: 'Long-form microsite on understanding GenAI.',
 		slug: 'ai-guide',
-		media: [
-			{ type: 'image', image: guide1, alt: "Stack's Guide to AI" },
-			{ type: 'image', image: guide2, alt: "Stack's Guide to AI" },
-			{ type: 'image', image: guide3, alt: "Stack's Guide to AI" },
-			{ type: 'image', image: guide4, alt: "Stack's Guide to AI" },
-			{ type: 'image', image: guide5, alt: "Stack's Guide to AI" },
-			{ type: 'image', image: guide6, alt: "Stack's Guide to AI" },
-		],
-	},
-	{
+		media: await Promise.all([
+			imageSlide(guide1, "Stack's Guide to AI"),
+			imageSlide(guide2, "Stack's Guide to AI"),
+			imageSlide(guide3, "Stack's Guide to AI"),
+			imageSlide(guide4, "Stack's Guide to AI"),
+			imageSlide(guide5, "Stack's Guide to AI"),
+			imageSlide(guide6, "Stack's Guide to AI"),
+		]),
+	}))(),
+	(async (): Promise<Project> => ({
 		title: 'OverflowAI',
 		description: 'AI feature launch, product and promo animation.',
 		slug: 'overflow-ai',
@@ -90,23 +123,23 @@ const items: { title: string; description: string; slug: string; media: Slide[] 
 			video('overflow-ai/oai-3', oai3Poster, 'OverflowAI'),
 			video('overflow-ai/oai-4', oai4Poster, 'OverflowAI'),
 			video('overflow-ai/oai-5', oai5Poster, 'OverflowAI'),
-			{ type: 'image', image: oai6, alt: 'OverflowAI' },
+			await imageSlide(oai6, 'OverflowAI'),
 		],
-	},
-	{
+	}))(),
+	(async (): Promise<Project> => ({
 		title: 'Stack Overflow Meetup (SOMU)',
 		description: 'Internal meetup, brand and collateral, end to end.',
 		slug: 'somu23',
 		media: [
-			{ type: 'image', image: somu1, alt: 'Stack Overflow Meetup' },
-			{ type: 'image', image: somu2, alt: 'Stack Overflow Meetup' },
-			{ type: 'image', image: somu3, alt: 'Stack Overflow Meetup' },
+			await imageSlide(somu1, 'Stack Overflow Meetup'),
+			await imageSlide(somu2, 'Stack Overflow Meetup'),
+			await imageSlide(somu3, 'Stack Overflow Meetup'),
 			video('somu23/somu-4', somu4Poster, 'Stack Overflow Meetup'),
-			{ type: 'image', image: somu5, alt: 'Stack Overflow Meetup' },
-			{ type: 'image', image: somu6, alt: 'Stack Overflow Meetup' },
+			await imageSlide(somu5, 'Stack Overflow Meetup'),
+			await imageSlide(somu6, 'Stack Overflow Meetup'),
 		],
-	},
-];
+	}))(),
+]);
 ---
 
 <section class="also-shipped">
@@ -131,13 +164,17 @@ const items: { title: string; description: string; slug: string; media: Slide[] 
 								aria-label={`Open image ${i + 1} of ${item.media.length}`}
 							>
 								{slide.type === 'image' ? (
-									<Picture
-										src={slide.image}
-										formats={['avif', 'webp']}
-										alt={slide.alt}
-										class="ship-carousel__media"
-										loading="eager"
-									/>
+									<picture>
+										<source data-srcset={slide.avif} type="image/avif" />
+										<source data-srcset={slide.webp} type="image/webp" />
+										<img
+											data-src={slide.fallback}
+											alt={slide.alt}
+											width={slide.width}
+											height={slide.height}
+											class="ship-carousel__media"
+										/>
+									</picture>
 								) : (
 									<>
 										<video
@@ -146,7 +183,7 @@ const items: { title: string; description: string; slug: string; media: Slide[] 
 											loop
 											playsinline
 											preload="none"
-											poster={slide.poster.src}
+											data-poster={slide.poster}
 											data-mp4={slide.mp4}
 											data-webm={slide.webm}
 										/>
@@ -509,7 +546,14 @@ const items: { title: string; description: string; slug: string; media: Slide[] 
 	function wireVideoSlides(carouselEl: HTMLElement): SlideController {
 		const videos = [...carouselEl.querySelectorAll<HTMLVideoElement>('video')];
 		let activeIndex = 0;
-		let isVisible = true;
+		// Starts false, not true: IntersectionObserver's first callback
+		// fires asynchronously, never synchronously on observe() — so an
+		// initial `true` here left a real window (from page load until
+		// that first callback) where an active slide's video would start
+		// loading/playing even while its carousel was still off-screen.
+		// Same false-until-observed pattern already used by the Hero and
+		// About model viewers' own IntersectionObservers.
+		let isVisible = false;
 
 		const visibilityObserver = new IntersectionObserver(
 			([entry]) => {
@@ -597,6 +641,41 @@ const items: { title: string; description: string; slug: string; media: Slide[] 
 		};
 	}
 
+	// Defers image/poster loading until a carousel is actually near the
+	// viewport — the same proximity-triggered technique already used for
+	// video sources, just for the <img>/<source>/poster data-*
+	// placeholders rendered above instead of a real src/srcset/poster.
+	// rootMargin gives it a 200px head start so loading finishes before
+	// the slide is actually scrolled into view, rather than popping in.
+	function wireImageLazyLoad(carouselEl: HTMLElement) {
+		const images = [...carouselEl.querySelectorAll<HTMLImageElement>('img[data-src]')];
+		const sources = [...carouselEl.querySelectorAll<HTMLSourceElement>('source[data-srcset]')];
+		const videosWithPoster = [...carouselEl.querySelectorAll<HTMLVideoElement>('video[data-poster]')];
+
+		if (images.length === 0 && sources.length === 0 && videosWithPoster.length === 0) return;
+
+		const observer = new IntersectionObserver(
+			([entry]) => {
+				if (!entry.isIntersecting) return;
+				sources.forEach((source) => {
+					const srcset = source.dataset.srcset;
+					if (srcset) source.srcset = srcset;
+				});
+				images.forEach((img) => {
+					const src = img.dataset.src;
+					if (src) img.src = src;
+				});
+				videosWithPoster.forEach((video) => {
+					const poster = video.dataset.poster;
+					if (poster) video.poster = poster;
+				});
+				observer.disconnect();
+			},
+			{ rootMargin: '200px' },
+		);
+		observer.observe(carouselEl);
+	}
+
 	function wireCardCarousel(card: HTMLElement) {
 		const carouselEl = card.querySelector<HTMLElement>('.ship-carousel');
 		const strip = card.querySelector<HTMLElement>('.ship-carousel__strip');
@@ -625,6 +704,13 @@ const items: { title: string; description: string; slug: string; media: Slide[] 
 				videoController.setActive(index);
 			},
 		});
+
+		// After createCarousel, not before (unlike wireVideoSlides above) —
+		// this one should catch the loop's phantom clones too, so
+		// scrubbing into one during a drag doesn't show a blank slide.
+		// Phantoms carry no click/keydown listeners either way, so unlike
+		// video there's no interactivity concern in including them here.
+		wireImageLazyLoad(carouselEl);
 
 		dots.forEach((dot, i) => {
 			dot.addEventListener('click', () => carousel.goTo(i));
@@ -723,6 +809,12 @@ const items: { title: string; description: string; slug: string; media: Slide[] 
 				lightboxVideoController?.setActive(index);
 			},
 		});
+
+		// The lightbox is always fully in view once open, so this fires
+		// immediately — but the cloned slides' data-src/data-poster may
+		// not have been resolved yet if the inline well never scrolled
+		// close enough to trigger its own lazy-load first.
+		wireImageLazyLoad(lightboxCarouselEl);
 
 		lightboxDots.forEach((dot, i) => {
 			dot.addEventListener('click', () => lightboxCarousel?.goTo(i));
