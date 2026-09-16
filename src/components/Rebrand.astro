@@ -69,7 +69,23 @@ const acts = [
 		width: 100%;
 		z-index: 5;
 		background: var(--color-bg);
-		padding-block: var(--title-padding-top) var(--title-padding-bottom);
+		padding-block-start: var(--title-padding-top);
+	}
+
+	/* Border lives on the inner container (not the full-width title
+	   bar) so it's container-width, like the rest of the page's
+	   content — not a full-bleed rule. Same fade treatment as the
+	   nav's own border: transparent at rest, only appearing while the
+	   title is actually pinned (see .is-stuck, toggled by Rebrand's
+	   ScrollTrigger onEnter/onLeave in the script below). */
+	.rebrand__pinned-title .container {
+		padding-block-end: var(--title-padding-bottom);
+		border-bottom: 1px solid transparent;
+		transition: border-color 0.25s ease;
+	}
+
+	.rebrand__pinned-title.is-stuck .container {
+		border-bottom-color: var(--color-line);
 	}
 
 	.rebrand__body {
@@ -130,8 +146,9 @@ const acts = [
 			return nav ? Math.floor(nav.getBoundingClientRect().height) - 1 : 0;
 		}
 
+		const title = document.querySelector<HTMLElement>('.rebrand__pinned-title');
+
 		function titleHeight() {
-			const title = document.querySelector('.rebrand__pinned-title');
 			return title ? Math.ceil(title.getBoundingClientRect().height) : 0;
 		}
 
@@ -149,6 +166,14 @@ const acts = [
 			end: () => `bottom top+=${titleHeight()}`,
 			pin: true,
 			pinSpacing: false,
+			// The border only appears while the title is actually pinned —
+			// on(Enter|Leave)(Back)? covers both scroll directions, so it
+			// fades in exactly when pinning starts and fades out exactly
+			// when it releases, whichever way the user is scrolling.
+			onEnter: () => title?.classList.add('is-stuck'),
+			onLeave: () => title?.classList.remove('is-stuck'),
+			onEnterBack: () => title?.classList.add('is-stuck'),
+			onLeaveBack: () => title?.classList.remove('is-stuck'),
 		});
 
 		window.addEventListener('load', () => ScrollTrigger.refresh());

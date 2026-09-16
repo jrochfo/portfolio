@@ -1,20 +1,110 @@
 ---
-const items = [
+import { Picture } from 'astro:assets';
+
+import iconPlay from '../assets/icons/functions/play.svg';
+import iconPause from '../assets/icons/functions/pause.svg';
+import iconClose from '../assets/icons/functions/close.svg';
+
+import key1 from '../assets/work/also-shipped/the-key/key-1.jpg';
+import key2 from '../assets/work/also-shipped/the-key/key-2.jpg';
+import key3 from '../assets/work/also-shipped/the-key/key-3.jpg';
+import key4 from '../assets/work/also-shipped/the-key/key-4.jpg';
+import key5 from '../assets/work/also-shipped/the-key/key-5.jpg';
+import key6 from '../assets/work/also-shipped/the-key/key-6.jpg';
+
+import guide1 from '../assets/work/also-shipped/ai-guide/guide-1.jpg';
+import guide2 from '../assets/work/also-shipped/ai-guide/guide-2.png';
+import guide3 from '../assets/work/also-shipped/ai-guide/guide-3.png';
+import guide4 from '../assets/work/also-shipped/ai-guide/guide-4.png';
+import guide5 from '../assets/work/also-shipped/ai-guide/guide-5.png';
+import guide6 from '../assets/work/also-shipped/ai-guide/guide-6.png';
+
+import oai1Poster from '../assets/work/also-shipped/overflow-ai/posters/oai-1-poster.jpg';
+import oai2Poster from '../assets/work/also-shipped/overflow-ai/posters/oai-2-poster.jpg';
+import oai3Poster from '../assets/work/also-shipped/overflow-ai/posters/oai-3-poster.jpg';
+import oai4Poster from '../assets/work/also-shipped/overflow-ai/posters/oai-4-poster.jpg';
+import oai5Poster from '../assets/work/also-shipped/overflow-ai/posters/oai-5-poster.jpg';
+import oai6 from '../assets/work/also-shipped/overflow-ai/oai-6.png';
+
+import somu1 from '../assets/work/also-shipped/somu23/somu-1.jpg';
+import somu2 from '../assets/work/also-shipped/somu23/somu-2.jpg';
+import somu3 from '../assets/work/also-shipped/somu23/somu-3.jpg';
+import somu4Poster from '../assets/work/also-shipped/somu23/posters/somu-4-poster.jpg';
+import somu5 from '../assets/work/also-shipped/somu23/somu-5.jpg';
+import somu6 from '../assets/work/also-shipped/somu23/somu-6.jpg';
+
+interface ImageSlide {
+	type: 'image';
+	image: ImageMetadata;
+	alt: string;
+}
+
+interface VideoSlide {
+	type: 'video';
+	mp4: string;
+	webm: string;
+	poster: ImageMetadata;
+	alt: string;
+}
+
+type Slide = ImageSlide | VideoSlide;
+
+function video(name: string, poster: ImageMetadata, alt: string): VideoSlide {
+	return { type: 'video', mp4: `/video/also-shipped/${name}.mp4`, webm: `/video/also-shipped/${name}.webm`, poster, alt };
+}
+
+const items: { title: string; description: string; slug: string; media: Slide[] }[] = [
 	{
 		title: 'The Key',
 		description: 'An April Fools joke turned real, sellable product.',
+		slug: 'the-key',
+		media: [
+			{ type: 'image', image: key1, alt: 'The Key' },
+			{ type: 'image', image: key2, alt: 'The Key' },
+			{ type: 'image', image: key3, alt: 'The Key' },
+			{ type: 'image', image: key4, alt: 'The Key' },
+			{ type: 'image', image: key5, alt: 'The Key' },
+			{ type: 'image', image: key6, alt: 'The Key' },
+		],
 	},
 	{
 		title: "Stack's Guide to AI",
 		description: 'Long-form microsite on understanding GenAI.',
+		slug: 'ai-guide',
+		media: [
+			{ type: 'image', image: guide1, alt: "Stack's Guide to AI" },
+			{ type: 'image', image: guide2, alt: "Stack's Guide to AI" },
+			{ type: 'image', image: guide3, alt: "Stack's Guide to AI" },
+			{ type: 'image', image: guide4, alt: "Stack's Guide to AI" },
+			{ type: 'image', image: guide5, alt: "Stack's Guide to AI" },
+			{ type: 'image', image: guide6, alt: "Stack's Guide to AI" },
+		],
 	},
 	{
 		title: 'OverflowAI',
 		description: 'AI feature launch, product and promo animation.',
+		slug: 'overflow-ai',
+		media: [
+			video('overflow-ai/oai-1', oai1Poster, 'OverflowAI'),
+			video('overflow-ai/oai-2', oai2Poster, 'OverflowAI'),
+			video('overflow-ai/oai-3', oai3Poster, 'OverflowAI'),
+			video('overflow-ai/oai-4', oai4Poster, 'OverflowAI'),
+			video('overflow-ai/oai-5', oai5Poster, 'OverflowAI'),
+			{ type: 'image', image: oai6, alt: 'OverflowAI' },
+		],
 	},
 	{
 		title: 'Stack Overflow Meetup (SOMU)',
 		description: 'Internal meetup, brand and collateral, end to end.',
+		slug: 'somu23',
+		media: [
+			{ type: 'image', image: somu1, alt: 'Stack Overflow Meetup' },
+			{ type: 'image', image: somu2, alt: 'Stack Overflow Meetup' },
+			{ type: 'image', image: somu3, alt: 'Stack Overflow Meetup' },
+			video('somu23/somu-4', somu4Poster, 'Stack Overflow Meetup'),
+			{ type: 'image', image: somu5, alt: 'Stack Overflow Meetup' },
+			{ type: 'image', image: somu6, alt: 'Stack Overflow Meetup' },
+		],
 	},
 ];
 ---
@@ -26,12 +116,79 @@ const items = [
 
 	<div class="container also-shipped__grid">
 		{items.map((item) => (
-			<article class="ship-card">
+			<article class="ship-card" data-project={item.slug}>
 				<h3 class="type-h3">{item.title}</h3>
 				<p class="type-body ship-card__desc">{item.description}</p>
-				<div class="ship-card__well" aria-hidden="true"></div>
+
+				<div class="ship-carousel">
+					<div class="ship-carousel__strip">
+						{item.media.map((slide, i) => (
+							<div
+								class="ship-carousel__slide"
+								data-slide-index={i}
+								role="button"
+								tabindex="0"
+								aria-label={`Open image ${i + 1} of ${item.media.length}`}
+							>
+								{slide.type === 'image' ? (
+									<Picture
+										src={slide.image}
+										formats={['avif', 'webp']}
+										alt={slide.alt}
+										class="ship-carousel__media"
+										loading="eager"
+									/>
+								) : (
+									<>
+										<video
+											class="ship-carousel__media"
+											muted
+											loop
+											playsinline
+											preload="none"
+											poster={slide.poster.src}
+											data-mp4={slide.mp4}
+											data-webm={slide.webm}
+										/>
+										<button type="button" class="ship-carousel__playbtn" aria-label="Play video" aria-pressed="false">
+											<span class="ship-icon ship-carousel__play-icon" style={`--icon-src: url(${iconPlay.src})`} aria-hidden="true" />
+											<span class="ship-icon ship-carousel__pause-icon" style={`--icon-src: url(${iconPause.src})`} aria-hidden="true" />
+										</button>
+									</>
+								)}
+							</div>
+						))}
+					</div>
+				</div>
+
+				<div class="ship-carousel__dots" role="tablist" aria-label={`${item.title} images`}>
+					{item.media.map((_, i) => (
+						<button
+							type="button"
+							class="ship-carousel__dot"
+							data-dot-index={i}
+							aria-current={i === 0 ? 'true' : undefined}
+							aria-label={`Image ${i + 1} of ${item.media.length}`}
+						/>
+					))}
+				</div>
 			</article>
 		))}
+	</div>
+
+	<div id="ship-lightbox" class="ship-lightbox" hidden>
+		<div class="ship-lightbox__backdrop"></div>
+		<div class="ship-lightbox__panel" role="dialog" aria-modal="true" aria-labelledby="ship-lightbox-title">
+			<button type="button" class="ship-lightbox__close" aria-label="Close">
+				<span class="ship-icon ship-icon--close" style={`--icon-src: url(${iconClose.src})`} aria-hidden="true" />
+			</button>
+			<h3 class="type-h3" id="ship-lightbox-title"></h3>
+			<p class="type-body" id="ship-lightbox-desc"></p>
+			<div class="ship-carousel ship-lightbox__carousel">
+				<div class="ship-carousel__strip" id="ship-lightbox-strip"></div>
+			</div>
+			<div class="ship-carousel__dots" id="ship-lightbox-dots" role="tablist" aria-label="Lightbox images"></div>
+		</div>
 	</div>
 </section>
 
@@ -44,23 +201,283 @@ const items = [
 	}
 
 	.ship-card {
-		/* Same card styling as What I Do — no icon, no caption, square
-		   well instead of 21:9. */
+		/* Same card styling as What I Do — no icon, no caption. */
 		background: var(--color-panel);
 		border-radius: var(--radius-card);
 		padding: var(--space-xs);
 	}
 
-	.ship-card__desc {
-		margin-block-start: var(--space-s);
+	/* Carousel: a rounded, clipped viewport (this element) around a
+	   horizontally scroll-snapping strip of full-bleed slides — same
+	   drag-to-advance mechanic as What I Do (src/scripts/carousel.ts),
+	   just nested per-card instead of page-level, and with no
+	   container-inset peeking (each slide fills the well exactly). */
+	.ship-carousel {
+		position: relative;
+		margin-block-start: var(--space-xs);
+		aspect-ratio: 16 / 9;
+		border-radius: var(--radius-well);
+		overflow: hidden;
+		background: var(--color-panel-well);
 	}
 
-	.ship-card__well {
+	.ship-carousel__strip {
+		display: flex;
+		width: 100%;
+		height: 100%;
+		overflow-x: auto;
+		scroll-snap-type: x mandatory;
+		cursor: grab;
+		scrollbar-width: none;
+		-ms-overflow-style: none;
+		/* Looping inserts a phantom slide before the real first slide
+		   (see carousel.ts) — the browser's own scroll anchoring then
+		   "helpfully" shifts scrollLeft on its own to keep that slide
+		   visually in place, which fights the module's own explicit
+		   correction and overshoots. This keeps scrollLeft purely under
+		   the module's control. */
+		overflow-anchor: none;
+	}
+
+	.ship-carousel__strip::-webkit-scrollbar {
+		display: none;
+	}
+
+	.ship-carousel__strip.is-dragging {
+		cursor: grabbing;
+		user-select: none;
+	}
+
+	.ship-carousel__slide {
+		flex: 0 0 100%;
+		scroll-snap-align: start;
+		position: relative;
+	}
+
+	.ship-carousel__media {
+		position: absolute;
+		inset: 0;
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		/* Media shouldn't itself be draggable/selectable — it fights the
+		   carousel's own drag-to-advance gesture. */
+		-webkit-user-drag: none;
+		user-select: none;
+	}
+
+	/* Video autoplays on the active slide regardless of device, so this
+	   button's job is manual override, not the only way to start
+	   playback — except on touch (no hover to reveal it) and under
+	   reduced motion (nothing autoplays there at all), where it's the
+	   only affordance and stays always visible. */
+	.ship-carousel__playbtn {
+		position: absolute;
+		right: var(--space-2xs);
+		bottom: var(--space-2xs);
+		z-index: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		border-radius: var(--radius-pill);
+		/* Low-opacity ink, not a fixed black — tracks whatever ink color
+		   is active (see the color exploration panel). */
+		background: oklch(from var(--color-ink) l c h / 0.55);
+		color: var(--color-bg);
+		opacity: 1;
+		transition: opacity 0.15s ease;
+	}
+
+	@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+		.ship-carousel__playbtn {
+			opacity: 0;
+		}
+
+		.ship-carousel__slide:hover .ship-carousel__playbtn,
+		.ship-carousel__playbtn:focus-visible {
+			opacity: 1;
+		}
+	}
+
+	/* Recolorable icon: a solid currentColor shape masked to the SVG's
+	   silhouette — same technique as WhatIDo's service icons, so it
+	   tracks the button's own `color` (here var(--color-bg), set on
+	   .ship-carousel__playbtn/.ship-lightbox__close) instead of being a
+	   fixed fill baked into the source file. */
+	.ship-icon {
+		display: block;
+		width: 14px;
+		height: 14px;
+		background-color: currentColor;
+		-webkit-mask-image: var(--icon-src);
+		mask-image: var(--icon-src);
+		-webkit-mask-repeat: no-repeat;
+		mask-repeat: no-repeat;
+		-webkit-mask-position: center;
+		mask-position: center;
+		-webkit-mask-size: contain;
+		mask-size: contain;
+	}
+
+	.ship-icon--close {
+		width: 18px;
+		height: 18px;
+	}
+
+	.ship-carousel__pause-icon {
+		display: none;
+	}
+
+	.ship-carousel__playbtn[aria-pressed='true'] .ship-carousel__play-icon {
+		display: none;
+	}
+
+	.ship-carousel__playbtn[aria-pressed='true'] .ship-carousel__pause-icon {
+		display: block;
+	}
+
+	.ship-carousel__dots {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: var(--space-2xs);
 		margin-block-start: var(--space-xs);
-		aspect-ratio: 4 / 3;
-		border-radius: var(--radius-well);
-		/* Slightly lighter than the card panel behind it. */
-		background: var(--color-panel-well);
+	}
+
+	/* :global() — the lightbox's dots are created client-side
+	   (document.createElement in the script) to mirror whichever
+	   project is open, so Astro's scoped-CSS attribute (added only to
+	   elements present in this file's own template) never lands on
+	   them; same fix as the color panel's token rows. */
+	:global(.ship-carousel__dot) {
+		position: relative;
+		width: 6px;
+		height: 6px;
+		border-radius: var(--radius-pill);
+		background: var(--color-line);
+		padding: 0;
+		transition: width 0.15s ease, background-color 0.15s ease;
+	}
+
+	/* Expands the clickable/tappable area well past the visible dot
+	   without growing the dot itself — a pseudo-element still counts as
+	   part of the button for hit-testing even where it visually extends
+	   past the button's own box. */
+	:global(.ship-carousel__dot)::before {
+		content: '';
+		position: absolute;
+		inset: -9px;
+	}
+
+	:global(.ship-carousel__dot[aria-current='true']) {
+		width: 18px;
+		background: var(--color-accent);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		:global(.ship-carousel__dot) {
+			transition: none;
+		}
+	}
+
+	/* Lightbox */
+	.ship-lightbox {
+		position: fixed;
+		inset: 0;
+		z-index: 100;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: var(--space-m);
+	}
+
+	.ship-lightbox[hidden] {
+		display: none;
+	}
+
+	.ship-lightbox__backdrop {
+		position: absolute;
+		inset: 0;
+		/* Deliberately not --color-scrim — that token's job is text
+		   legibility over arbitrary video footage; this needs to visually
+		   recede an entire busy page behind a modal, a different (and
+		   darker) job. Hardcoded for the same reason --color-scrim is:
+		   it isn't a palette color, it's a fixed dimming layer. */
+		background: rgba(0, 0, 0, 0.75);
+		opacity: 0;
+		transition: opacity 0.2s ease;
+	}
+
+	.ship-lightbox.is-open .ship-lightbox__backdrop {
+		opacity: 1;
+	}
+
+	.ship-lightbox__panel {
+		position: relative;
+		z-index: 1;
+		width: 100%;
+		max-width: var(--container-max);
+		max-height: 90vh;
+		overflow-y: auto;
+		/* Same fill, padding, and radius as .ship-card — reads as the
+		   same surface lifted out, not a separate piece of UI. */
+		padding: var(--space-xs);
+		background: var(--color-panel);
+		border-radius: var(--radius-card);
+		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+		opacity: 0;
+		transform: translateY(8px) scale(0.98);
+		transition: opacity 0.2s ease, transform 0.2s ease;
+	}
+
+	.ship-lightbox.is-open .ship-lightbox__panel {
+		opacity: 1;
+		transform: none;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.ship-lightbox__backdrop,
+		.ship-lightbox__panel {
+			transition: none;
+		}
+	}
+
+	.ship-lightbox__close {
+		position: absolute;
+		top: var(--space-xs);
+		right: var(--space-xs);
+		z-index: 2;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 36px;
+		height: 36px;
+		border-radius: var(--radius-pill);
+		background: oklch(from var(--color-ink) l c h / 0.55);
+		color: var(--color-bg);
+		opacity: 0;
+		transition: opacity 0.15s ease;
+	}
+
+	/* Hover-reveal is a desktop refinement, not the only way to see it —
+	   always visible on touch (no hover to reveal it) and on keyboard
+	   focus, same split used for the carousel's own play button. */
+	.ship-lightbox__panel:hover .ship-lightbox__close,
+	.ship-lightbox__close:focus-visible {
+		opacity: 1;
+	}
+
+	@media (hover: none) {
+		.ship-lightbox__close {
+			opacity: 1;
+		}
+	}
+
+	.ship-lightbox__carousel {
+		margin-block-start: var(--space-s);
 	}
 
 	@media (max-width: 768px) {
@@ -69,3 +486,349 @@ const items = [
 		}
 	}
 </style>
+
+<script>
+	import { createCarousel, type CarouselHandle } from '../scripts/carousel';
+
+	const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+	interface SlideController {
+		setActive(index: number): void;
+		destroy(): void;
+	}
+
+	// Wires one carousel's video slides to the shared "which slide is
+	// active" state. Any device: the active slide's video autoplays
+	// automatically (no hover requirement — it's already a deliberate
+	// navigation action, same logic on desktop as touch). An
+	// IntersectionObserver additionally pauses it once the carousel
+	// itself scrolls out of view, so a video left active doesn't keep
+	// decoding indefinitely as the page scrolls past it. Reduced
+	// motion: never autoplays either way; the always-visible-on-touch,
+	// hover-revealed-on-desktop play button is the only way to start it.
+	function wireVideoSlides(carouselEl: HTMLElement): SlideController {
+		const videos = [...carouselEl.querySelectorAll<HTMLVideoElement>('video')];
+		let activeIndex = 0;
+		let isVisible = true;
+
+		const visibilityObserver = new IntersectionObserver(
+			([entry]) => {
+				isVisible = entry.isIntersecting;
+				refresh();
+			},
+			{ threshold: 0.01 },
+		);
+		visibilityObserver.observe(carouselEl);
+
+		function ensureLoaded(video: HTMLVideoElement) {
+			if (video.dataset.loaded) return;
+			const mp4 = video.dataset.mp4;
+			const webm = video.dataset.webm;
+			if (webm) {
+				const sourceWebm = document.createElement('source');
+				sourceWebm.src = webm;
+				sourceWebm.type = 'video/webm';
+				video.appendChild(sourceWebm);
+			}
+			if (mp4) {
+				const sourceMp4 = document.createElement('source');
+				sourceMp4.src = mp4;
+				sourceMp4.type = 'video/mp4';
+				video.appendChild(sourceMp4);
+			}
+			video.load();
+			video.dataset.loaded = 'true';
+		}
+
+		function playBtnFor(video: HTMLVideoElement) {
+			return video.nextElementSibling as HTMLButtonElement | null;
+		}
+
+		function syncButton(video: HTMLVideoElement) {
+			const btn = playBtnFor(video);
+			if (btn) btn.setAttribute('aria-pressed', String(!video.paused));
+		}
+
+		videos.forEach((video) => {
+			video.addEventListener('play', () => syncButton(video));
+			video.addEventListener('pause', () => syncButton(video));
+
+			const btn = playBtnFor(video);
+			btn?.addEventListener('click', (e) => {
+				e.stopPropagation();
+				ensureLoaded(video);
+				if (video.paused) {
+					video.play().catch(() => {});
+				} else {
+					video.pause();
+				}
+			});
+		});
+
+		function refresh() {
+			videos.forEach((video) => {
+				const slide = video.closest<HTMLElement>('.ship-carousel__slide');
+				const index = Number(slide?.dataset.slideIndex ?? -1);
+				const isActive = index === activeIndex;
+
+				if (!isActive || !isVisible || reduceMotionQuery.matches) {
+					if (!video.paused) video.pause();
+					return;
+				}
+
+				ensureLoaded(video);
+				video.play().catch(() => {});
+			});
+		}
+
+		refresh();
+
+		return {
+			setActive(index) {
+				activeIndex = index;
+				refresh();
+			},
+			destroy() {
+				visibilityObserver.disconnect();
+				videos.forEach((video) => {
+					video.pause();
+				});
+			},
+		};
+	}
+
+	function wireCardCarousel(card: HTMLElement) {
+		const carouselEl = card.querySelector<HTMLElement>('.ship-carousel');
+		const strip = card.querySelector<HTMLElement>('.ship-carousel__strip');
+		const slides = strip ? [...strip.querySelectorAll<HTMLElement>('.ship-carousel__slide')] : [];
+		const dots = [...card.querySelectorAll<HTMLButtonElement>('.ship-carousel__dot')];
+		if (!carouselEl || !strip || slides.length === 0) return null;
+
+		function setActiveDot(index: number) {
+			dots.forEach((dot, i) => {
+				if (i === index) {
+					dot.setAttribute('aria-current', 'true');
+				} else {
+					dot.removeAttribute('aria-current');
+				}
+			});
+		}
+
+		const videoController = wireVideoSlides(carouselEl);
+
+		const carousel = createCarousel({
+			strip,
+			items: slides,
+			loop: true,
+			onActiveChange: (index) => {
+				setActiveDot(index);
+				videoController.setActive(index);
+			},
+		});
+
+		dots.forEach((dot, i) => {
+			dot.addEventListener('click', () => carousel.goTo(i));
+		});
+
+		return { carousel, videoController };
+	}
+
+	const cardCarousels = new Map<string, ReturnType<typeof wireCardCarousel>>();
+	document.querySelectorAll<HTMLElement>('.ship-card').forEach((card) => {
+		const slug = card.dataset.project;
+		if (slug) cardCarousels.set(slug, wireCardCarousel(card));
+	});
+
+	// --- Lightbox --------------------------------------------------------
+	const lightbox = document.querySelector<HTMLElement>('#ship-lightbox');
+	const lightboxTitle = document.querySelector<HTMLElement>('#ship-lightbox-title');
+	const lightboxDesc = document.querySelector<HTMLElement>('#ship-lightbox-desc');
+	const lightboxStrip = document.querySelector<HTMLElement>('#ship-lightbox-strip');
+	const lightboxCarouselEl = document.querySelector<HTMLElement>('.ship-lightbox__carousel');
+	const lightboxDotsWrap = document.querySelector<HTMLElement>('#ship-lightbox-dots');
+	const lightboxClose = document.querySelector<HTMLButtonElement>('.ship-lightbox__close');
+
+	let lightboxCarousel: CarouselHandle | null = null;
+	let lightboxVideoController: SlideController | null = null;
+	let originCard: HTMLElement | null = null;
+	let originOpener: HTMLElement | null = null;
+
+	function focusableElements(container: HTMLElement) {
+		return [...container.querySelectorAll<HTMLElement>('button, [href], [tabindex]:not([tabindex="-1"])')].filter(
+			(el) => !el.hasAttribute('disabled'),
+		);
+	}
+
+	function openLightbox(card: HTMLElement, opener: HTMLElement, startIndex: number) {
+		if (!lightbox || !lightboxStrip || !lightboxDotsWrap || !lightboxTitle || !lightboxDesc || !lightboxCarouselEl) return;
+
+		originCard = card;
+		originOpener = opener;
+
+		const titleText = card.querySelector('.type-h3')?.textContent ?? '';
+		const descText = card.querySelector('.ship-card__desc')?.textContent ?? '';
+		lightboxTitle.textContent = titleText;
+		lightboxDesc.textContent = descText;
+
+		lightboxStrip.innerHTML = '';
+		// [data-slide-index] excludes the inline carousel's own loop
+		// phantoms (carousel.ts strips that attribute specifically so
+		// real slides stay distinguishable from their clones) — without
+		// it this picks up all 8 DOM children (6 real + 2 phantoms), not
+		// the 6 real slides, which is exactly the extra-dots/wrong-
+		// starting-slide bug.
+		const sourceSlides = [...card.querySelectorAll<HTMLElement>('.ship-carousel__slide[data-slide-index]')];
+		sourceSlides.forEach((slide) => {
+			const clone = slide.cloneNode(true) as HTMLElement;
+			// The clone is a display-only slide inside the lightbox (no
+			// "open a lightbox from within the lightbox" concept) — strip
+			// the interactive-button semantics cloneNode copied over,
+			// rather than leaving an inert focusable element behind.
+			clone.removeAttribute('role');
+			clone.removeAttribute('tabindex');
+			clone.removeAttribute('aria-label');
+			lightboxStrip.appendChild(clone);
+		});
+
+		lightboxDotsWrap.innerHTML = '';
+		sourceSlides.forEach((_, i) => {
+			const dot = document.createElement('button');
+			dot.type = 'button';
+			dot.className = 'ship-carousel__dot';
+			dot.dataset.dotIndex = String(i);
+			dot.setAttribute('aria-label', `Image ${i + 1} of ${sourceSlides.length}`);
+			if (i === startIndex) dot.setAttribute('aria-current', 'true');
+			lightboxDotsWrap.appendChild(dot);
+		});
+		const lightboxDots = [...lightboxDotsWrap.querySelectorAll<HTMLButtonElement>('.ship-carousel__dot')];
+
+		function setActiveDot(index: number) {
+			lightboxDots.forEach((dot, i) => {
+				if (i === index) dot.setAttribute('aria-current', 'true');
+				else dot.removeAttribute('aria-current');
+			});
+		}
+
+		lightboxVideoController?.destroy();
+		lightboxVideoController = wireVideoSlides(lightboxCarouselEl);
+
+		lightboxCarousel?.destroy();
+		const lightboxSlides = [...lightboxStrip.querySelectorAll<HTMLElement>('.ship-carousel__slide')];
+		lightboxCarousel = createCarousel({
+			strip: lightboxStrip,
+			items: lightboxSlides,
+			loop: true,
+			onActiveChange: (index) => {
+				setActiveDot(index);
+				lightboxVideoController?.setActive(index);
+			},
+		});
+
+		lightboxDots.forEach((dot, i) => {
+			dot.addEventListener('click', () => lightboxCarousel?.goTo(i));
+		});
+
+		lightbox.hidden = false;
+		// Force layout before adding the class so the open transition
+		// actually runs instead of starting from the final state.
+		lightbox.getBoundingClientRect();
+		lightbox.classList.add('is-open');
+		document.body.style.overflow = 'hidden';
+
+		lightboxCarousel.goTo(startIndex);
+		lightboxClose?.focus();
+	}
+
+	function closeLightbox() {
+		if (!lightbox) return;
+
+		// Leave the inline well wherever the lightbox navigated to.
+		if (originCard && lightboxCarousel) {
+			const slug = originCard.dataset.project;
+			const entry = slug ? cardCarousels.get(slug) : null;
+			entry?.carousel.goTo(lightboxCarousel.getActive());
+		}
+
+		lightbox.classList.remove('is-open');
+		document.body.style.overflow = '';
+		lightboxVideoController?.destroy();
+		lightboxVideoController = null;
+
+		const finish = () => {
+			if (lightbox) lightbox.hidden = true;
+		};
+		if (reduceMotionQuery.matches) {
+			finish();
+		} else {
+			lightbox.addEventListener('transitionend', finish, { once: true });
+		}
+
+		originOpener?.focus();
+		originOpener = null;
+		originCard = null;
+	}
+
+	function openFromSlide(slide: HTMLElement) {
+		const card = slide.closest<HTMLElement>('.ship-card');
+		const index = Number(slide.dataset.slideIndex ?? 0);
+		if (card) openLightbox(card, slide, index);
+	}
+
+	// data-slide-index excludes the loop phantoms (carousel.ts strips it
+	// specifically so real slides stay distinguishable from their
+	// clones) — this runs after all the carousels above already exist,
+	// so without the filter this would also wire up the (inert, but
+	// better to just never attach anything to in the first place)
+	// phantom copies.
+	document.querySelectorAll<HTMLElement>('.ship-carousel__slide[data-slide-index]').forEach((slide) => {
+		// Video slides open the lightbox from the slide itself (not the
+		// media element), so a click doesn't fight the play button sitting
+		// on top of it.
+		slide.addEventListener('click', (e) => {
+			if ((e.target as HTMLElement).closest('.ship-carousel__playbtn')) return;
+			openFromSlide(slide);
+		});
+
+		// Slides are `role="button" tabindex="0"` (a plain <div> can't be
+		// a real <button> here — it contains the play button on video
+		// slides, and buttons can't nest) — Enter/Space activation is
+		// otherwise free on a real button but has to be wired by hand here.
+		slide.addEventListener('keydown', (e) => {
+			if ((e.target as HTMLElement).closest('.ship-carousel__playbtn')) return;
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				openFromSlide(slide);
+			}
+		});
+	});
+
+	lightboxClose?.addEventListener('click', closeLightbox);
+
+	lightbox?.querySelector('.ship-lightbox__backdrop')?.addEventListener('click', closeLightbox);
+
+	document.addEventListener('keydown', (e) => {
+		if (!lightbox || lightbox.hidden) return;
+
+		if (e.key === 'Escape') {
+			closeLightbox();
+			return;
+		}
+
+		if (e.key === 'Tab') {
+			const panel = lightbox.querySelector<HTMLElement>('.ship-lightbox__panel');
+			if (!panel) return;
+			const focusable = focusableElements(panel);
+			if (focusable.length === 0) return;
+			const first = focusable[0];
+			const last = focusable[focusable.length - 1];
+
+			if (e.shiftKey && document.activeElement === first) {
+				e.preventDefault();
+				last.focus();
+			} else if (!e.shiftKey && document.activeElement === last) {
+				e.preventDefault();
+				first.focus();
+			}
+		}
+	});
+</script>

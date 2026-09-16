@@ -50,7 +50,12 @@ const modelIcons = {
 		z-index: 10;
 		width: 100%;
 		background: var(--color-bg);
-		border-bottom: 1px solid var(--color-line);
+		border-bottom: 1px solid transparent;
+		transition: border-color 0.25s ease;
+	}
+
+	.site-nav--scrolled {
+		border-bottom-color: var(--color-line);
 	}
 
 	.site-nav__inner {
@@ -88,4 +93,17 @@ const modelIcons = {
 			icon.src = icons[model];
 		}
 	});
+
+	// Nav's hairline border only shows once the page has actually
+	// scrolled — at the top it'd just be a stray line sitting under the
+	// hero/headline with nothing yet to separate it from. The 10px
+	// threshold (rather than > 0) is where the nav starts actually
+	// colliding with the first thing on the page (the model viewer),
+	// not just any scroll at all.
+	const nav = document.querySelector('.site-nav');
+	function updateScrolledState() {
+		nav?.classList.toggle('site-nav--scrolled', window.scrollY > 10);
+	}
+	updateScrolledState();
+	window.addEventListener('scroll', updateScrolledState, { passive: true });
 </script>
