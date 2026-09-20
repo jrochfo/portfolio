@@ -289,7 +289,7 @@ body {
 	background: var(--color-bg);
 }
 
-/* Accent — the only three jobs the accent slot does (plus the nav-pill
+/* Accent — the only four jobs the accent slot does (plus the nav-pill
    active tab, styled locally in WhatIDo.astro). --color-accent
    resolves to a real color OR a live copy of --color-ink when the
    color panel's Accent control is set to "None", so these rules never
@@ -309,6 +309,17 @@ a:not(.button):focus-visible {
 	text-decoration: underline;
 	text-decoration-color: var(--color-accent);
 	text-underline-offset: 0.15em;
+}
+
+/* A link sitting inline in a paragraph of body copy looks identical to
+   the surrounding text until hovered — nothing at rest tells a reader
+   it's actually clickable. Coloring it the accent gives it a resting
+   affordance, not just a hover one. Scoped to .type-body specifically
+   (real body copy — documentation prose, card descriptions), not
+   every link site-wide: nav/footer/card links are already deliberate,
+   separately-styled navigation, not something to recolor wholesale. */
+.type-body a:not(.button) {
+	color: var(--color-accent);
 }
 
 /* ---------------------------------------------------------------
@@ -412,6 +423,11 @@ main {
 	   this is also the browser default. */
 	font-optical-sizing: auto;
 	font-variation-settings: var(--font-display-variation);
+	/* Lets a heading that wraps choose its own break point for more
+	   even line lengths, instead of always filling the first line and
+	   leaving a short orphan on the second. No-op on a heading that
+	   fits one line. */
+	text-wrap: balance;
 }
 
 .type-h1 {
@@ -428,6 +444,7 @@ main {
 	   --font-text instead (Schibsted Grotesk has neither axis). */
 	font-optical-sizing: auto;
 	font-variation-settings: var(--font-display-variation);
+	text-wrap: balance;
 }
 
 .type-h2 {

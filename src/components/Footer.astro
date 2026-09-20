@@ -1,4 +1,10 @@
 ---
+// A footer link to the page you're already on is a self-link — clicking
+// it just reloads the page you're standing on. Rendered as plain
+// (inert, non-interactive) text instead on that one page; everywhere
+// else it's a normal link.
+const onAbout = Astro.url.pathname === '/about';
+const onDocumentationHub = Astro.url.pathname === '/documentation';
 ---
 
 <footer class="site-footer">
@@ -6,7 +12,18 @@
 		<p class="type-caption">
 			Designed and built from scratch in Chicago.<br class="site-footer__break" /> © Jake Rochford 2026
 		</p>
-		<a href="/about" class="type-caption">About</a>
+		<div class="site-footer__links">
+			{onAbout ? (
+				<span class="type-caption site-footer__current">About</span>
+			) : (
+				<a href="/about" class="type-caption">About</a>
+			)}
+			{onDocumentationHub ? (
+				<span class="type-caption site-footer__current">Documentation</span>
+			) : (
+				<a href="/documentation" class="type-caption">Documentation</a>
+			)}
+		</div>
 	</div>
 </footer>
 
@@ -26,6 +43,18 @@
 	.site-footer__break {
 		/* Desktop: one line — suppress the break entirely. */
 		display: none;
+	}
+
+	.site-footer__links {
+		display: flex;
+		align-items: center;
+		gap: var(--space-s);
+	}
+
+	/* Muted rather than the default ink — reads as "you are here", not
+	   as a broken/dead version of the link next to it. */
+	.site-footer__current {
+		color: var(--color-ink-muted);
 	}
 
 	@media (max-width: 768px) {

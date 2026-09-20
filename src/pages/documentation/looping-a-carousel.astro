@@ -1,0 +1,614 @@
+---
+import Base from '../../layouts/Base.astro';
+import DocHero from '../../components/DocHero.astro';
+---
+
+<Base title="Looping a Carousel That Can't Be Looped — Jake Rochford" navLabel="Home" navHref="/" navIcon="pencil">
+	<section class="doc">
+		<div class="container doc__inner">
+			<header class="doc__header">
+				<p class="type-caption doc__eyebrow">
+					<a class="doc__eyebrow-link" href="/documentation"
+						><span class="doc__eyebrow-arrow" aria-hidden="true">← </span>Documentation</a
+					>
+				</p>
+				<h1 class="type-display">Looping a carousel that can't be looped</h1>
+				<p class="type-h3 doc__dek">
+					<code>scrollLeft</code> has a hard ceiling. The Also Shipped carousel needed to scroll past it
+					anyway — so it built somewhere further to go.
+				</p>
+				<p class="type-caption doc__meta">
+					Field notes on jakerochford.com — the agent's account of a bug it hit building the Also
+					Shipped carousel, written up with Jake.
+				</p>
+			</header>
+
+			<div class="doc__hero">
+				<DocHero
+					glyph="∞"
+					label="An infinity symbol, set in Fraunces — this piece is about a carousel that loops without end."
+				/>
+			</div>
+
+			<nav class="doc__toc" aria-label="On this page">
+				<p class="type-caption doc__toc-label">On this page</p>
+				<ol>
+					<li><a class="type-body" href="#background">Background</a></li>
+					<li><a class="type-body" href="#the-intuition">The intuition</a></li>
+					<li><a class="type-body" href="#reading-the-code">Reading the code</a></li>
+				</ol>
+			</nav>
+
+			<div class="doc__prose">
+				<h2 class="type-h1" id="background">Background</h2>
+
+				<details class="doc__aside">
+					<summary class="type-body">New to drag-to-scroll carousels? Start here.</summary>
+					<div class="doc__aside-body">
+						<p class="type-body">
+							A horizontally-scrolling carousel is just a row of elements sitting inside a container
+							with <code>overflow-x: auto</code> — the browser already knows how to scroll it, no
+							library required. <code>scrollLeft</code> is the one number that describes where that
+							scroll currently sits: <code>0</code> at the very start, and up to
+							<code>scrollWidth - clientWidth</code> at the very end. Set it to anything outside that
+							range and the browser just clamps it back in — that ceiling is the whole subject of this
+							page. <code>scroll-snap-type: x mandatory</code>, set on the same container, is what
+							makes a drag settle neatly on a slide boundary instead of stopping wherever the pointer
+							happened to let go.
+						</p>
+					</div>
+				</details>
+
+				<p class="type-body">
+					Every carousel on this site — What I Do's service cards, and now Also Shipped's project
+					cards — shares one module, <a href="#reading-the-code"><code>src/scripts/carousel.ts</code></a
+					>. It handles the part browsers don't give you for free: dragging with a mouse. Touch already
+					scrolls a row like this natively, but desktop browsers don't turn a mouse drag into a scroll on
+					their own, so the module adds that — track the pointer, move <code>scrollLeft</code> to match,
+					then ease the strip to whichever slide the drag ended nearest.
+				</p>
+
+				<p class="type-body">
+					That was enough for What I Do, where dragging past the last card just stops — a reasonable
+					default. But once Also Shipped's real content landed (four projects, each with five or six
+					images and videos), a real question followed: dragging past the last image should keep
+					scrubbing into the first one, not just snap there. It should feel like the strip never ends.
+				</p>
+
+				<h2 class="type-h1" id="the-intuition">The intuition</h2>
+
+				<p class="type-body">Try the carousel below first. Drag it — with a mouse — past the last slide.</p>
+
+				<div class="loop-demo" data-loop-demo="false" aria-hidden="true">
+					<p class="type-caption loop-demo__label">loop: false — what every carousel here did until now</p>
+					<div class="loop-demo__strip" data-loop-strip>
+						<div class="loop-demo__slide" data-slide-index="0"><span class="type-h1">1</span></div>
+						<div class="loop-demo__slide" data-slide-index="1"><span class="type-h1">2</span></div>
+						<div class="loop-demo__slide" data-slide-index="2"><span class="type-h1">3</span></div>
+						<div class="loop-demo__slide" data-slide-index="3"><span class="type-h1">4</span></div>
+					</div>
+					<p class="type-caption loop-demo__status">Showing <strong data-current>1</strong> of 4</p>
+				</div>
+
+				<p class="type-body">
+					It stops dead at 4. Which makes sense — there's nothing after it. <code>scrollLeft</code> is a
+					real, physically bounded number, and the browser will not move it past the strip's actual
+					scrollable width no matter what value your code tries to hand it. You could set
+					<code>strip.scrollLeft = 99999</code> and it would land in exactly the same place: clamped at
+					the edge. Making the loop "feel infinite" isn't a bigger-number problem. It's a
+					not-enough-content problem — there's genuinely nothing there to scroll into.
+				</p>
+
+				<p class="type-body">
+					So give it something. Clone the first slide, and drop that clone <em>after</em> the last one.
+					Now there's real, physical, scrollable content past the end — it just happens to be pixel-identical
+					to slide 1. Do the same in reverse at the front, with a clone of the last slide. The strip goes
+					from four elements to six:
+				</p>
+
+				<div class="loop-diagram" aria-hidden="true">
+					<div class="loop-diagram__row">
+						<div class="loop-diagram__box loop-diagram__box--phantom"><span>4</span></div>
+						<div class="loop-diagram__box"><span>1</span></div>
+						<div class="loop-diagram__box"><span>2</span></div>
+						<div class="loop-diagram__box"><span>3</span></div>
+						<div class="loop-diagram__box"><span>4</span></div>
+						<div class="loop-diagram__box loop-diagram__box--phantom"><span>1</span></div>
+					</div>
+					<div class="loop-diagram__labels">
+						<span class="type-caption">clone</span>
+						<span class="type-caption">real</span>
+						<span class="type-caption">real</span>
+						<span class="type-caption">real</span>
+						<span class="type-caption">real</span>
+						<span class="type-caption">clone</span>
+					</div>
+				</div>
+				<p class="type-caption loop-diagram__caption">
+					Six DOM nodes, four real indices. The dashed boxes are the only new thing — actual elements
+					with actual width, which is the only reason there's anywhere left to scroll.
+				</p>
+
+				<p class="type-body">
+					A drag can now scrub straight off the end of slide 4 and onto that trailing clone — same
+					motion, same easing, nothing special happens. The moment it settles there, though, something
+					has to happen: the outside world (the dots, anything tracking "which slide is active") should
+					never learn a clone exists. So the instant the strip stops on it, the code silently
+					re-points <code>scrollLeft</code> at the <em>real</em> slide 1, sitting in the exact same
+					visual position. Because the clone and the real slide are identical, nothing appears to move.
+					The swap is imperceptible. Try it below — same drag, same everything, except this time it
+					doesn't stop:
+				</p>
+
+				<div class="loop-demo" data-loop-demo="true" aria-hidden="true">
+					<p class="type-caption loop-demo__label">loop: true — Also Shipped's carousels, today</p>
+					<div class="loop-demo__strip" data-loop-strip>
+						<div class="loop-demo__slide" data-slide-index="0"><span class="type-h1">1</span></div>
+						<div class="loop-demo__slide" data-slide-index="1"><span class="type-h1">2</span></div>
+						<div class="loop-demo__slide" data-slide-index="2"><span class="type-h1">3</span></div>
+						<div class="loop-demo__slide" data-slide-index="3"><span class="type-h1">4</span></div>
+					</div>
+					<p class="type-caption loop-demo__status">Showing <strong data-current>1</strong> of 4</p>
+				</div>
+
+				<p class="type-caption loop-demo__note">
+					Both demos above are the real <code>createCarousel</code> from this site's own
+					<code>carousel.ts</code>, imported unmodified — the only difference between them is one flag,
+					<code>loop: true</code>.
+				</p>
+
+				<h2 class="type-h1" id="reading-the-code">Reading the code</h2>
+
+				<h3 class="type-h2">Setting up the clones</h3>
+				<p class="type-body">
+					<code>createCarousel</code> only builds the phantoms when asked. A <code>trailPhantom</code>
+					is a clone of the first real item, appended after the last one; a <code>leadPhantom</code>
+					is a clone of the last item, inserted before the first:
+				</p>
+				<pre class="doc__code"><code>{`if (loop) {
+	trailPhantom = items[0].cloneNode(true) as HTMLElement;
+	markAsPhantom(trailPhantom);
+	strip.appendChild(trailPhantom);
+
+	leadPhantom = items[items.length - 1].cloneNode(true) as HTMLElement;
+	markAsPhantom(leadPhantom);
+	strip.insertBefore(leadPhantom, items[0]);
+}`}</code></pre>
+				<p class="type-body">
+					<code>cloneNode</code> never copies event listeners, so a phantom starts inert — but it does
+					copy attributes, including anything that made the original slide keyboard-focusable or
+					announced to a screen reader. <code>markAsPhantom</code> strips that back off — <code
+						>role</code
+					>, <code>tabindex</code>, <code>aria-label</code>, and the <code>data-slide-index</code>
+					attribute this page comes back to below — and walks the clone's own descendants (a video
+					slide's play button, say) to pull them out of the tab order too. A phantom is real DOM, but it
+					should be invisible to everything except the scrollbar.
+				</p>
+
+				<h3 class="type-h2">Two different numbers for "which slide"</h3>
+				<p class="type-body">
+					With two extra nodes in the strip, "the third element in the DOM" and "slide index 2" stop
+					being the same number. The module keeps them apart deliberately — everything outside it
+					only ever deals in the second kind:
+				</p>
+				<pre class="doc__code"><code>{`const allSlides = leadPhantom && trailPhantom ? [leadPhantom, ...items, trailPhantom] : items;
+const domOffset = leadPhantom ? 1 : 0;
+
+function toRealIndex(domPos: number): number {
+	if (!loop) return domPos;
+	if (domPos <= 0) return items.length - 1; // lead phantom
+	if (domPos >= allSlides.length - 1) return 0; // trail phantom
+	return domPos - domOffset;
+}
+
+function toDomPos(realIndex: number): number {
+	return loop ? realIndex + domOffset : realIndex;
+}`}</code></pre>
+				<p class="type-body">
+					A caller asking to go to slide 0 gets DOM position 1 (past the lead phantom sitting at 0). A
+					drag that lands on DOM position 0 is reported back as real index <code>items.length - 1</code>
+					— the last slide, exactly as it should read, since visually that's what's showing.
+				</p>
+
+				<h3 class="type-h2">The invisible swap</h3>
+				<p class="type-body">
+					Once a drag settles, one check runs: did it land on a phantom? If so, jump — instantly, with
+					snapping turned off for the one frame it takes — to the real slide occupying that same visual
+					spot:
+				</p>
+				<pre class="doc__code"><code>{`function correctIfOnPhantom(domPos: number) {
+	if (!isPhantomDomPos(domPos)) return;
+	const realIndex = toRealIndex(domPos);
+	const correctedDomPos = toDomPos(realIndex);
+	const prevSnap = strip.style.scrollSnapType;
+	strip.style.scrollSnapType = 'none';
+	strip.scrollLeft = strip.scrollLeft + slideOffsets()[correctedDomPos];
+	strip.style.scrollSnapType = prevSnap;
+}`}</code></pre>
+				<p class="type-body">
+					This runs after every mouse-drag release, and — because a plain wheel or trackpad scroll can
+					also snap onto a phantom without ever touching the drag handlers — after scrolling settles
+					generally, on a short debounce. The reader never notices either path, for the same reason the
+					whole trick works at all: a phantom and its real counterpart are pixel-identical.
+				</p>
+
+				<h3 class="type-h2">A bug: landing on slide 2 instead of slide 1</h3>
+				<p class="type-body">
+					The first working version of this loaded Also Shipped's carousels sitting on the <em
+						>second</em
+					>
+					slide, not the first — the lead phantom's clone-of-the-last-slide was visible on load instead.
+					The fix ended up being one character, but the reasoning behind it is worth keeping:
+				</p>
+				<pre class="doc__code"><code>{`if (loop) {
+	strip.scrollLeft = strip.scrollLeft + slideOffsets()[toDomPos(0)];
+}`}</code></pre>
+				<p class="type-body">
+					<code>slideOffsets()</code> always returns <em>deltas</em> from wherever <code>scrollLeft</code>
+					already is — every other call site in the module adds it to the current value, never assigns
+					it directly. The original version of this one line broke that pattern and assigned instead,
+					which happened to work when <code>scrollLeft</code> started at exactly <code>0</code> — except
+					it doesn't reliably start at <code>0</code>. Some browsers apply <em>scroll anchoring</em>: when
+					content is inserted before the current scroll position (the lead phantom, inserted right
+					before slide 1, is exactly that), the browser nudges <code>scrollLeft</code> on its own to keep
+					whatever was visually on screen still on screen. By the time this line runs, "current" isn't
+					reliably zero anymore — so the fix was just making this line consistent with every other
+					offset calculation in the file: add, don't assign.
+				</p>
+
+				<h3 class="type-h2">A bug: the lightbox counted the clones too</h3>
+				<p class="type-body">
+					Also Shipped's lightbox rebuilds its own strip by cloning whatever slides are currently in a
+					project card. The first version of that query picked up all eight DOM children — six real
+					images plus the two loop phantoms — and opened on whichever one the phantom math happened to
+					land on, with two extra, silently-broken dots in the nav. The fix leaned on the same attribute
+					<code>markAsPhantom</code> already strips:
+				</p>
+				<pre class="doc__code"><code>{`// [data-slide-index] excludes the inline carousel's own loop
+// phantoms (carousel.ts strips that attribute specifically so
+// real slides stay distinguishable from their clones) — without
+// it this picks up all 8 DOM children (6 real + 2 phantoms), not
+// the 6 real slides, which is exactly the extra-dots/wrong-
+// starting-slide bug.
+const sourceSlides = [...card.querySelectorAll<HTMLElement>('.ship-carousel__slide[data-slide-index]')];`}</code
+					></pre>
+				<p class="type-body">
+					Nothing about this bug lived inside <code>carousel.ts</code> at all — the module did exactly
+					what it promised. It surfaced one layer up, in code that shared a CSS class with the phantoms
+					without knowing they existed. That's the actual cost of the technique: every future consumer of
+					a looping strip has to remember phantoms are in there, sharing selectors with the real thing,
+					unless it specifically asks for <code>[data-slide-index]</code> the way the phantoms themselves
+					were told to give up.
+				</p>
+
+				<p class="type-body doc__closing">
+					One honest limit, straight from the module's own comment: this only loops a mouse drag.
+					Touch scrolling on mobile never runs through <code>createCarousel</code> at all — it's native
+					browser scroll-snap, full stop — so a real swipe past the last image on a phone still just
+					stops. Fixing that would mean either reimplementing the whole phantom-and-correction dance on
+					top of native touch scrolling, or deciding a mobile carousel doesn't need to loop the same way
+					a desktop drag does. Neither happened yet. It's on the list, not solved — which is a fine place
+					to end a page about a trick that only works because there was somewhere further to go.
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<style>
+		.doc__inner {
+			max-width: 680px;
+			padding-block: var(--space-l);
+		}
+
+		.doc__header {
+			display: flex;
+			flex-direction: column;
+			gap: var(--space-2xs);
+		}
+
+		.doc__eyebrow {
+			text-transform: uppercase;
+			color: var(--color-ink-muted);
+		}
+
+		.doc__eyebrow-link {
+			color: inherit;
+		}
+
+		.doc__eyebrow-link:hover,
+		.doc__eyebrow-link:focus-visible {
+			color: var(--color-ink);
+		}
+
+		/* Collapsed to zero width at rest, so "Documentation" sits flush
+		   left — hovering grows the arrow open, sliding the word right
+		   as it makes room, rather than fading in place. inline-flex,
+		   not inline-block: an inline-block with overflow other than
+		   visible aligns by its bottom margin edge instead of its text
+		   baseline (a CSS2.1 quirk needed for the width animation's
+		   overflow:hidden to work), which is what was throwing "←" out
+		   of line with "Documentation" — flex items use the normal
+		   first-baseline algorithm instead, so switching display type
+		   sidesteps the quirk entirely. */
+		.doc__eyebrow-arrow {
+			display: inline-flex;
+			align-items: baseline;
+			width: 0;
+			overflow: hidden;
+			opacity: 0;
+			white-space: pre;
+			transition: width 0.15s ease, opacity 0.15s ease;
+		}
+
+		.doc__eyebrow-link:hover .doc__eyebrow-arrow,
+		.doc__eyebrow-link:focus-visible .doc__eyebrow-arrow {
+			width: 1.1em;
+			opacity: 1;
+		}
+
+		.doc__dek {
+			color: var(--color-ink-muted);
+			font-weight: 400;
+			margin-block-start: var(--space-2xs);
+		}
+
+		.doc__meta {
+			color: var(--color-ink-muted);
+			margin-block-start: var(--space-xs);
+		}
+
+		.doc__hero {
+			margin-block-start: var(--space-m);
+		}
+
+		.doc__toc {
+			margin-block-start: var(--space-l);
+			padding: var(--space-xs) var(--space-s);
+			background: var(--color-panel);
+			border-radius: var(--radius-well);
+		}
+
+		.doc__toc-label {
+			text-transform: uppercase;
+			color: var(--color-ink-muted);
+		}
+
+		.doc__toc ol {
+			display: flex;
+			flex-direction: column;
+			gap: var(--space-2xs);
+			margin-block-start: var(--space-2xs);
+		}
+
+		.doc__toc a {
+			color: var(--color-ink);
+		}
+
+		.doc__toc a:hover,
+		.doc__toc a:focus-visible {
+			text-decoration: underline;
+			text-decoration-color: var(--color-accent);
+			text-underline-offset: 0.15em;
+		}
+
+		.doc__prose {
+			margin-block-start: var(--space-l);
+			display: flex;
+			flex-direction: column;
+			gap: var(--space-s);
+		}
+
+		.doc__prose h2 {
+			margin-block-start: var(--space-m);
+		}
+
+		.doc__prose h3 {
+			margin-block-start: var(--space-xs);
+		}
+
+		.doc__prose code {
+			font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+			font-size: 0.9em;
+			background: var(--color-panel);
+			border-radius: 4px;
+			padding: 0.1em 0.35em;
+		}
+
+		.doc__aside {
+			background: var(--color-panel);
+			border-radius: var(--radius-well);
+			padding: var(--space-xs) var(--space-s);
+		}
+
+		.doc__aside summary {
+			cursor: pointer;
+			color: var(--color-ink-muted);
+		}
+
+		.doc__aside summary:hover {
+			color: var(--color-ink);
+		}
+
+		.doc__aside-body {
+			margin-block-start: var(--space-xs);
+		}
+
+		.doc__code {
+			font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+			font-size: 13px;
+			line-height: 1.6;
+			background: var(--color-ink);
+			color: var(--color-bg);
+			border-radius: var(--radius-well);
+			padding: var(--space-xs) var(--space-s);
+			overflow-x: auto;
+			white-space: pre;
+		}
+
+		/* .doc__prose code (the inline-code chip style, below) otherwise
+		   also matches this <code>, since it's still a descendant of
+		   .doc__prose — same near-white chip painted over near-white
+		   text, reading as an illegible blank bar. Reset it back to the
+		   plain block styling above. */
+		.doc__code code {
+			background: none;
+			padding: 0;
+			font-size: inherit;
+			border-radius: 0;
+		}
+
+		.doc__closing {
+			padding-block-start: var(--space-xs);
+			border-block-start: 1px solid var(--color-line);
+		}
+
+		/* --- Interactive loop demos --- */
+
+		.loop-demo {
+			display: flex;
+			flex-direction: column;
+			gap: var(--space-2xs);
+		}
+
+		.loop-demo__label {
+			color: var(--color-ink-muted);
+		}
+
+		.loop-demo__strip {
+			/* Fixed, not fluid — a fixed size lets the trailing-slack math
+			   below stay a plain calc() against literal values instead of
+			   needing a runtime-measured inset like the homepage carousels
+			   (WhatIDo/AlsoShipped) use for their viewport-relative bleed. */
+			--frame-width: 300px;
+			--frame-inset: var(--space-xs);
+			--slide-width: 160px;
+
+			display: flex;
+			gap: var(--space-xs);
+			max-width: var(--frame-width);
+			overflow-x: auto;
+			overflow-anchor: none;
+			scroll-snap-type: x mandatory;
+			scroll-padding-inline-start: var(--frame-inset);
+			cursor: grab;
+			border-radius: var(--radius-well);
+			background: var(--color-neutral);
+			padding-block: var(--frame-inset);
+			padding-inline-start: var(--frame-inset);
+			/* Trailing slack: without it the last slide's snap point sits
+			   past the strip's real scrollable end, and a drag can never
+			   bring it flush — same fix as WhatIDo's --strip-inset/
+			   --card-width formula, just against fixed literals here. */
+			padding-inline-end: calc(var(--frame-width) - var(--frame-inset) - var(--slide-width));
+
+			scrollbar-width: none;
+			-ms-overflow-style: none;
+		}
+
+		.loop-demo__strip::-webkit-scrollbar {
+			display: none;
+		}
+
+		.loop-demo__strip.is-dragging {
+			cursor: grabbing;
+		}
+
+		.loop-demo__slide {
+			flex: 0 0 auto;
+			width: var(--slide-width);
+			aspect-ratio: 1 / 1;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: var(--color-panel);
+			border-radius: var(--radius-well);
+			scroll-snap-align: start;
+			color: var(--color-ink-muted);
+			-webkit-user-drag: none;
+			user-select: none;
+			transition: color 0.15s ease;
+		}
+
+		.loop-demo__slide[data-active='true'] {
+			color: var(--color-accent);
+		}
+
+		.loop-demo__status {
+			color: var(--color-ink-muted);
+		}
+
+		.loop-demo__note {
+			color: var(--color-ink-muted);
+		}
+
+		/* --- Static DOM diagram --- */
+
+		.loop-diagram__row {
+			display: flex;
+			gap: var(--space-2xs);
+		}
+
+		.loop-diagram__box {
+			flex: 1 1 0;
+			aspect-ratio: 1 / 1;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: var(--color-panel);
+			border-radius: var(--radius-well);
+			color: var(--color-ink-muted);
+		}
+
+		.loop-diagram__box--phantom {
+			background: transparent;
+			border: 1px dashed var(--color-line);
+		}
+
+		.loop-diagram__labels {
+			display: flex;
+			gap: var(--space-2xs);
+			margin-block-start: var(--space-2xs);
+		}
+
+		.loop-diagram__labels span {
+			flex: 1 1 0;
+			text-align: center;
+			color: var(--color-ink-muted);
+		}
+
+		.loop-diagram__caption {
+			color: var(--color-ink-muted);
+			margin-block-start: var(--space-2xs);
+		}
+
+	</style>
+
+	<script>
+		import { createCarousel } from '../../scripts/carousel';
+
+		document.querySelectorAll<HTMLElement>('.loop-demo').forEach((demo) => {
+			const strip = demo.querySelector<HTMLElement>('[data-loop-strip]');
+			const status = demo.querySelector<HTMLElement>('[data-current]');
+			const slides = strip ? [...strip.querySelectorAll<HTMLElement>('.loop-demo__slide')] : [];
+			if (!strip || slides.length === 0) return;
+
+			const loop = demo.dataset.loopDemo === 'true';
+
+			function setActive(index: number) {
+				slides.forEach((slide, i) => {
+					slide.dataset.active = String(i === index);
+				});
+				if (status) status.textContent = String(index + 1);
+			}
+
+			createCarousel({
+				strip,
+				items: slides,
+				loop,
+				onActiveChange: setActive,
+			});
+
+			setActive(0);
+		});
+	</script>
+</Base>

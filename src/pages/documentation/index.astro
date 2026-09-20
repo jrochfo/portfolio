@@ -1,0 +1,191 @@
+---
+import Base from '../../layouts/Base.astro';
+import DocHero from '../../components/DocHero.astro';
+
+const pieces = [
+	{
+		href: '/documentation/looping-a-carousel',
+		glyph: '∞',
+		title: 'Looping a carousel that can’t be looped',
+		dek: 'scrollLeft has a hard ceiling. Here’s how the Also Shipped carousel gets past it anyway — by giving itself somewhere further to go.',
+	},
+];
+---
+
+<Base title="Documentation — Jake Rochford" navLabel="Home" navHref="/" navIcon="pencil">
+	<section class="doc-index">
+		<div class="container doc-index__inner">
+			<header class="doc-index__header">
+				<h1 class="type-display">Documentation</h1>
+				<p class="type-h3 doc-index__dek">How this site actually gets built</p>
+			</header>
+
+			<div class="doc-index__prose is-collapsed" id="doc-bio">
+				<p class="type-body">
+					I read a thread by Geoffrey Litt at Notion, based on a talk he'd given, and his argument
+					stuck with me: as agents get better at writing and checking their own code, the bottleneck
+					moves. It's not whether the code is correct anymore — it's whether the person working
+					alongside the agent still understands what's being built. Not to verify it, but to stay
+					fluent enough to make the next creative call, and to keep evolving the system instead of just
+					accepting whatever it produces. His answer was{' '}
+					<a href="https://gist.github.com/geoffreylitt/a29df1b5f9865506e8952488eac3d524" target="_blank" rel="noopener noreferrer"
+						>a prompt</a
+					> he called <code>/explain-diff</code>,
+					which turns a code change into a short explainer: background, an intuition-building
+					walkthrough, the actual code, and — in his version — a short quiz gating whether you're
+					allowed to ship.
+				</p>
+				<p class="type-body">
+					I wanted to try a version of that here, but public. Partly to hold myself to actually staying
+					informed about how this site gets built with an agent, and partly because I think that
+					process is worth looking at in the open, not just the finished result. Every piece here
+					follows Litt's shape — background, then an intuition, then the real code — written from an
+					actual moment in building this site: a real bug, a real decision, an honest debugging story,
+					in the site's own type and color system rather than a one-off file living outside the
+					project. The one thing I dropped is the quiz — it was Litt's own speed regulator, for
+					himself, mid-project, and it doesn't make much sense for someone dropping in from outside.
+				</p>
+				<p class="type-body">
+					So this isn't a blog about the site. It's closer to a lab notebook that happens to be public
+					— kept because staying legible to yourself, and to whoever's curious, is worth doing in the
+					open.
+				</p>
+			</div>
+			<button type="button" class="doc-index__read-more" id="doc-bio-toggle">Read more</button>
+
+			<div class="doc-index__list">
+				{pieces.map((piece) => (
+					<a class="doc-card" href={piece.href}>
+						<DocHero glyph={piece.glyph} label={`Cover image for “${piece.title}”`} />
+						<div class="doc-card__body">
+							<h2 class="type-h2">{piece.title}</h2>
+							<p class="type-body doc-card__dek">{piece.dek}</p>
+						</div>
+					</a>
+				))}
+			</div>
+
+			<p class="type-caption doc-index__note">More of these as they come up.</p>
+		</div>
+
+		<script>
+			const prose = document.getElementById('doc-bio');
+			const toggle = document.getElementById('doc-bio-toggle');
+
+			toggle?.addEventListener('click', () => {
+				prose?.classList.remove('is-collapsed');
+				toggle.remove();
+			});
+		</script>
+	</section>
+
+	<style>
+		.doc-index__inner {
+			max-width: 680px;
+			padding-block: var(--space-l);
+		}
+
+		.doc-index__dek {
+			color: var(--color-ink-muted);
+			font-weight: 400;
+			margin-block-start: var(--space-2xs);
+		}
+
+		.doc-index__prose {
+			position: relative;
+			margin-block-start: var(--space-m);
+			display: flex;
+			flex-direction: column;
+			gap: var(--space-s);
+		}
+
+		.doc-index__prose code {
+			font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+			font-size: 0.9em;
+			background: var(--color-panel);
+			border-radius: 4px;
+			padding: 0.1em 0.35em;
+		}
+
+		/* Collapsed by default so the explainer list below stays visible
+		   without scrolling — the gradient signals there's more, "Read
+		   more" removes the clamp (and itself) for good rather than
+		   re-collapsing, since there's no reason to hide it again once
+		   read. */
+		.doc-index__prose.is-collapsed {
+			max-height: 108px;
+			overflow: hidden;
+		}
+
+		.doc-index__prose.is-collapsed::after {
+			content: '';
+			position: absolute;
+			inset-inline: 0;
+			bottom: 0;
+			height: 3.5em;
+			background: linear-gradient(to bottom, transparent, var(--color-bg));
+			pointer-events: none;
+		}
+
+		.doc-index__read-more {
+			display: inline-block;
+			margin-block-start: var(--space-2xs);
+			font-family: var(--font-text);
+			font-size: var(--type-caption-size);
+			color: var(--color-accent);
+			text-decoration: underline;
+			text-underline-offset: 0.15em;
+			transition: opacity 0.15s ease;
+		}
+
+		.doc-index__read-more:hover,
+		.doc-index__read-more:focus-visible {
+			opacity: 0.7;
+		}
+
+		.doc-index__list {
+			margin-block-start: var(--space-l);
+			display: flex;
+			flex-direction: column;
+			gap: var(--space-s);
+		}
+
+		.doc-card {
+			display: flex;
+			flex-direction: column;
+			gap: var(--space-xs);
+			background: var(--color-panel);
+			border-radius: var(--radius-card);
+			padding: var(--space-xs);
+			transition: background-color 0.15s ease;
+		}
+
+		/* Overrides the global a:not(.button):hover underline rule —
+		   without this, hovering the card underlines every line of text
+		   in it, and even the hero image, since the decoration line
+		   belongs to the anchor itself, not each piece of text inside
+		   it. */
+		.doc-card:hover,
+		.doc-card:focus-visible {
+			background: var(--color-line);
+			text-decoration: none;
+		}
+
+		.doc-card__body {
+			display: flex;
+			flex-direction: column;
+			gap: var(--space-2xs);
+			padding-inline: var(--space-2xs);
+			padding-block-end: var(--space-2xs);
+		}
+
+		.doc-card__dek {
+			color: var(--color-ink-muted);
+		}
+
+		.doc-index__note {
+			margin-block-start: var(--space-s);
+			color: var(--color-ink-muted);
+		}
+	</style>
+</Base>
