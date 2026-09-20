@@ -4,7 +4,8 @@ import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import FontAudition from '../components/FontAudition.astro';
 import FontVariationTuner from '../components/FontVariationTuner.astro';
-import ColorExploration from '../components/ColorExploration.astro';
+import ColorExploration from '../components/_archive/ColorExploration.astro';
+import ColorFavorites from '../components/ColorFavorites.astro';
 
 interface Props {
 	title?: string;
@@ -29,10 +30,17 @@ const FONT_AUDITION_ENABLED = false;
 // Tuner off; flip true to revisit.
 const FONT_VARIATION_TUNER_ENABLED = false;
 
-// Neutral/ink/accent tokens are mid-exploration (see the Color section
-// of global.css) — panel on until a working palette is chosen and
-// committed as literal values.
-const COLOR_EXPLORATION_ENABLED = true;
+// Superseded by ColorFavorites below — Jake narrowed the open-ended
+// exploration down to four favorites, so the full tinkering tool
+// (sliders, open Accent grid, unlimited saves) is retired. Kept in
+// _archive/ rather than deleted in case wide-open exploration is ever
+// useful again; flip true to bring it back.
+const COLOR_EXPLORATION_ENABLED = false;
+
+// Neutral/ink/accent tokens are down to a shortlist of four favorites
+// (Rust/Teal/Moss/Cobalt) — panel on until Jake picks one and it's
+// committed as literal defaults in global.css.
+const COLOR_FAVORITES_ENABLED = true;
 ---
 
 <html lang="en">
@@ -57,6 +65,7 @@ const COLOR_EXPLORATION_ENABLED = true;
 		{FONT_AUDITION_ENABLED && import.meta.env.DEV && <FontAudition />}
 		{FONT_VARIATION_TUNER_ENABLED && import.meta.env.DEV && <FontVariationTuner />}
 		{COLOR_EXPLORATION_ENABLED && import.meta.env.DEV && <ColorExploration />}
+		{COLOR_FAVORITES_ENABLED && import.meta.env.DEV && <ColorFavorites />}
 	</body>
 </html>
 

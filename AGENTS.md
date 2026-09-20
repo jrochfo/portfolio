@@ -69,20 +69,27 @@ complete, tokens defined); build phase is transcribing that spec.
   variables (--neutral-hue, --neutral-chroma, --compression,
   --ink-lightness, --ink-chroma-mix) in OKLCH, so a small set of
   values determines the whole system — see the Color section of
-  global.css for the formulas. A dev-only panel
-  (src/components/ColorExploration.astro, enabled via
-  COLOR_EXPLORATION_ENABLED in Base.astro) exposes four live controls
-  — Temperature, Compression, Ink, Accent — for auditioning palettes;
-  land on a favorite there, then commit its values as the literal
-  defaults and turn the panel off. --color-accent is the one slot with
-  a real color choice pending (candidates: Ochre/Rust/Moss, or "None");
-  it currently drives the nav-pill active tab, WhatIDo card icons,
-  focus rings, ::selection, link-hover underlines, and button hover
-  states. Nothing here is final — it's still the token *layer*, tuned
-  further once real content (video, images) is in place. Roles that
-  are only coincidentally the same value today (e.g. a card panel and
-  a full-bleed section band) still get separate tokens, so the real
-  palette can tell them apart later without a find-and-replace.
+  global.css for the formulas. The original open-ended tinkering tool
+  (src/components/_archive/ColorExploration.astro — Temperature/
+  Compression/Ink sliders, an 8-swatch Accent grid, unlimited saved
+  favorites) did its job and is archived (COLOR_EXPLORATION_ENABLED in
+  Base.astro, currently false). Its successor,
+  src/components/ColorFavorites.astro (enabled via
+  COLOR_FAVORITES_ENABLED in Base.astro), is a dev-only panel exposing
+  just the four favorites Jake narrowed it to — Rust, Teal, Moss,
+  Cobalt — plus a token readout; no sliders, nothing new to save. Pick
+  a final one there, then commit its values as the literal defaults
+  and turn the panel off. --color-accent currently drives the nav-pill
+  active tab, WhatIDo card icons, focus rings, ::selection, link-hover
+  underlines, body-copy link color, and button hover states — plus the
+  nav toolbox icon and the Hero 3D toolbox model's texture, both of
+  which live-update off a `color-accent-change` custom event
+  dispatched whenever the accent changes (see Nav.astro and
+  Hero.astro). Nothing here is final — it's still the token *layer*,
+  tuned further once real content (video, images) is in place. Roles
+  that are only coincidentally the same value today (e.g. a card panel
+  and a full-bleed section band) still get separate tokens, so the
+  real palette can tell them apart later without a find-and-replace.
 - Tooltips / transient overlays (e.g. the About page's "Email copied"):
   caption type, --radius-well, solid dark fill (no translucency),
   fade in/out only. No animation under `prefers-reduced-motion: reduce`

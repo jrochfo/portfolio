@@ -4,6 +4,8 @@ import iconPencil from '../assets/icons/nav/pencil.svg';
 import iconEraser from '../assets/icons/nav/eraser.svg';
 import iconInk from '../assets/icons/nav/ink.svg';
 import iconStamp from '../assets/icons/nav/stamp.svg';
+import iconToolboxBase from '../assets/icons/nav/toolbox-base-mask.svg';
+import iconToolboxShade from '../assets/icons/nav/toolbox-shade-mask.svg';
 
 interface Props {
 	label?: string;
@@ -12,6 +14,11 @@ interface Props {
 }
 
 const { label = 'About', href = '/about', icon = 'toolbox' } = Astro.props;
+
+// On the home page itself, "/" is a self-link — a real navigation just
+// reloads the page. A smooth scroll-to-top feels like the same action
+// but without the flash/reset; everywhere else it's a normal link home.
+const isHome = Astro.url.pathname === '/';
 
 // Toolbox is the Hero model viewer's own default (first) model — the
 // nav icon starts matching it, then swaps on 'hero-model-change'
@@ -25,20 +32,74 @@ const modelIcons = {
 	ink: iconInk.src,
 	stamp: iconStamp.src,
 };
+
+// Toolbox alone gets a live, accent-colored icon instead of the plain
+// flat-color <img> the other four models use — it's the only one of
+// the five that's just two flat fills (a base shape and a shading
+// tone), and the one Jake's actively matching to whichever accent
+// candidate wins, so it's worth it being reactive while the other
+// four still aren't. Two stacked mask layers, colored via
+// var(--color-accent) directly — no JS color math, no event needed:
+// the moment ColorExploration writes a new --color-accent, both
+// layers repaint on their own through the normal CSS cascade.
+const isToolboxDefault = icon === 'toolbox';
 ---
 
 <nav class="site-nav">
 	<div class="site-nav__inner container">
-		<a href="/" class="site-nav__brand">
-			<img
-				id="site-nav-icon"
-				class="site-nav__icon"
-				src={modelIcons[icon]}
-				data-icons={JSON.stringify(modelIcons)}
-				alt=""
-			/>
-			<span class="type-h3">Jake Rochford</span>
-		</a>
+		{isHome ? (
+			<button type="button" class="site-nav__brand" id="nav-scroll-top" aria-label="Back to top">
+				<span class="site-nav__icon-stack">
+					<img
+						id="site-nav-icon"
+						class="site-nav__icon"
+						src={modelIcons[icon]}
+						data-icons={JSON.stringify(modelIcons)}
+						alt=""
+						hidden={isToolboxDefault}
+					/>
+					<span
+						id="site-nav-icon-toolbox"
+						class="site-nav__icon site-nav__icon--toolbox"
+						aria-hidden="true"
+						hidden={!isToolboxDefault}
+					>
+						<span class="site-nav__icon-layer" style={`--icon-src: url(${iconToolboxBase.src})`} />
+						<span
+							class="site-nav__icon-layer site-nav__icon-layer--shade"
+							style={`--icon-src: url(${iconToolboxShade.src})`}
+						/>
+					</span>
+				</span>
+				<span class="type-h3">Jake Rochford</span>
+			</button>
+		) : (
+			<a href="/" class="site-nav__brand">
+				<span class="site-nav__icon-stack">
+					<img
+						id="site-nav-icon"
+						class="site-nav__icon"
+						src={modelIcons[icon]}
+						data-icons={JSON.stringify(modelIcons)}
+						alt=""
+						hidden={isToolboxDefault}
+					/>
+					<span
+						id="site-nav-icon-toolbox"
+						class="site-nav__icon site-nav__icon--toolbox"
+						aria-hidden="true"
+						hidden={!isToolboxDefault}
+					>
+						<span class="site-nav__icon-layer" style={`--icon-src: url(${iconToolboxBase.src})`} />
+						<span
+							class="site-nav__icon-layer site-nav__icon-layer--shade"
+							style={`--icon-src: url(${iconToolboxShade.src})`}
+						/>
+					</span>
+				</span>
+				<span class="type-h3">Jake Rochford</span>
+			</a>
+		)}
 		<a href={href} class="button type-caption">{label}</a>
 	</div>
 </nav>
@@ -69,14 +130,70 @@ const modelIcons = {
 		display: flex;
 		align-items: center;
 		gap: var(--space-2xs);
+		text-align: start;
 	}
 
-	.site-nav__icon {
+	/* Overrides the global a:not(.button):hover underline rule — this
+	   is a plain <a> (not .button) in the non-home case, so it'd
+	   otherwise pick up the site-wide link underline on hover. */
+	.site-nav__brand:hover,
+	.site-nav__brand:focus-visible {
+		text-decoration: none;
+	}
+
+	.site-nav__icon-stack {
+		position: relative;
 		display: block;
 		flex-shrink: 0;
 		width: 24px;
 		height: 24px;
+	}
+
+	.site-nav__icon {
+		display: block;
+		width: 24px;
+		height: 24px;
 		object-fit: contain;
+	}
+
+	/* `.site-nav__icon`'s own `display: block` and the browser's default
+	   `[hidden] { display: none }` rule are the same specificity (one
+	   class, one attribute selector) — without this, the tie silently
+	   goes to author CSS and the `hidden` attribute toggled in the
+	   script below stops actually hiding anything, leaving the
+	   absolutely-positioned toolbox layer permanently on top of
+	   whichever plain icon should be showing. */
+	.site-nav__icon[hidden] {
+		display: none;
+	}
+
+	.site-nav__icon--toolbox {
+		position: absolute;
+		inset: 0;
+	}
+
+	.site-nav__icon-layer {
+		position: absolute;
+		inset: 0;
+		background-color: var(--color-accent);
+		-webkit-mask-image: var(--icon-src);
+		mask-image: var(--icon-src);
+		-webkit-mask-repeat: no-repeat;
+		mask-repeat: no-repeat;
+		-webkit-mask-position: center;
+		mask-position: center;
+		-webkit-mask-size: contain;
+		mask-size: contain;
+	}
+
+	/* Same relationship as the original flat toolbox.svg's two literal
+	   hex fills (a base tone and a darker, slightly less saturated
+	   shading tone) — derived live from whatever --color-accent
+	   currently is via relative color syntax, instead of a second
+	   hardcoded color, so it tracks any of the color panel's accent
+	   candidates automatically. */
+	.site-nav__icon-layer--shade {
+		background-color: oklch(from var(--color-accent) calc(l - 0.1) calc(c * 0.9) h);
 	}
 </style>
 
@@ -85,13 +202,20 @@ const modelIcons = {
 	// cycle; on pages without a Hero (About), it just never fires and
 	// the icon stays at its default (toolbox).
 	const icon = document.querySelector<HTMLImageElement>('#site-nav-icon');
+	const toolboxIcon = document.querySelector<HTMLElement>('#site-nav-icon-toolbox');
 	const icons = icon ? JSON.parse(icon.dataset.icons ?? '{}') : {};
 
 	window.addEventListener('hero-model-change', (e) => {
 		const model = (e as CustomEvent<{ model: string }>).detail?.model;
-		if (icon && model && icons[model]) {
+		if (!model) return;
+		if (icon && icons[model]) {
 			icon.src = icons[model];
 		}
+		// Toolbox alone renders as the live accent-colored mask icon;
+		// every other model still just swaps the plain flat-color <img>.
+		const isToolbox = model === 'toolbox';
+		if (icon) icon.hidden = isToolbox;
+		if (toolboxIcon) toolboxIcon.hidden = !isToolbox;
 	});
 
 	// Nav's hairline border only shows once the page has actually
@@ -106,4 +230,9 @@ const modelIcons = {
 	}
 	updateScrolledState();
 	window.addEventListener('scroll', updateScrolledState, { passive: true });
+
+	document.querySelector<HTMLButtonElement>('#nav-scroll-top')?.addEventListener('click', () => {
+		const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+	});
 </script>

@@ -1,0 +1,430 @@
+---
+// DEV-ONLY. Rendered conditionally by Base.astro
+// ({import.meta.env.DEV && <ColorFavorites />}), so the whole
+// component is dead-code-eliminated from production builds, not just
+// hidden.
+//
+// Successor to the full tinkering tool, archived at
+// src/components/_archive/ColorExploration.astro — that panel's job
+// was landing on a shortlist; this one's job is just picking among
+// the four favorites Jake actually narrowed it to. No sliders, no
+// open Accent grid, nothing new to save — a token readout and four
+// fixed buttons. Picking one persists across reloads; picking none
+// leaves global.css's own committed defaults in effect.
+const FAVORITES = [
+	{
+		key: 'rust',
+		label: 'Rust',
+		hue: 78,
+		chroma: 0.012,
+		compression: 0.5,
+		inkLightness: 0.2,
+		inkChromaMix: 1,
+		accentOklch: 'oklch(0.55 0.14 40)',
+	},
+	{
+		key: 'teal',
+		label: 'Teal',
+		hue: 112,
+		chroma: 0.009,
+		compression: 0.66,
+		inkLightness: 0.2,
+		inkChromaMix: 1,
+		accentOklch: 'oklch(0.5 0.1 200)',
+	},
+	{
+		key: 'moss',
+		label: 'Moss',
+		hue: 114,
+		chroma: 0.012,
+		compression: 0.5,
+		inkLightness: 0.2,
+		inkChromaMix: 1,
+		accentOklch: 'oklch(0.5 0.09 145)',
+	},
+	{
+		key: 'cobalt',
+		label: 'Cobalt',
+		hue: 280,
+		chroma: 0.006,
+		compression: 0.5,
+		inkLightness: 0.2,
+		inkChromaMix: 1,
+		accentOklch: 'oklch(0.549 0.185 262.4)',
+	},
+];
+---
+
+<div id="color-favorites" class="color-favorites">
+	<div class="color-favorites__header">
+		<p class="color-favorites__label">Color favorites</p>
+		<button
+			type="button"
+			class="color-favorites__collapse"
+			id="cf-collapse"
+			aria-expanded="true"
+			aria-label="Collapse panel">−</button
+		>
+	</div>
+
+	<div class="color-favorites__group">
+		<div class="color-favorites__group-title">Favorites</div>
+		<div class="color-favorites__favorites" role="radiogroup" aria-label="Color favorite">
+			{FAVORITES.map((fav) => (
+				<button
+					type="button"
+					class="color-favorites__favorite"
+					data-favorite={fav.key}
+					style={`background: oklch(0.99 ${fav.chroma} ${fav.hue});`}
+					aria-pressed="false"
+				>
+					<span class="color-favorites__dot" style={`background: ${fav.accentOklch};`} />
+					<span class="color-favorites__favorite-label">{fav.label}</span>
+				</button>
+			))}
+		</div>
+	</div>
+
+	<div class="color-favorites__group">
+		<div class="color-favorites__group-title">Tokens (click to copy)</div>
+		<ul class="color-favorites__tokens" id="cf-tokens"></ul>
+		<p class="color-favorites__copied" id="cf-copied" aria-live="polite"></p>
+	</div>
+</div>
+
+<style>
+	.color-favorites {
+		position: fixed;
+		left: 12px;
+		bottom: 12px;
+		z-index: 9999;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		padding: 12px;
+		width: 220px;
+		max-height: calc(100vh - 24px);
+		overflow-y: auto;
+		border-radius: 10px;
+		background: #fff;
+		border: 1px solid #d8d7d2;
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+		font-family: system-ui, -apple-system, sans-serif;
+		font-size: 12px;
+		color: #111;
+	}
+
+	.color-favorites__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+	}
+
+	.color-favorites__label {
+		margin: 0;
+		font-size: 10px;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: #767570;
+	}
+
+	.color-favorites__collapse {
+		flex-shrink: 0;
+		width: 20px;
+		height: 20px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font: inherit;
+		font-size: 13px;
+		line-height: 1;
+		border-radius: 4px;
+		border: 1px solid #d8d7d2;
+		background: #fff;
+		color: #444;
+		cursor: pointer;
+	}
+
+	/* Collapsed: only the header row stays visible — same convention
+	   as the archived tool's own collapse behavior. */
+	.color-favorites.is-collapsed {
+		width: auto;
+		max-height: none;
+		padding: 8px 10px;
+	}
+
+	.color-favorites.is-collapsed > .color-favorites__group {
+		display: none;
+	}
+
+	.color-favorites__group {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		padding-block-start: 8px;
+		border-top: 1px solid #eeece7;
+	}
+
+	.color-favorites__group:first-of-type {
+		padding-block-start: 0;
+		border-top: none;
+	}
+
+	.color-favorites__group-title {
+		font-size: 10px;
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: #767570;
+	}
+
+	.color-favorites__favorites {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 8px;
+	}
+
+	.color-favorites__favorite {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 4px;
+		height: 56px;
+		border-radius: 8px;
+		border: 1px solid #d8d7d2;
+		cursor: pointer;
+	}
+
+	.color-favorites__favorite[aria-pressed='true'] {
+		border-color: #111;
+		box-shadow: 0 0 0 1px #111;
+	}
+
+	.color-favorites__dot {
+		display: block;
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		border: 1px solid rgba(0, 0, 0, 0.15);
+	}
+
+	.color-favorites__favorite-label {
+		font: inherit;
+		font-size: 10px;
+		color: #333;
+	}
+
+	.color-favorites__tokens {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	/* :global() — the li/button/span rows are created client-side, so
+	   Astro's scoped-CSS attribute (added only to elements present in
+	   this file's own template — just the outer <ul> here) never lands
+	   on them; an unscoped selector is the only way these rules match.
+	   Same reasoning as the archived tool's own token list. */
+	.color-favorites__tokens :global(li button) {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		width: 100%;
+		font: inherit;
+		font-size: 10.5px;
+		font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+		padding: 3px 4px;
+		border-radius: 4px;
+		background: none;
+		border: none;
+		color: #333;
+		cursor: pointer;
+		text-align: left;
+	}
+
+	.color-favorites__tokens :global(li button:hover) {
+		background: #f2f1ec;
+	}
+
+	.color-favorites__tokens :global(.cf-swatch) {
+		display: block;
+		width: 12px;
+		height: 12px;
+		border-radius: 3px;
+		border: 1px solid rgba(0, 0, 0, 0.12);
+		flex-shrink: 0;
+	}
+
+	.color-favorites__tokens :global(.cf-name) {
+		color: #767570;
+	}
+
+	.color-favorites__tokens :global(.cf-hex) {
+		margin-left: auto;
+	}
+
+	.color-favorites__copied {
+		margin: 0;
+		min-height: 12px;
+		font-size: 10px;
+		color: #767570;
+	}
+</style>
+
+<script>
+	interface Favorite {
+		key: string;
+		hue: number;
+		chroma: number;
+		compression: number;
+		inkLightness: number;
+		inkChromaMix: number;
+		accentOklch: string;
+	}
+
+	const TOKENS: { label: string; varName: string }[] = [
+		{ label: 'Page field', varName: '--color-bg' },
+		{ label: 'Panel/band', varName: '--color-panel' },
+		{ label: 'Neutral well', varName: '--color-neutral' },
+		{ label: 'Line', varName: '--color-line' },
+		{ label: 'Ink', varName: '--color-ink' },
+		{ label: 'Ink muted', varName: '--color-ink-muted' },
+		{ label: 'Accent', varName: '--color-accent' },
+	];
+
+	const SELECTED_KEY = 'jr-color-favorite-selected';
+	const COLLAPSED_KEY = 'jr-color-favorites-panel-collapsed';
+
+	const root = document.documentElement;
+	const panelEl = document.querySelector<HTMLElement>('#color-favorites');
+	const collapseBtn = document.querySelector<HTMLButtonElement>('#cf-collapse');
+	const favoriteButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-favorite]')];
+	const tokensList = document.querySelector<HTMLUListElement>('#cf-tokens');
+	const copiedEl = document.querySelector<HTMLParagraphElement>('#cf-copied');
+
+	function readFavorite(btn: HTMLButtonElement): Favorite {
+		const style = btn.getAttribute('style') ?? '';
+		const dot = btn.querySelector<HTMLElement>('.color-favorites__dot');
+		// The button's own inline background (set server-side from
+		// FAVORITES) is the single source of truth for hue/chroma —
+		// re-parsed here rather than duplicating the list in the script,
+		// so the two can never drift out of sync.
+		const match = style.match(/oklch\(0\.99 ([\d.]+) (-?[\d.]+)\)/);
+		const chroma = match ? Number(match[1]) : 0.012;
+		const hue = match ? Number(match[2]) : 55;
+		return {
+			key: btn.dataset.favorite ?? '',
+			hue,
+			chroma,
+			compression: 0.5,
+			inkLightness: 0.2,
+			inkChromaMix: 1,
+			accentOklch: dot?.style.backgroundColor || 'oklch(0.55 0.14 40)',
+		};
+	}
+
+	// --- Token readout (identical technique to the archived tool) ------
+	const probe = document.createElement('div');
+	probe.style.position = 'absolute';
+	probe.style.width = '0';
+	probe.style.height = '0';
+	probe.style.overflow = 'hidden';
+	probe.style.pointerEvents = 'none';
+	document.body.appendChild(probe);
+
+	const swatchCanvas = document.createElement('canvas');
+	swatchCanvas.width = 1;
+	swatchCanvas.height = 1;
+	const swatchCtx = swatchCanvas.getContext('2d', { willReadFrequently: true });
+
+	function resolveHex(varName: string): string {
+		probe.style.color = `var(${varName})`;
+		const computed = getComputedStyle(probe).color;
+		if (!swatchCtx) return '#000000';
+		swatchCtx.fillStyle = computed;
+		swatchCtx.fillRect(0, 0, 1, 1);
+		const [r, g, b] = swatchCtx.getImageData(0, 0, 1, 1).data;
+		return `#${[r, g, b].map((n) => n.toString(16).padStart(2, '0')).join('')}`;
+	}
+
+	function renderTokens() {
+		if (!tokensList) return;
+		tokensList.innerHTML = '';
+		TOKENS.forEach(({ varName }) => {
+			const hex = resolveHex(varName);
+			const li = document.createElement('li');
+			const btn = document.createElement('button');
+			btn.type = 'button';
+			btn.innerHTML = `<span class="cf-swatch" style="background:${hex}"></span><span class="cf-name">${varName}</span><span class="cf-hex">${hex}</span>`;
+			btn.addEventListener('click', async () => {
+				const text = `${varName}: ${hex};`;
+				try {
+					await navigator.clipboard.writeText(text);
+					if (copiedEl) copiedEl.textContent = `Copied ${varName}`;
+				} catch {
+					if (copiedEl) copiedEl.textContent = text;
+				}
+				window.setTimeout(() => {
+					if (copiedEl) copiedEl.textContent = '';
+				}, 1750);
+			});
+			li.appendChild(btn);
+			tokensList.appendChild(li);
+		});
+	}
+
+	// --- Apply -----------------------------------------------------------
+	function applyFavorite(fav: Favorite) {
+		root.style.setProperty('--neutral-hue', String(fav.hue));
+		root.style.setProperty('--neutral-chroma', String(fav.chroma));
+		root.style.setProperty('--compression', String(fav.compression));
+		root.style.setProperty('--ink-lightness', String(fav.inkLightness));
+		root.style.setProperty('--ink-chroma-mix', String(fav.inkChromaMix));
+		root.style.setProperty('--color-accent', fav.accentOklch);
+		localStorage.setItem(SELECTED_KEY, fav.key);
+		favoriteButtons.forEach((btn) => {
+			btn.setAttribute('aria-pressed', String(btn.dataset.favorite === fav.key));
+		});
+		// Same convention as Hero's own hero-model-change: the toolbox
+		// model's texture (if it's the model on screen) listens for this
+		// rather than polling --color-accent itself.
+		window.dispatchEvent(new CustomEvent('color-accent-change', { detail: { accent: fav.key } }));
+		renderTokens();
+	}
+
+	favoriteButtons.forEach((btn) => {
+		btn.addEventListener('click', () => applyFavorite(readFavorite(btn)));
+	});
+
+	// --- Collapse ----------------------------------------------------------
+	function setCollapsed(collapsed: boolean) {
+		panelEl?.classList.toggle('is-collapsed', collapsed);
+		collapseBtn?.setAttribute('aria-expanded', String(!collapsed));
+		if (collapseBtn) collapseBtn.textContent = collapsed ? '+' : '−';
+		localStorage.setItem(COLLAPSED_KEY, String(collapsed));
+	}
+
+	setCollapsed(localStorage.getItem(COLLAPSED_KEY) === 'true');
+
+	collapseBtn?.addEventListener('click', () => {
+		setCollapsed(!(panelEl?.classList.contains('is-collapsed') ?? false));
+	});
+
+	// --- Restore on load ---------------------------------------------------
+	// No selection yet (first visit): leave global.css's own committed
+	// defaults in effect rather than forcing one of the four.
+	const savedKey = localStorage.getItem(SELECTED_KEY);
+	const savedBtn = savedKey ? favoriteButtons.find((btn) => btn.dataset.favorite === savedKey) : undefined;
+	if (savedBtn) {
+		applyFavorite(readFavorite(savedBtn));
+	} else {
+		renderTokens();
+	}
+</script>

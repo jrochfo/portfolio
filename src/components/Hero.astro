@@ -618,6 +618,33 @@ const logos = [
 				}
 			}
 
+			// Toolbox alone has hand-painted variants matching each accent
+			// candidate in the color panel (the same "hero" model Jake's
+			// actively comparing them against) — swapped in live while
+			// comparing, reusing reloadTexture() exactly as the dev-only
+			// file watcher above does. "None" (or any model other than
+			// toolbox on screen) falls back to the model's own default
+			// texture rather than leaving an accent color applied after
+			// switching away from it.
+			const TOOLBOX_ACCENT_TEXTURES: Record<string, string> = {
+				ochre: '/models/toolbox/textures/toolbox-texture-ochre.png',
+				rust: '/models/toolbox/textures/toolbox-texture-rust.png',
+				moss: '/models/toolbox/textures/toolbox-texture-moss.png',
+				cobalt: '/models/toolbox/textures/toolbox-texture-cobalt.png',
+				teal: '/models/toolbox/textures/toolbox-texture-teal.png',
+				plum: '/models/toolbox/textures/toolbox-texture-plum.png',
+				coral: '/models/toolbox/textures/toolbox-texture-coral.png',
+			};
+
+			window.addEventListener('color-accent-change', (e) => {
+				const accent = (e as CustomEvent<{ accent: string }>).detail?.accent;
+				const modelDef = MODELS[currentModelIndex];
+				if (!accent || !modelDef || modelDef.id !== 'toolbox') return;
+				currentTexturePath = TOOLBOX_ACCENT_TEXTURES[accent] ?? modelDef.texture;
+				lastModified = null;
+				reloadTexture();
+			});
+
 			loadModel(currentModelIndex);
 
 			let watchInterval: number | null = null;

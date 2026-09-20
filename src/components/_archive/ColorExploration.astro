@@ -1,5 +1,18 @@
 ---
-// DEV-ONLY. Rendered conditionally by Base.astro
+// ARCHIVED 2026-09-18 — superseded by ../ColorFavorites.astro. This
+// was the full open-ended tinkering tool (Temperature/Compression/Ink
+// sliders, an 8-swatch Accent grid, unlimited saved favorites) used to
+// land on a shortlist of candidate palettes. That job is done — Jake
+// narrowed it to four favorites (Rust/Teal/Moss/Cobalt) and just needs
+// to pick one of those, not keep exploring — so ColorFavorites.astro
+// (tokens + those four favorites only, no sliders, nothing new to
+// save) replaced it as the panel Base.astro actually renders.
+//
+// Kept here rather than deleted in case wide-open exploration like
+// this is ever useful again (a future rebrand, a stuck decision) —
+// still fully functional, just not imported/rendered anywhere.
+//
+// DEV-ONLY. Was rendered conditionally by Base.astro
 // ({import.meta.env.DEV && <ColorExploration />}), so the whole
 // component — markup, styles, and script — is dead-code-eliminated
 // from production builds, not just hidden.
@@ -13,7 +26,10 @@
 ---
 
 <div id="color-exploration" class="color-exploration">
-	<p class="color-exploration__label">Color exploration</p>
+	<div class="color-exploration__header">
+		<p class="color-exploration__label">Color exploration</p>
+		<button type="button" class="color-exploration__collapse" id="ce-collapse" aria-expanded="true" aria-label="Collapse panel">−</button>
+	</div>
 
 	<div class="color-exploration__group">
 		<div class="color-exploration__group-title">Temperature</div>
@@ -59,7 +75,25 @@
 			<button type="button" data-accent="moss"
 				><span class="color-exploration__swatch" style="background: oklch(0.5 0.09 145);"></span>Moss</button
 			>
+			<button type="button" data-accent="cobalt"
+				><span class="color-exploration__swatch" style="background: oklch(0.549 0.185 262.4);"></span>Cobalt</button
+			>
+			<button type="button" data-accent="teal"
+				><span class="color-exploration__swatch" style="background: oklch(0.5 0.1 200);"></span>Teal</button
+			>
+			<button type="button" data-accent="plum"
+				><span class="color-exploration__swatch" style="background: oklch(0.45 0.13 320);"></span>Plum</button
+			>
+			<button type="button" data-accent="coral"
+				><span class="color-exploration__swatch" style="background: oklch(0.62 0.15 25);"></span>Coral</button
+			>
 		</div>
+	</div>
+
+	<div class="color-exploration__group">
+		<div class="color-exploration__group-title">Favorites</div>
+		<div class="color-exploration__favorites" id="ce-favorites"></div>
+		<button type="button" class="color-exploration__save-favorite" id="ce-save-favorite">+ Save current</button>
 	</div>
 
 	<div class="color-exploration__group">
@@ -91,6 +125,13 @@
 		color: #111;
 	}
 
+	.color-exploration__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+	}
+
 	.color-exploration__label {
 		margin: 0;
 		font-size: 10px;
@@ -98,6 +139,37 @@
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
 		color: #767570;
+	}
+
+	.color-exploration__collapse {
+		flex-shrink: 0;
+		width: 20px;
+		height: 20px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font: inherit;
+		font-size: 13px;
+		line-height: 1;
+		border-radius: 4px;
+		border: 1px solid #d8d7d2;
+		background: #fff;
+		color: #444;
+		cursor: pointer;
+	}
+
+	/* Collapsed: only the header row (label + toggle) stays visible —
+	   the panel shrinks down to a small pill anchored at the same
+	   bottom-left spot rather than disappearing, so it's still there to
+	   reach for without being in the way while not in use. */
+	.color-exploration.is-collapsed {
+		width: auto;
+		max-height: none;
+		padding: 8px 10px;
+	}
+
+	.color-exploration.is-collapsed > .color-exploration__group {
+		display: none;
 	}
 
 	.color-exploration__group {
@@ -177,6 +249,28 @@
 		border-left: 1px solid #d8d7d2;
 	}
 
+	/* Accent has grown past a single row — a real 4-column grid, not
+	   flex-wrap, so the 5th button starts a clean new row instead of
+	   wrapping wherever it happens to run out of space. The 1px gap
+	   plus a matching container background shows through as gridlines
+	   in both directions, which is simpler and more reliable than
+	   nth-child math for which buttons should/shouldn't get a border
+	   on which side. Overrides the plain toggle's own border-left
+	   rule above (same specificity, later in the file wins) since that
+	   rule would otherwise still draw a stray line at the start of
+	   row 2. */
+	.color-exploration__toggle--accent {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 1px;
+		background: #d8d7d2;
+	}
+
+	.color-exploration__toggle--accent button,
+	.color-exploration__toggle--accent button + button {
+		border-left: none;
+	}
+
 	.color-exploration__toggle button[aria-pressed='true'] {
 		background: #111;
 		color: #fff;
@@ -249,11 +343,86 @@
 		font-size: 10px;
 		color: #767570;
 	}
+
+	.color-exploration__favorites {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	.color-exploration__save-favorite {
+		align-self: flex-start;
+		font: inherit;
+		font-size: 11px;
+		padding: 5px 8px;
+		border-radius: 6px;
+		border: 1px dashed #d8d7d2;
+		background: #fff;
+		color: #444;
+		cursor: pointer;
+	}
+
+	/* :global() — favorite chips are created client-side (a saved
+	   config becomes a DOM element only when rendered), same reason as
+	   the token rows above: Astro's scoped-CSS attribute never lands on
+	   elements that don't exist in this file's own template. */
+	.color-exploration__favorites :global(.ce-favorite) {
+		position: relative;
+	}
+
+	.color-exploration__favorites :global(.ce-favorite__apply) {
+		width: 28px;
+		height: 28px;
+		padding: 0;
+		border-radius: 6px;
+		border: 1px solid #d8d7d2;
+		cursor: pointer;
+	}
+
+	.color-exploration__favorites :global(.ce-favorite__apply.is-active) {
+		border-color: #111;
+		box-shadow: 0 0 0 1px #111;
+	}
+
+	.color-exploration__favorites :global(.ce-favorite__accent-dot) {
+		position: absolute;
+		bottom: -3px;
+		right: -3px;
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		border: 1px solid rgba(0, 0, 0, 0.15);
+	}
+
+	.color-exploration__favorites :global(.ce-favorite__remove) {
+		position: absolute;
+		top: -6px;
+		right: -6px;
+		width: 14px;
+		height: 14px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 50%;
+		border: 1px solid #d8d7d2;
+		background: #fff;
+		color: #767570;
+		font-size: 9px;
+		line-height: 1;
+		padding: 0;
+		cursor: pointer;
+		opacity: 0;
+		transition: opacity 0.15s ease;
+	}
+
+	.color-exploration__favorites :global(.ce-favorite:hover .ce-favorite__remove) {
+		opacity: 1;
+	}
 </style>
 
 <script>
 	type InkKey = 'pure-black' | 'warm-10' | 'warm-15' | 'warm-20';
-	type AccentKey = 'none' | 'ochre' | 'rust' | 'moss';
+	type AccentKey = 'none' | 'ochre' | 'rust' | 'moss' | 'cobalt' | 'teal' | 'plum' | 'coral';
 
 	const INK_CONFIG: Record<InkKey, { lightness: number; chromaMix: number }> = {
 		'pure-black': { lightness: 0.04, chromaMix: 0 },
@@ -268,6 +437,13 @@
 		ochre: 'oklch(0.62 0.12 80)',
 		rust: 'oklch(0.55 0.14 40)',
 		moss: 'oklch(0.5 0.09 145)',
+		// Converted from #3169DB (a real hex Jake picked), not a guess.
+		cobalt: 'oklch(0.549 0.185 262.4)',
+		// Three more filling the rest of the hue wheel, same register —
+		// just for fun, to see what a fuller spread looks like live.
+		teal: 'oklch(0.5 0.1 200)',
+		plum: 'oklch(0.45 0.13 320)',
+		coral: 'oklch(0.62 0.15 25)',
 	};
 
 	const TOKENS: { label: string; varName: string }[] = [
@@ -287,6 +463,9 @@
 		ink: 'jr-color-ink',
 		accent: 'jr-color-accent',
 	};
+
+	const FAVORITES_KEY = 'jr-color-favorites';
+	const COLLAPSED_KEY = 'jr-color-collapsed';
 
 	const DEFAULTS = {
 		hue: 55,
@@ -309,6 +488,10 @@
 	const accentButtons = document.querySelectorAll<HTMLButtonElement>('[data-accent]');
 	const tokensList = document.querySelector<HTMLUListElement>('#ce-tokens');
 	const copiedEl = document.querySelector<HTMLParagraphElement>('#ce-copied');
+	const favoritesList = document.querySelector<HTMLDivElement>('#ce-favorites');
+	const saveFavoriteBtn = document.querySelector<HTMLButtonElement>('#ce-save-favorite');
+	const panelEl = document.querySelector<HTMLElement>('#color-exploration');
+	const collapseBtn = document.querySelector<HTMLButtonElement>('#ce-collapse');
 
 	function hueLabel(hue: number, chroma: number): string {
 		if (chroma < 0.003) return 'Neutral';
@@ -348,6 +531,11 @@
 		accentButtons.forEach((btn) => {
 			btn.setAttribute('aria-pressed', String(btn.dataset.accent === key));
 		});
+		// Same convention as Hero's own hero-model-change: anything that
+		// needs to react to the live accent (currently: the toolbox
+		// model's texture, if it's the model on screen) listens for this
+		// rather than polling --color-accent itself.
+		window.dispatchEvent(new CustomEvent('color-accent-change', { detail: { accent: key } }));
 	}
 
 	// --- Token readout -----------------------------------------------
@@ -408,8 +596,156 @@
 		});
 	}
 
+	// --- Favorites -----------------------------------------------------
+	// A saved snapshot of all five controls, so you can keep tweaking and
+	// come back to compare against something you already liked — or drop
+	// it once it's no longer in the running.
+	interface Favorite {
+		id: string;
+		hue: number;
+		chroma: number;
+		compression: number;
+		ink: InkKey;
+		accent: AccentKey;
+	}
+
+	function loadFavorites(): Favorite[] {
+		try {
+			const raw = localStorage.getItem(FAVORITES_KEY);
+			return raw ? JSON.parse(raw) : [];
+		} catch {
+			return [];
+		}
+	}
+
+	function saveFavorites(favorites: Favorite[]) {
+		localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+	}
+
+	function currentSnapshot(): Favorite {
+		return {
+			id: '',
+			hue: Number(hueInput?.value ?? DEFAULTS.hue),
+			chroma: Number(chromaInput?.value ?? DEFAULTS.chroma),
+			compression: Number(compressionInput?.value ?? DEFAULTS.compression),
+			ink: (localStorage.getItem(STORAGE_KEYS.ink) as InkKey | null) ?? DEFAULTS.ink,
+			accent: (localStorage.getItem(STORAGE_KEYS.accent) as AccentKey | null) ?? DEFAULTS.accent,
+		};
+	}
+
+	function sameConfig(a: Favorite, b: Favorite): boolean {
+		return a.hue === b.hue && a.chroma === b.chroma && a.compression === b.compression && a.ink === b.ink && a.accent === b.accent;
+	}
+
+	// Preview swatches don't touch the live page at all (unlike applying
+	// a favorite) — they just replicate global.css's own --color-bg/
+	// --color-ink formulas directly as literal oklch() values in a
+	// style attribute, independent of whatever the current live tokens
+	// resolve to. No need for the canvas/hex trick the token readout
+	// uses either: a preview swatch can show a raw oklch() color as-is,
+	// only the copyable token list needs an actual hex string.
+	function previewColors(fav: Favorite): { bg: string; accent: string } {
+		const ink = INK_CONFIG[fav.ink];
+		const bg = `oklch(0.99 ${fav.chroma} ${fav.hue})`;
+		const inkColor = `oklch(${ink.lightness} ${fav.chroma * ink.chromaMix * 3} ${fav.hue})`;
+		const accent = fav.accent === 'none' ? inkColor : ACCENT_CONFIG[fav.accent];
+		return { bg, accent };
+	}
+
+	function applyFavorite(fav: Favorite) {
+		if (hueInput) hueInput.value = String(fav.hue);
+		if (chromaInput) chromaInput.value = String(fav.chroma);
+		if (compressionInput) compressionInput.value = String(fav.compression);
+		applyTemperature(fav.hue, fav.chroma);
+		applyCompression(fav.compression);
+		applyInk(fav.ink);
+		applyAccent(fav.accent);
+		localStorage.setItem(STORAGE_KEYS.hue, String(fav.hue));
+		localStorage.setItem(STORAGE_KEYS.chroma, String(fav.chroma));
+		localStorage.setItem(STORAGE_KEYS.compression, String(fav.compression));
+		localStorage.setItem(STORAGE_KEYS.ink, fav.ink);
+		localStorage.setItem(STORAGE_KEYS.accent, fav.accent);
+		refresh();
+	}
+
+	function removeFavorite(id: string) {
+		saveFavorites(loadFavorites().filter((fav) => fav.id !== id));
+		renderFavorites();
+	}
+
+	function renderFavorites() {
+		if (!favoritesList) return;
+		favoritesList.innerHTML = '';
+		const current = currentSnapshot();
+		loadFavorites().forEach((fav) => {
+			const { bg, accent } = previewColors(fav);
+			const item = document.createElement('div');
+			item.className = 'ce-favorite';
+
+			const applyBtn = document.createElement('button');
+			applyBtn.type = 'button';
+			applyBtn.className = 'ce-favorite__apply';
+			if (sameConfig(fav, current)) applyBtn.classList.add('is-active');
+			applyBtn.style.background = bg;
+			applyBtn.title = `${fav.hue}° · ${fav.ink} · ${fav.accent}`;
+			applyBtn.addEventListener('click', () => applyFavorite(fav));
+
+			const dot = document.createElement('span');
+			dot.className = 'ce-favorite__accent-dot';
+			dot.style.background = accent;
+			applyBtn.appendChild(dot);
+
+			const removeBtn = document.createElement('button');
+			removeBtn.type = 'button';
+			removeBtn.className = 'ce-favorite__remove';
+			removeBtn.setAttribute('aria-label', 'Remove favorite');
+			removeBtn.textContent = '×';
+			removeBtn.addEventListener('click', (e) => {
+				e.stopPropagation();
+				removeFavorite(fav.id);
+			});
+
+			item.appendChild(applyBtn);
+			item.appendChild(removeBtn);
+			favoritesList.appendChild(item);
+		});
+	}
+
+	saveFavoriteBtn?.addEventListener('click', () => {
+		const favorites = loadFavorites();
+		// Date.now() alone can collide — two saves within the same
+		// millisecond (a real risk from a fast double-click, not just
+		// automated testing) would get identical ids, and removing one
+		// would then match and delete both.
+		const id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+		// Spread order matters: currentSnapshot() itself includes a
+		// placeholder id: '' (so it satisfies the Favorite shape for
+		// sameConfig() comparisons) — spreading it *after* id here would
+		// silently overwrite the real generated id with that empty
+		// string, which is exactly what happened (every favorite ended
+		// up with the same id: '', so removing one removed all of them).
+		favorites.push({ ...currentSnapshot(), id });
+		saveFavorites(favorites);
+		renderFavorites();
+	});
+
+	// --- Collapse --------------------------------------------------------
+	function setCollapsed(collapsed: boolean) {
+		panelEl?.classList.toggle('is-collapsed', collapsed);
+		collapseBtn?.setAttribute('aria-expanded', String(!collapsed));
+		if (collapseBtn) collapseBtn.textContent = collapsed ? '+' : '−';
+		localStorage.setItem(COLLAPSED_KEY, String(collapsed));
+	}
+
+	setCollapsed(localStorage.getItem(COLLAPSED_KEY) === 'true');
+
+	collapseBtn?.addEventListener('click', () => {
+		setCollapsed(!(panelEl?.classList.contains('is-collapsed') ?? false));
+	});
+
 	function refresh() {
 		renderTokens();
+		renderFavorites();
 	}
 
 	// --- Restore from localStorage ------------------------------------
