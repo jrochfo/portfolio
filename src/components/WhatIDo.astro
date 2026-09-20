@@ -1,7 +1,26 @@
 ---
+import { getImage } from 'astro:assets';
 import iconMotion from '../assets/icons/services/motion.svg';
 import iconSystems from '../assets/icons/services/systems.svg';
 import iconStrategy from '../assets/icons/services/strategy.svg';
+import iconPlay from '../assets/icons/functions/play.svg';
+import iconPause from '../assets/icons/functions/pause.svg';
+import motionFreedPoster from '../assets/work/what-i-do/posters/motion-freed-poster.jpg';
+
+interface VideoMedia {
+	type: 'video';
+	mp4: string;
+	webm: string;
+	poster: string;
+}
+
+// Mirrors Off The Clock's video() helper — same reasoning (a single
+// well-compressed poster format, not the full avif/webp/fallback triad
+// used for lightbox-worthy imagery).
+async function video(name: string, poster: ImageMetadata): Promise<VideoMedia> {
+	const resolvedPoster = await getImage({ src: poster, format: 'webp' });
+	return { type: 'video', mp4: `/video/what-i-do/${name}.mp4`, webm: `/video/what-i-do/${name}.webm`, poster: resolvedPoster.src };
+}
 
 const sections = [
 	{
@@ -9,18 +28,21 @@ const sections = [
 		claim: 'Everything I make moves.',
 		caption: 'Freed.ai — animated ads and spot illustration',
 		icon: iconMotion,
+		media: await video('motion-freed', motionFreedPoster),
 	},
 	{
 		title: 'Systems',
 		claim: 'One system, everywhere the brand lives.',
 		caption: 'Tulip — brand refresh, guidelines, and internal tooling',
 		icon: iconSystems,
+		media: null,
 	},
 	{
 		title: 'Strategy',
 		claim: 'Strategy, from the first workshop on.',
 		caption: 'Stack Overflow — the rebrand, below ↓',
 		icon: iconStrategy,
+		media: null,
 	},
 ];
 ---
@@ -39,7 +61,30 @@ const sections = [
 				</div>
 				<p class="type-body card__claim">{section.claim}</p>
 				<p class="type-caption card__caption">{section.caption}</p>
-				<div class="card__well" aria-hidden="true"></div>
+				<div class="card__well">
+					{section.media && (
+						<>
+							<video
+								class="card__media"
+								muted
+								loop
+								playsinline
+								preload="none"
+								data-poster={section.media.poster}
+								data-mp4={section.media.mp4}
+								data-webm={section.media.webm}
+							/>
+							<button type="button" class="card__playbtn" aria-label="Play video" aria-pressed="false">
+								<svg class="card__progress-ring" viewBox="0 0 32 32" aria-hidden="true">
+									<circle class="card__progress-ring-track" cx="16" cy="16" r="15" />
+									<circle class="card__progress-ring-bar" cx="16" cy="16" r="15" />
+								</svg>
+								<span class="card-icon card__play-icon" style={`--icon-src: url(${iconPlay.src})`} aria-hidden="true" />
+								<span class="card-icon card__pause-icon" style={`--icon-src: url(${iconPause.src})`} aria-hidden="true" />
+							</button>
+						</>
+					)}
+				</div>
 			</article>
 		))}
 	</div>
@@ -139,13 +184,21 @@ const sections = [
 	.card__claim {
 		grid-area: claim;
 		align-self: baseline;
+		margin-block-start: var(--space-2xs);
 	}
 
 	.card__caption {
 		grid-area: caption;
+		/* No margin-block-start here (desktop only — the mobile override
+		   below still needs its own, where caption moves to a genuinely
+		   separate row below the well). This and .card__claim share a
+		   grid row and are both align-self: baseline, which synchronizes
+		   their text baselines — margin here doesn't just move caption,
+		   it drags claim's baseline down to match, even though claim
+		   itself has none. That was the actual source of the gap not
+		   matching Also Shipped's cards, not a title/claim spacing rule. */
 		align-self: baseline;
 		justify-self: end;
-		margin-block-start: var(--space-s);
 		white-space: nowrap;
 	}
 
@@ -162,6 +215,118 @@ const sections = [
 		border-radius: var(--radius-well);
 		/* Slightly lighter than the card panel behind it. */
 		background: var(--color-panel-well);
+		position: relative;
+		overflow: hidden;
+	}
+
+	.card__media {
+		position: absolute;
+		inset: 0;
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		/* Browsers make video natively draggable by default, which
+		   fights the carousel's own mousedown-based drag gesture on the
+		   strip — same fix already applied to Also Shipped's and Off
+		   The Clock's carousel/well media. */
+		-webkit-user-drag: none;
+		user-select: none;
+	}
+
+	/* Manual override, not the only way to start playback — the active
+	   card's video already autoplays on its own. Hidden until hover on
+	   pointer devices that support it; always visible on touch and
+	   under reduced motion, where it's the only affordance. Same
+	   pattern as Also Shipped's carousel play button. */
+	.card__playbtn {
+		position: absolute;
+		right: var(--space-2xs);
+		bottom: var(--space-2xs);
+		z-index: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		border-radius: var(--radius-pill);
+		background: oklch(from var(--color-ink) l c h / 0.55);
+		color: var(--color-bg);
+		opacity: 1;
+		transition: opacity 0.15s ease;
+	}
+
+	@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+		.card__playbtn {
+			opacity: 0;
+		}
+
+		.card:hover .card__playbtn,
+		.card__playbtn:focus-visible {
+			opacity: 1;
+		}
+	}
+
+	.card-icon {
+		display: block;
+		width: 14px;
+		height: 14px;
+		background-color: currentColor;
+		-webkit-mask-image: var(--icon-src);
+		mask-image: var(--icon-src);
+		-webkit-mask-repeat: no-repeat;
+		mask-repeat: no-repeat;
+		-webkit-mask-position: center;
+		mask-position: center;
+		-webkit-mask-size: contain;
+		mask-size: contain;
+	}
+
+	/* Traces the play button's own 32px edge (r=15, stroke-width 2,
+	   fits exactly within it) — filled via JS on the video's timeupdate,
+	   not CSS, since it tracks actual playback position rather than a
+	   fixed duration. Rotated -90deg so the fill starts at 12 o'clock
+	   like a clock face, the usual convention for this kind of ring. */
+	.card__progress-ring {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
+		transform: rotate(-90deg);
+	}
+
+	.card__progress-ring-track,
+	.card__progress-ring-bar {
+		fill: none;
+		stroke-width: 2;
+	}
+
+	.card__progress-ring-track {
+		stroke: oklch(from var(--color-bg) l c h / 0.3);
+	}
+
+	.card__progress-ring-bar {
+		stroke: var(--color-bg);
+		stroke-linecap: round;
+		/* 2 * PI * r(15) — the ring's full circumference. Dasharray
+		   fixed here since the radius never changes; JS only ever
+		   touches dashoffset (0 = full circle drawn, circumference =
+		   nothing drawn) to reflect playback progress. */
+		stroke-dasharray: 94.2478;
+		stroke-dashoffset: 94.2478;
+	}
+
+	.card__pause-icon {
+		display: none;
+	}
+
+	.card__playbtn[aria-pressed='true'] .card__play-icon {
+		display: none;
+	}
+
+	.card__playbtn[aria-pressed='true'] .card__pause-icon {
+		display: block;
 	}
 
 	.nav-pill {
@@ -253,10 +418,121 @@ const sections = [
 
 <script>
 	import { createCarousel } from '../scripts/carousel';
+	import { wireImageLazyLoad } from '../scripts/lazyMedia';
 
 	const strip = document.querySelector<HTMLElement>('.card-strip');
 	const cards = strip ? [...strip.querySelectorAll<HTMLElement>('.card')] : [];
 	const tabs = [...document.querySelectorAll<HTMLButtonElement>('.nav-pill__tab')];
+
+	const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+	// Same convention as Also Shipped: the active card's well video
+	// autoplays on its own, no hover required — it's already a
+	// deliberate navigation action. An IntersectionObserver additionally
+	// pauses it once the strip scrolls out of view, so a video left
+	// active doesn't keep decoding indefinitely as the page scrolls
+	// past it. Reduced motion: never autoplays either way; the
+	// always-visible-on-touch, hover-revealed-on-desktop play button is
+	// the only way to start it.
+	function wireCardVideos() {
+		const videos = cards.map((card) => card.querySelector<HTMLVideoElement>('video.card__media'));
+		let activeIndex = 0;
+		// Starts false, not true — IntersectionObserver's first callback
+		// fires asynchronously, never synchronously on observe(). Same
+		// false-until-observed pattern used everywhere else on this site
+		// (Also Shipped, Off The Clock, the About/Hero model viewers).
+		let isVisible = false;
+
+		const visibilityObserver = new IntersectionObserver(
+			([entry]) => {
+				isVisible = entry.isIntersecting;
+				refresh();
+			},
+			{ threshold: 0.01 },
+		);
+		if (strip) visibilityObserver.observe(strip);
+
+		function ensureLoaded(video: HTMLVideoElement) {
+			if (video.dataset.loaded) return;
+			const webm = video.dataset.webm;
+			const mp4 = video.dataset.mp4;
+			if (webm) {
+				const source = document.createElement('source');
+				source.src = webm;
+				source.type = 'video/webm';
+				video.appendChild(source);
+			}
+			if (mp4) {
+				const source = document.createElement('source');
+				source.src = mp4;
+				source.type = 'video/mp4';
+				video.appendChild(source);
+			}
+			video.load();
+			video.dataset.loaded = 'true';
+		}
+
+		function playBtnFor(video: HTMLVideoElement) {
+			return video.nextElementSibling as HTMLButtonElement | null;
+		}
+
+		function syncButton(video: HTMLVideoElement) {
+			const btn = playBtnFor(video);
+			if (btn) btn.setAttribute('aria-pressed', String(!video.paused));
+		}
+
+		// Matches stroke-dasharray in the CSS above — 2 * PI * r(15).
+		const RING_CIRCUMFERENCE = 94.2478;
+
+		function syncProgressRing(video: HTMLVideoElement) {
+			const bar = playBtnFor(video)?.querySelector<SVGCircleElement>('.card__progress-ring-bar');
+			if (!bar) return;
+			const progress = video.duration ? video.currentTime / video.duration : 0;
+			bar.style.strokeDashoffset = String(RING_CIRCUMFERENCE * (1 - progress));
+		}
+
+		videos.forEach((video) => {
+			if (!video) return;
+			video.addEventListener('play', () => syncButton(video));
+			video.addEventListener('pause', () => syncButton(video));
+			video.addEventListener('timeupdate', () => syncProgressRing(video));
+
+			const btn = playBtnFor(video);
+			btn?.addEventListener('click', (e) => {
+				e.stopPropagation();
+				ensureLoaded(video);
+				if (video.paused) {
+					video.play().catch(() => {});
+				} else {
+					video.pause();
+				}
+			});
+		});
+
+		function refresh() {
+			videos.forEach((video, i) => {
+				if (!video) return;
+				const isActive = i === activeIndex;
+				if (!isActive || !isVisible || reduceMotionQuery.matches) {
+					if (!video.paused) video.pause();
+					return;
+				}
+				ensureLoaded(video);
+				video.play().catch(() => {});
+			});
+		}
+
+		refresh();
+
+		return {
+			setActive(index: number) {
+				activeIndex = index;
+				refresh();
+			},
+		};
+	}
+
+	const videoController = wireCardVideos();
 
 	function setActive(index: number) {
 		tabs.forEach((tab, i) => {
@@ -266,6 +542,7 @@ const sections = [
 				tab.removeAttribute('aria-current');
 			}
 		});
+		videoController.setActive(index);
 	}
 
 	function currentInset() {
@@ -274,6 +551,8 @@ const sections = [
 		const value = style.scrollPaddingLeft || style.scrollPaddingInlineStart;
 		return parseFloat(value) || 0;
 	}
+
+	if (strip) wireImageLazyLoad(strip);
 
 	if (strip && cards.length > 0) {
 		const carousel = createCarousel({
