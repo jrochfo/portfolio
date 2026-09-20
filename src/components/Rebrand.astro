@@ -1,20 +1,286 @@
 ---
+import { getImage } from 'astro:assets';
+import GlyphViewer from './GlyphViewer.astro';
+import AnimatedLogo from './AnimatedLogo.astro';
+import rfpCoverSvg from '../assets/work/so-rebrand/direction/rfp.svg';
+import londonConference from '../assets/work/so-rebrand/direction/london-1.jpg';
+import londonPlacard from '../assets/work/so-rebrand/direction/london-2.jpg';
+import londonWhiteboard from '../assets/work/so-rebrand/direction/london-3.jpg';
+import londonPub from '../assets/work/so-rebrand/direction/london-4.jpg';
+import brandWorkshopSvg from '../assets/work/so-rebrand/direction/brandworkshop-1.svg';
+import whatHowWhySvg from '../assets/work/so-rebrand/direction/workshop-whathowwhy.svg';
+
+import newLogo from '../assets/work/so-rebrand/systems/systems-1.svg';
+import nashville1 from '../assets/work/so-rebrand/systems/systems-2-1.jpg';
+import nashville2 from '../assets/work/so-rebrand/systems/systems-2-2.jpg';
+import uxNotificationCards from '../assets/work/so-rebrand/systems/systems-3-1.svg';
+import ux404Page from '../assets/work/so-rebrand/systems/systems-3-2.svg';
+import guidelinesWalkthroughPlaceholder from '../assets/work/so-rebrand/systems/systems-4.svg';
+import glyphViewerPlaceholder from '../assets/work/so-rebrand/systems/systems-5-1.svg';
+import typeDetailZoom from '../assets/work/so-rebrand/systems/systems-5-2.svg';
+import toneOfVoice from '../assets/work/so-rebrand/systems/systems-6.svg';
+import stacksShapeSystem from '../assets/work/so-rebrand/systems/systems-7-1.svg';
+import stacksLinkedInMockup from '../assets/work/so-rebrand/systems/systems-7-2.svg';
+import isometricSkewDiagram from '../assets/work/so-rebrand/systems/systems-8-1.svg';
+import isometricSkewPlugin from '../assets/work/so-rebrand/systems/systems-8-2.svg';
+import deckTemplatesPlaceholder from '../assets/work/so-rebrand/systems/systems-9.svg';
+
 const acts = [
 	{
 		title: 'Direction',
 		description:
-			'Vision and strategy with the C-suite and Koto. workshops in London and alignment across every leadership team.',
+			"Three months of internal research became a 40-page RFP, then a five-agency search that ended with Koto. Remote workshops mapped our what, how, and why before we ever met in person, then a week in London turned that into strategy and tone-of-voice sessions face to face with the C-suite. We left that week with every leader aligned on the same direction, months before any visual work began.",
 	},
 	{
 		title: 'System',
 		description:
-			'An evolution built to hold up across product, marketing, and millions of developers.',
+			"Logo, type, a brand shape system, tone of voice, and more all came together on a guidelines site our team built end to end. We met with Koto and Stack Overflow's product team in Nashville for a brand-product intensive, sticky notes covering the walls, as we stress-tested the new brand against real interface problems. We left Nashville with a system ready for rollout to both product and marketing.",
 	},
 	{
 		title: 'Rollout',
 		description: 'A year of deployment: product surfaces, decks, events, social, motion.',
 	},
 ];
+
+// Each act with real content gets its own pin board: a loose
+// two-column grid (occasional full-width rows for hero pieces), each
+// photo/document held down by a small pushpin at its top-center and
+// given a very slight per-item skew — not a freeform scatter, but not
+// a sterile grid either. Rollout is still the original placeholder
+// grid below, pending its own content.
+const [conferenceImg, placardImg, whiteboardImg, pubImg, nashville1Img, nashville2Img] = await Promise.all([
+	getImage({ src: londonConference, format: 'webp', width: 900 }),
+	getImage({ src: londonPlacard, format: 'webp', width: 700 }),
+	getImage({ src: londonWhiteboard, format: 'webp', width: 900 }),
+	getImage({ src: londonPub, format: 'webp', width: 700 }),
+	getImage({ src: nashville1, format: 'webp', width: 900 }),
+	getImage({ src: nashville2, format: 'webp', width: 900 }),
+	// The RFP cover and the workshop board (Direction) and every System
+	// asset are SVGs, used directly below via .src — vector, so they
+	// skip the raster pipeline entirely. No resolution/quality tuning
+	// needed; they're crisp at any size for free.
+]);
+
+interface Pin {
+	src: string;
+	alt: string;
+	ratio: number; // width / height — drives both the flex-grow share within a shared-height row, and (for the full-width row) the aspect-ratio itself
+	rot: number; // a couple of degrees at most — a hint of skew, not the old scatter's rotation
+	pinTop?: string; // overrides the pin's default top offset — for an image with its own transparent margin (the workshop board), so the pin lands on the actual slide inside it, not the image's outer edge
+	transparentBg?: boolean; // suppresses the shared neutral placeholder background — for an image with its own transparent gutters (e.g. the type-detail close-up), so the placeholder tone doesn't show through as a faint mat
+	component?: 'glyph-viewer' | 'animated-logo'; // renders a real component in place of the <img> — for the interactive glyph-set viewer and the animated logo well, both of which need live DOM/JS rather than a static image
+}
+
+// Grouped into explicit rows (rather than one auto-flowing list) so
+// each row of two can share a single height, with each image's own
+// aspect ratio determining how much of the row's width it takes —
+// the wide research/strategy boards naturally run wider than the
+// square placard/pub/conference shots, instead of both being forced
+// into equal-width columns with mismatched heights. The workshop
+// board is the one full-width row, sized by its own aspect ratio
+// alone rather than sharing a row height with anything.
+const directionRows: Pin[][] = [
+	[
+		{
+			src: rfpCoverSvg.src,
+			alt: 'Cover of the 40-page RFP Jake and Dave drafted to kick off the rebrand search',
+			ratio: 595 / 842,
+			rot: -0.8,
+		},
+		{
+			src: whatHowWhySvg.src,
+			alt: 'A "What, How, Why" brand strategy board from an early remote workshop, covered in sticky notes',
+			ratio: 3191 / 1894,
+			rot: 0.6,
+		},
+	],
+	[
+		{
+			src: placardImg.src,
+			alt: 'A room sign reading "Poached" next to a booking panel showing the room reserved for Stack Overflow, at Koto’s London studio',
+			ratio: 1,
+			rot: 0.9,
+		},
+		{
+			src: conferenceImg.src,
+			alt: 'Jake and the Koto team in a meeting room, a slide reading "Technology enthusiasts" on the screen behind them',
+			ratio: 1,
+			rot: -0.7,
+		},
+	],
+	[
+		{
+			src: whiteboardImg.src,
+			alt: 'Whiteboard covered in handwritten notes from a brand metaphor exercise, listing words like "Source," "Oasis," and "Vital"',
+			ratio: 3874 / 3024,
+			rot: 0.7,
+		},
+		{
+			src: pubImg.src,
+			alt: 'Jake raising a pint outside a London pub after the workshop',
+			ratio: 1,
+			rot: -1,
+		},
+	],
+	[
+		{
+			src: brandWorkshopSvg.src,
+			alt: 'A personality and tone-of-voice workshop board, with sticky-note reactions to sample marketing copy',
+			ratio: 2400 / 1400,
+			rot: 0.5,
+			// This SVG's own board rect sits inset from the canvas edge
+			// (translate(141.889 84.5625) in the file — its drop-shadow
+			// filters need that margin to blur into), not flush like the
+			// old PNG exports looked. 84.5625/1400 = 6.04% down is where
+			// the board itself actually starts.
+			pinTop: 'calc(6.04% - 6px)',
+		},
+	],
+];
+
+// System's own rows — deliberately plain, unlike Direction's scattered
+// pinboard: no skew, no pushpins, uniform spacing throughout, closer
+// to the grid this act used as a placeholder. Direction's exploratory,
+// slightly-messy corkboard treatment fit its own theme (workshops,
+// sticky notes, alignment being *found*); System is the opposite
+// story — a system being *engineered* — so it reads as a clean,
+// systematic grid instead. Sequenced as one uninterrupted kit-first
+// deep-dive, product application held back as the closer rather than
+// an early interruption: the new logo full-width as the opening beat,
+// a placeholder for the brand-guidelines-site walkthrough video, the
+// interactive glyph viewer (placeholder for now) next to a
+// type-detail close-up, the tone-of-voice principles, the full
+// "Stacks" shape system next to it in use, the isometric-skew
+// construction method next to the plugin setting that produces it, a
+// placeholder for the deck-template library video, and finally the
+// Nashville workshop where Koto met Stack's product team next to two
+// examples of the system solving real product problems — proof it
+// works, closing System out and setting up Rollout right after.
+const systemRows: Pin[][] = [
+	[
+		{
+			src: newLogo.src,
+			alt: 'The new Stack Overflow logo lockup animating in against a scrub through brand guideline visuals, then settling back on the rebrand’s orange',
+			ratio: 3840 / 2160,
+			rot: 0,
+			component: 'animated-logo',
+		},
+	],
+	[
+		{
+			src: guidelinesWalkthroughPlaceholder.src,
+			alt: 'Placeholder for a video walkthrough of the brand guidelines site Jake and Dave built, covering color, type, motion, illustration, and icons in depth',
+			ratio: 3840 / 2160,
+			rot: 0,
+		},
+	],
+	[
+		{
+			src: glyphViewerPlaceholder.src,
+			alt: 'An interactive glyph-set viewer showing the typeface at large scale, marking its ascender, cap height, x-height, baseline, and descender, with a switcher for weight',
+			ratio: 1944 / 2370,
+			rot: 0,
+			component: 'glyph-viewer',
+		},
+		{
+			src: typeDetailZoom.src,
+			alt: 'An extreme close-up on the typeface, showing individual letterform details at large scale',
+			ratio: 1944 / 2370,
+			rot: 0,
+			transparentBg: true,
+		},
+	],
+	[
+		{
+			src: toneOfVoice.src,
+			alt: 'A slide reading "The Stack Overflow tone of voice is based on the following principles: simple, spirited, syntax," with a short definition of each',
+			ratio: 3840 / 2160,
+			rot: 0,
+		},
+	],
+	[
+		{
+			src: stacksShapeSystem.src,
+			alt: 'The full "Stacks" shape system — fifteen named 2D and 3D brand shapes, from Data and DNA to Rotor and Helix',
+			ratio: 1855 / 2315,
+			rot: 0,
+		},
+		{
+			src: stacksLinkedInMockup.src,
+			alt: 'A mockup of a Stack Overflow LinkedIn post using the Stacks shape system',
+			ratio: 1914 / 2315,
+			rot: 0,
+		},
+	],
+	[
+		{
+			src: isometricSkewDiagram.src,
+			alt: 'A diagram showing how to skew text against isometric shapes at precise pixel offsets',
+			ratio: 2790 / 1987,
+			rot: 0,
+		},
+		{
+			src: isometricSkewPlugin.src,
+			alt: 'The Figma plugin settings used to apply that same isometric skew',
+			ratio: 1055 / 1987,
+			rot: 0,
+		},
+	],
+	[
+		{
+			src: deckTemplatesPlaceholder.src,
+			alt: 'Placeholder for a video cycling through the rebrand’s refreshed deck template library',
+			ratio: 3840 / 2071,
+			rot: 0,
+		},
+	],
+	[
+		{
+			src: nashville1Img.src,
+			alt: 'Koto and Stack Overflow working through product theming questions during a workshop in Nashville, sketches and sticky notes covering the table',
+			ratio: 1630 / 1630,
+			rot: 0,
+		},
+		{
+			src: nashville2Img.src,
+			alt: 'The Koto and Stack Overflow teams grouped around a wall of sticky notes from the Nashville workshop',
+			ratio: 2173 / 1630,
+			rot: 0,
+		},
+	],
+	[
+		{
+			src: uxNotificationCards.src,
+			alt: 'Stacked push-notification cards showing the rebrand carrying into a new product-alert design',
+			ratio: 1880 / 1658,
+			rot: 0,
+		},
+		{
+			src: ux404Page.src,
+			alt: 'A 404 error page using the rebrand’s 3D isometric shapes',
+			ratio: 1880 / 1658,
+			rot: 0,
+		},
+	],
+];
+
+interface ActPinboard {
+	rows: Pin[][];
+	// 'scattered': Direction's corkboard — skewed, pinned, hand-tuned
+	// gaps. 'plain': everything else — square, unpinned, one uniform
+	// gap throughout. The style is a property of the ACT (its theme),
+	// not of any individual image, which is why it lives here rather
+	// than on each Pin.
+	style: 'scattered' | 'plain';
+}
+
+// Looked up by act title — an act with an entry here gets a real pin
+// board; without one (Rollout, for now) it falls back to the original
+// placeholder grid.
+const pinboardsByAct: Record<string, ActPinboard> = {
+	Direction: { rows: directionRows, style: 'scattered' },
+	System: { rows: systemRows, style: 'plain' },
+};
 ---
 
 <section class="rebrand">
@@ -36,12 +302,35 @@ const acts = [
 				<article class="act">
 					<h2 class="type-h2">{act.title}</h2>
 					<p class="type-body act__desc">{act.description}</p>
-					<div class="act__gallery">
-						<div class="act__gallery-item" aria-hidden="true"></div>
-						<div class="act__gallery-item" aria-hidden="true"></div>
-						<div class="act__gallery-item" aria-hidden="true"></div>
-						<div class="act__gallery-item" aria-hidden="true"></div>
-					</div>
+					{pinboardsByAct[act.title] ? (
+						<div class={`act__pinboard act__pinboard--${pinboardsByAct[act.title].style}`}>
+							{pinboardsByAct[act.title].rows.map((row) => (
+								<div class={`act__pinboard-row ${row.length === 1 ? 'act__pinboard-row--full' : ''}`}>
+									{row.map((pin) => (
+										<div class="act__pinboard-item" style={`--ratio:${pin.ratio}; --rot:${pin.rot}deg; --pin-top:${pin.pinTop ?? '-6px'}; --item-bg:${pin.transparentBg ? 'none' : 'var(--color-neutral)'};`}>
+											{pinboardsByAct[act.title].style === 'scattered' && (
+												<span class="act__pinboard-pin" aria-hidden="true"></span>
+											)}
+											{pin.component === 'glyph-viewer' ? (
+												<GlyphViewer />
+											) : pin.component === 'animated-logo' ? (
+												<AnimatedLogo />
+											) : (
+												<img class="act__pinboard-img" src={pin.src} alt={pin.alt} loading="lazy" />
+											)}
+										</div>
+									))}
+								</div>
+							))}
+						</div>
+					) : (
+						<div class="act__gallery">
+							<div class="act__gallery-item" aria-hidden="true"></div>
+							<div class="act__gallery-item" aria-hidden="true"></div>
+							<div class="act__gallery-item" aria-hidden="true"></div>
+							<div class="act__gallery-item" aria-hidden="true"></div>
+						</div>
+					)}
 				</article>
 			))}
 		</div>
@@ -120,6 +409,203 @@ const acts = [
 		background: var(--color-neutral);
 	}
 
+	/* Explicit rows (see directionRows in the frontmatter), not one
+	   auto-flowing grid. Within a two-image row, flex-grow proportional
+	   to each image's own ratio (--ratio) decides how much of the row's
+	   width it takes, and aspect-ratio (not a fixed height) derives each
+	   image's own height from that width — the ratio cancels out of the
+	   math, so every image in the row lands at the exact same height
+	   with zero cropping, rather than a hardcoded row height fighting
+	   object-fit to fake it. The closing workshop board is a plain
+	   block row (not flex) so its single image just fills the container
+	   width normally — flex's default flex-shrink:0 on a lone
+	   non-growing item refuses to shrink below the image's own intrinsic
+	   pixel size, which is what was blowing it out past the container. */
+	.act__pinboard {
+		margin-block-start: var(--space-m);
+	}
+
+	.act__pinboard-row {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--space-s);
+	}
+
+	.act__pinboard-row + .act__pinboard-row {
+		margin-block-start: var(--space-s);
+	}
+
+	/* Tighter than the general row-to-row gap above — a full-width
+	   image's own top margin (transparent space a drop-shadow blurs
+	   into, e.g. the Direction workshop board) already reads as extra
+	   whitespace on top of a full page gap, so that transition
+	   specifically needs to be shorter than the others to not look
+	   doubled-up. Zero here, not just a smaller token — the item's own
+	   14px pin-clearance margin (below) already does all the work of
+	   separating it from the row above.
+
+	   Scoped to .act__pinboard--scattered (Direction) and to only a
+	   *2-column* row feeding into a full row: plain-style boards
+	   (System) want their one uniform gap everywhere, and even within
+	   scattered, two full rows back to back (a placeholder video into
+	   its next full slide) don't have this doubled-whitespace problem
+	   in the first place — zeroing that gap too would read as two
+	   slabs touching with no separation at all. */
+	.act__pinboard--scattered .act__pinboard-row:not(.act__pinboard-row--full) + .act__pinboard-row--full {
+		margin-block-start: 0;
+	}
+
+	/* System's own rows: no skew (rot is 0 in the data anyway), no
+	   pushpins (not rendered in the markup for this style), and one
+	   uniform gap everywhere instead of scattered's hand-tuned
+	   exceptions above — closer to the plain grid this act used as a
+	   placeholder before real content arrived. */
+	.act__pinboard--plain .act__pinboard-row {
+		gap: var(--space-xs);
+	}
+
+	.act__pinboard--plain .act__pinboard-row + .act__pinboard-row {
+		margin-block-start: var(--space-xs);
+	}
+
+	.act__pinboard--plain .act__pinboard-item {
+		/* No pin, so no need to reserve space above the image for one. */
+		margin-block-start: 0;
+	}
+
+	.act__pinboard-row--full {
+		/* flow-root, not plain block — block would let the item's own
+		   margin-block-start (below) collapse into this rule's own
+		   margin-block-start instead of adding to it, making the gap
+		   above this one row 14px shorter than every other gap on the
+		   board. flow-root keeps the plain block layout (still no
+		   flex-shrink:0 overflow risk) while stopping that collapse. */
+		display: flow-root;
+	}
+
+	.act__pinboard-item {
+		position: relative;
+		/* flex-basis: 0 + grow: var(--ratio) is the standard "justified
+		   row" trick — items share the row's width in proportion to their
+		   own aspect ratio. */
+		flex: var(--ratio) 1 0;
+		min-width: 0;
+		/* Room for the pushpin to sit half on, half above the photo. Kept
+		   on every item unconditionally (not just the first per row) so
+		   row-to-row spacing and item-to-item spacing (the mobile stack,
+		   via the row's own gap) end up visually identical — both are
+		   this same 14px plus the shared var(--space-m) rhythm. */
+		margin-block-start: 14px;
+	}
+
+	.act__pinboard-img {
+		display: block;
+		width: 100%;
+		aspect-ratio: var(--ratio);
+		border-radius: var(--radius-well);
+		/* Defaults to the shared neutral placeholder tone; a pin with
+		   its own transparent gutters (see transparentBg on the Pin
+		   type) sets this to none instead, so that tone doesn't show
+		   through as a faint mat. */
+		background: var(--item-bg);
+		transform: rotate(var(--rot));
+	}
+
+	/* Scoped to scattered boards only — this bleed math is measured
+	   specifically off the Direction workshop board's own margins
+	   (see below). System's full-width rows are plain placeholders/
+	   slides with no matching margin to reveal, so they stay at the
+	   ordinary width: 100% from the base rule above; applying this
+	   same scale-up to them would just overflow them past the
+	   container for no reason. */
+	.act__pinboard--scattered .act__pinboard-row--full .act__pinboard-img {
+		/* The workshop board's own SVG content is inset from its canvas
+		   edge (room for its drop-shadow filters to blur into) — the
+		   shared neutral placeholder background above would otherwise
+		   show through that margin as a faint mat instead of blending
+		   into the page. */
+		background: none;
+		/* The global img reset (max-width: 100%, see global.css) caps
+		   every image at its container's width by default — exactly
+		   what every other pin here wants, but it silently overrides
+		   the bleed below no matter how `width` itself is set (even
+		   with !important), since max-width is a separate constraint
+		   the cascade applies after width resolves. This is the one
+		   pin deliberately meant to exceed its container. */
+		max-width: none;
+		/* The black board itself (not the transparent canvas around it)
+		   fills 2117.11 of this file's 2400px width — 88.2% — measured
+		   straight from the SVG's own board rect. Scaling the whole
+		   image up by 1/0.882 makes the board land at container width,
+		   so the post-it notes pinned in the margin around it (which
+		   this export centers almost exactly — left/right margins are
+		   within 0.04% of each other) bleed past the container edge
+		   instead of being squeezed inside it. min() caps that scale-up
+		   against the actual viewport (minus a fixed 16px gutter each
+		   side) rather than the container, so on a narrower window —
+		   where there isn't 1200px of page to bleed into — it eases
+		   back down smoothly toward the container's own width instead
+		   of overflowing it. */
+		--bleed-width: min(113.37%, calc(100vw - 32px));
+		width: var(--bleed-width);
+		margin-inline: calc((100% - var(--bleed-width)) / 2);
+	}
+
+	/* The pin itself never rotates — only the photo beneath it does,
+	   the way a real pushpin holds a photo steady while the photo
+	   itself hangs slightly askew. Colored off the live accent token
+	   (see the color panel) rather than a fixed hue, so it always
+	   matches whichever candidate is active. --pin-top defaults to
+	   sitting half on/half above the photo's own top edge, but a pin
+	   can override it (see pinTop on the Pin type) for an image with
+	   its own transparent margin, so the pin lands on the actual
+	   content inside rather than the file's outer bounds. */
+	.act__pinboard-pin {
+		position: absolute;
+		top: var(--pin-top, -6px);
+		left: 50%;
+		transform: translateX(-50%);
+		width: 18px;
+		height: 18px;
+		border-radius: 50%;
+		z-index: 2;
+		background: radial-gradient(
+			circle at 35% 30%,
+			oklch(from var(--color-accent) calc(l + 0.2) c h),
+			var(--color-accent) 55%,
+			oklch(from var(--color-accent) calc(l - 0.15) c h) 100%
+		);
+		box-shadow: 0 3px 4px oklch(from var(--color-ink) l c h / 0.35);
+	}
+
+	@media (max-width: 768px) {
+		.act__pinboard-row {
+			/* A single-column scroll of content, not a shared-height row,
+			   at phone width — two photos side by side would be too small
+			   to read. The row's own `gap` (unchanged from desktop) now
+			   spaces the stacked items vertically instead of horizontally,
+			   which is what keeps this rhythm matching the row-to-row
+			   margin below rather than needing a separate value. */
+			flex-direction: column;
+		}
+
+		.act__pinboard-item {
+			flex: none;
+		}
+
+		.act__pinboard-img {
+			/* No skew on mobile — the pin stays, the tilt goes. */
+			transform: none;
+		}
+
+		.act__pinboard-row--full .act__pinboard-img {
+			/* No bleed at phone width either — there's no page margin to
+			   bleed into in the first place, so this just matches every
+			   other pin's plain full-width treatment. */
+			width: 100%;
+			margin-inline: 0;
+		}
+	}
 </style>
 
 <script>

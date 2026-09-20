@@ -1,0 +1,345 @@
+---
+// A full-loop animation for System's opening beat: the flag mark builds
+// from a blinking cursor bar into the full glyph, holds while the
+// background scrubs through six visuals from the guidelines site (the
+// logo recoloring to whatever reads against each one), then collapses
+// back to a bar and blinks until the loop repeats.
+//
+// The wordmark is a CSS mask (the same technique Nav.astro uses for the
+// toolbox icon) — a single fixed shape, only its color ever changes.
+// The glyph is different: it swaps between 56 source SVGs at 24fps, and
+// swapping mask-image that often to onto a masked div proved unreliable
+// (Chromium ghosting/flicker between the old and new mask bitmap during
+// the swap) — it's a <canvas> instead, cleared and redrawn every frame
+// with drawImage() + a 'source-in' color fill, which is fully synchronous
+// and leaves no room for a stale mask to linger.
+import newLogoWordmark from '../assets/work/so-rebrand/systems/systems-1-wordmark-mask.svg';
+
+const glyphFrameModules = import.meta.glob<{ default: { src: string } }>(
+	'../assets/work/so-rebrand/systems/glyph-sequence-2/*.svg',
+	{ eager: true },
+);
+const glyphFrames = Object.keys(glyphFrameModules)
+	.sort()
+	.map((key) => glyphFrameModules[key].default.src);
+
+// The six background visuals the well scrubs through while the glyph
+// holds on frame 16. `color` is the logo's fill against that
+// background (ink or white only, per brand) — `null` means the visual
+// already carries its own logo treatment (systems-1-scrub-3, the
+// terminal/ascii one) and the glyph+wordmark overlay hides entirely.
+import scrub2 from '../assets/work/so-rebrand/systems/systems-1-scrub-2.jpg';
+import scrub3 from '../assets/work/so-rebrand/systems/systems-1-scrub-3.svg';
+import scrub4 from '../assets/work/so-rebrand/systems/systems-1-scrub-4.svg';
+import scrub5 from '../assets/work/so-rebrand/systems/systems-1-scrub-5.svg';
+import scrub6 from '../assets/work/so-rebrand/systems/systems-1-scrub-6.jpg';
+import scrub7 from '../assets/work/so-rebrand/systems/systems-1-scrub-7.svg';
+import { getImage } from 'astro:assets';
+
+const scrub2Optimized = await getImage({ src: scrub2, width: 1920, format: 'webp', quality: 70 });
+const scrub3Optimized = await getImage({ src: scrub3, width: 1920, format: 'webp', quality: 82 });
+const scrub6Optimized = await getImage({ src: scrub6, width: 1920, format: 'webp', quality: 70 });
+
+const SCRUB_VISUALS = [
+	{ src: scrub2Optimized.src, color: '#FFFFFF' },
+	{ src: scrub3Optimized.src, color: null },
+	{ src: scrub4.src, color: '#201C1D' },
+	{ src: scrub5.src, color: '#FFFFFF' },
+	{ src: scrub6Optimized.src, color: '#201C1D' },
+	{ src: scrub7.src, color: '#FFFFFF' },
+];
+const scrubColors = SCRUB_VISUALS.map((v) => v.color);
+---
+
+<div class="animated-logo" data-animated-logo data-glyph-frame-count={glyphFrames.length}>
+	<div class="animated-logo__bg animated-logo__bg--orange" data-bg-orange></div>
+	{
+		SCRUB_VISUALS.map((visual, i) => (
+			<img class="animated-logo__bg" data-bg-index={i} src={visual.src} alt="" aria-hidden="true" loading="eager" hidden />
+		))
+	}
+
+	<div class="animated-logo__glyph" data-glyph>
+		<canvas data-glyph-canvas></canvas>
+	</div>
+	<div class="animated-logo__wordmark" data-wordmark style={`mask-image:url(${newLogoWordmark.src}); -webkit-mask-image:url(${newLogoWordmark.src});`} />
+
+	<script type="application/json" data-glyph-frames is:inline set:html={JSON.stringify(glyphFrames)} />
+	<script type="application/json" data-scrub-colors is:inline set:html={JSON.stringify(scrubColors)} />
+</div>
+
+<style>
+	.animated-logo {
+		position: relative;
+		width: 100%;
+		aspect-ratio: var(--ratio);
+		border-radius: var(--radius-well);
+		overflow: hidden;
+		background: var(--color-neutral);
+	}
+
+	.animated-logo__bg {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		display: block;
+		object-fit: cover;
+	}
+
+	.animated-logo__bg[hidden] {
+		display: none;
+	}
+
+	.animated-logo__bg--orange {
+		background: #ff5e00;
+	}
+
+	/* Position/size derived from frame 16's own shape bounding box,
+	   scaled+translated so it lands on the flag mark's original spot in
+	   the 3840x2160 lockup (matching where the wordmark mask expects it
+	   to sit) — see the build notes for the math. Fixed for every
+	   frame; only the mask source and color change per frame. */
+	.animated-logo__glyph {
+		position: absolute;
+		left: 4.032%;
+		top: 73.264%;
+		width: 11.601%;
+		height: 20.623%;
+	}
+
+	.animated-logo__glyph canvas {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+
+	.animated-logo__wordmark {
+		position: absolute;
+		inset: 0;
+		background-color: var(--logo-color, #201c1d);
+		mask-repeat: no-repeat;
+		mask-size: 100% 100%;
+		-webkit-mask-repeat: no-repeat;
+		-webkit-mask-size: 100% 100%;
+	}
+
+	.animated-logo__glyph[hidden],
+	.animated-logo__wordmark[hidden] {
+		display: none;
+	}
+</style>
+
+<script>
+	const FPS = 24;
+	const FRAME_MS = 1000 / FPS;
+	const IMAGE_HOLD_MS = 1000;
+	const INK = '#201C1D';
+
+	// The glyph-frame sequence is full of fairly jarring shape changes
+	// frame-to-frame (17 alone splits into 5 disconnected fragments) —
+	// at the base 24fps rate that reads as ghosting/afterimage even
+	// though each frame renders cleanly on its own. Holding every glyph
+	// frame a bit longer than 1 tick gives the eye enough time to
+	// actually track the shape changing. Only the per-image scrub HOLD
+	// (doesn't touch the glyph, just its color) and the frame-22 beat (a
+	// deliberate pause, not per-frame pacing) stay on their own timing.
+	const SLOW_FRAME_MS = FRAME_MS * 1.6;
+
+	const LEAD_FRAMES = 10; // frames 1–10, steady bar
+	const BUILD_FRAMES = 5; // frames 11–15, build up
+	const HOLD_FRAME_COUNT = 6; // number of scrub visuals held on frame 16
+	const COLLAPSE_FRAMES = 5; // frames 17–21, collapse — plays over the LAST scrub visual
+	const RESET_HOLD_FRAMES = 6; // extra beat on frame 22 right as the bg hard-cuts back to orange
+	const BLINK_FRAMES = 35; // frames 22–56, blinking cursor idle loop
+
+	const LEAD_MS = LEAD_FRAMES * SLOW_FRAME_MS;
+	const BUILD_MS = BUILD_FRAMES * SLOW_FRAME_MS;
+	const HOLD_MS = HOLD_FRAME_COUNT * IMAGE_HOLD_MS;
+	const COLLAPSE_MS = COLLAPSE_FRAMES * SLOW_FRAME_MS;
+	const RESET_HOLD_MS = RESET_HOLD_FRAMES * FRAME_MS;
+	const BLINK_MS = RESET_HOLD_MS + BLINK_FRAMES * SLOW_FRAME_MS;
+	const TOTAL_MS = LEAD_MS + BUILD_MS + HOLD_MS + COLLAPSE_MS + BLINK_MS;
+
+	interface DisplayState {
+		frame: number;
+		bgIndex: number; // -1 = orange
+		color: string | null; // null = no overlay (the ascii visual)
+	}
+
+	function computeState(tIn: number, scrubColors: (string | null)[]): DisplayState {
+		let t = tIn;
+		if (t < LEAD_MS) {
+			return { frame: Math.min(1 + Math.floor(t / SLOW_FRAME_MS), LEAD_FRAMES), bgIndex: -1, color: INK };
+		}
+		t -= LEAD_MS;
+		if (t < BUILD_MS) {
+			return { frame: Math.min(LEAD_FRAMES + 1 + Math.floor(t / SLOW_FRAME_MS), LEAD_FRAMES + BUILD_FRAMES), bgIndex: -1, color: INK };
+		}
+		t -= BUILD_MS;
+		if (t < HOLD_MS) {
+			const imgIndex = Math.min(Math.floor(t / IMAGE_HOLD_MS), HOLD_FRAME_COUNT - 1);
+			return { frame: 16, bgIndex: imgIndex, color: scrubColors[imgIndex] };
+		}
+		t -= HOLD_MS;
+		const lastIndex = HOLD_FRAME_COUNT - 1;
+		if (t < COLLAPSE_MS) {
+			return {
+				frame: Math.min(17 + Math.floor(t / SLOW_FRAME_MS), 21),
+				bgIndex: lastIndex,
+				color: scrubColors[lastIndex],
+			};
+		}
+		t -= COLLAPSE_MS;
+		if (t < RESET_HOLD_MS) {
+			return { frame: 22, bgIndex: -1, color: INK };
+		}
+		t -= RESET_HOLD_MS;
+		return { frame: Math.min(23 + Math.floor(t / SLOW_FRAME_MS), 56), bgIndex: -1, color: INK };
+	}
+
+	const root = document.querySelector<HTMLElement>('[data-animated-logo]');
+	if (root) {
+		const framesEl = root.querySelector<HTMLScriptElement>('[data-glyph-frames]');
+		const colorsEl = root.querySelector<HTMLScriptElement>('[data-scrub-colors]');
+		const glyphFrames: string[] = framesEl ? JSON.parse(framesEl.textContent || '[]') : [];
+		const scrubColors: (string | null)[] = colorsEl ? JSON.parse(colorsEl.textContent || '[]') : [];
+
+		const orangeBg = root.querySelector<HTMLElement>('[data-bg-orange]');
+		const bgLayers = Array.from(root.querySelectorAll<HTMLElement>('[data-bg-index]'));
+		const glyphEl = root.querySelector<HTMLElement>('[data-glyph]');
+		const wordmarkEl = root.querySelector<HTMLElement>('[data-wordmark]');
+		const glyphCanvas = root.querySelector<HTMLCanvasElement>('[data-glyph-canvas]');
+		const glyphCtx = glyphCanvas?.getContext('2d') ?? null;
+
+		const frameImages: HTMLImageElement[] = glyphFrames.map((src) => {
+			const img = new Image();
+			img.src = src;
+			return img;
+		});
+
+		function resizeGlyphCanvas() {
+			if (!glyphCanvas) return;
+			const rect = glyphCanvas.getBoundingClientRect();
+			const dpr = window.devicePixelRatio || 1;
+			const w = Math.max(1, Math.round(rect.width * dpr));
+			const h = Math.max(1, Math.round(rect.height * dpr));
+			if (glyphCanvas.width !== w || glyphCanvas.height !== h) {
+				glyphCanvas.width = w;
+				glyphCanvas.height = h;
+			}
+		}
+
+		function drawGlyph(frame: number, color: string | null) {
+			if (!glyphCanvas || !glyphCtx) return;
+			glyphCtx.clearRect(0, 0, glyphCanvas.width, glyphCanvas.height);
+			if (color === null) return;
+			const img = frameImages[frame - 1];
+			if (!img || !img.complete) return;
+			glyphCtx.drawImage(img, 0, 0, glyphCanvas.width, glyphCanvas.height);
+			glyphCtx.globalCompositeOperation = 'source-in';
+			glyphCtx.fillStyle = color;
+			glyphCtx.fillRect(0, 0, glyphCanvas.width, glyphCanvas.height);
+			glyphCtx.globalCompositeOperation = 'source-over';
+		}
+
+		if (glyphCanvas && 'ResizeObserver' in window) {
+			new ResizeObserver(() => {
+				resizeGlyphCanvas();
+				if (lastApplied) drawGlyph(lastApplied.frame, lastApplied.color);
+			}).observe(glyphCanvas);
+		}
+		resizeGlyphCanvas();
+
+		// Frame/bg/color only actually change ~24x/sec, but this runs once per
+		// rAF tick — every display refresh, which is 2-6x that on most
+		// screens. Re-writing mask-image (and re-hiding/showing layers) on
+		// ticks where nothing changed was the likely source of the reported
+		// flicker: each identical reassignment still forces the browser to
+		// re-decode/re-composite the SVG mask, and doing that several times
+		// per logical frame adds up over a loop or two. Diffing against the
+		// last applied state means the DOM is only touched when something
+		// actually moves.
+		let lastApplied: DisplayState | null = null;
+
+		function applyState(state: DisplayState) {
+			if (lastApplied && lastApplied.frame === state.frame && lastApplied.bgIndex === state.bgIndex && lastApplied.color === state.color) {
+				return;
+			}
+
+			if (!lastApplied || lastApplied.bgIndex !== state.bgIndex) {
+				if (orangeBg) orangeBg.hidden = state.bgIndex !== -1;
+				for (const layer of bgLayers) {
+					layer.hidden = Number(layer.dataset.bgIndex) !== state.bgIndex;
+				}
+			}
+
+			if (!lastApplied || lastApplied.frame !== state.frame || lastApplied.color !== state.color) {
+				drawGlyph(state.frame, state.color);
+			}
+
+			if (!lastApplied || lastApplied.color !== state.color) {
+				const showOverlay = state.color !== null;
+				if (glyphEl) glyphEl.hidden = !showOverlay;
+				if (wordmarkEl) wordmarkEl.hidden = !showOverlay;
+				if (showOverlay && state.color) {
+					wordmarkEl?.style.setProperty('--logo-color', state.color);
+				}
+			}
+
+			lastApplied = state;
+		}
+
+		const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+		if (reduceMotionQuery.matches) {
+			// Static rest state: frame 16 held, just the first scrub visual.
+			Promise.all(frameImages.map((img) => img.decode().catch(() => {}))).then(() => {
+				applyState({ frame: 16, bgIndex: 0, color: scrubColors[0] });
+			});
+		} else {
+			let elapsedMs = 0;
+			let lastTimestamp: number | null = null;
+			let rafId: number | null = null;
+
+			function tick(now: number) {
+				if (lastTimestamp !== null) {
+					elapsedMs = (elapsedMs + (now - lastTimestamp)) % TOTAL_MS;
+				}
+				lastTimestamp = now;
+				applyState(computeState(elapsedMs, scrubColors));
+				rafId = requestAnimationFrame(tick);
+			}
+
+			function start() {
+				if (rafId !== null) return;
+				lastTimestamp = null;
+				rafId = requestAnimationFrame(tick);
+			}
+			function stop() {
+				if (rafId !== null) {
+					cancelAnimationFrame(rafId);
+					rafId = null;
+				}
+				lastTimestamp = null;
+			}
+
+			const observer = new IntersectionObserver(
+				(entries) => {
+					for (const entry of entries) {
+						if (entry.isIntersecting) start();
+						else stop();
+					}
+				},
+				{ threshold: 0.1 },
+			);
+			// Wait for every frame to decode before observing, so the very
+			// first paint of the loop never lands mid-decode (drawGlyph
+			// already guards against an incomplete image, but this avoids
+			// the resulting blank flash entirely on a cold cache).
+			Promise.all(frameImages.map((img) => img.decode().catch(() => {}))).then(() => {
+				observer.observe(root);
+			});
+		}
+	}
+</script>

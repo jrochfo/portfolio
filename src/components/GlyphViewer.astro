@@ -1,0 +1,547 @@
+---
+// A cursor-driven riff on Stack Overflow's real brand-guidelines "Glyph
+// set" viewer (stackoverflow.design/brand/typography#glyph-set): same
+// idea — one glyph shown large, with its ascender/cap-height/x-height/
+// baseline/descender marked and its advance width labeled — but instead
+// of clicking a glyph out of a 509-character grid, a curated set cycles
+// automatically as the cursor moves around the page. Weight and face
+// (Headline vs. the notched display cut) are still deliberate choices,
+// so those stay switchers.
+//
+// All the metric math (guide-line positions, the glyph's own display
+// size, the width-indicator's per-glyph bar) is measured live from the
+// actual variable fonts via Canvas's measureText and the rendered DOM,
+// then expressed as percentages/cqh units — no hardcoded numbers to
+// keep in sync with the font files, and it stays correct if a font or
+// weight range ever changes.
+---
+
+<div class="glyph-viewer" data-glyph-viewer>
+	<div class="glyph-viewer__well">
+		<div class="glyph-viewer__guide" data-guide="ascender">
+			<span class="glyph-viewer__guide-label">Ascender</span>
+		</div>
+		<div class="glyph-viewer__guide" data-guide="cap-height">
+			<span class="glyph-viewer__guide-label">Cap Height</span>
+		</div>
+		<div class="glyph-viewer__guide" data-guide="x-height">
+			<span class="glyph-viewer__guide-label">x-Height</span>
+		</div>
+		<div class="glyph-viewer__guide" data-guide="baseline">
+			<span class="glyph-viewer__guide-label">Baseline</span>
+		</div>
+		<div class="glyph-viewer__guide" data-guide="descender">
+			<span class="glyph-viewer__guide-label">Descender</span>
+		</div>
+
+		<span class="glyph-viewer__glyph" data-glyph-char>2</span>
+
+		<div class="glyph-viewer__width-row" data-width-row>
+			<span class="glyph-viewer__width-line"></span>
+			<span class="glyph-viewer__width-tick glyph-viewer__width-tick--start"></span>
+			<span class="glyph-viewer__width-tick glyph-viewer__width-tick--end"></span>
+			<span class="glyph-viewer__width-value glyph-viewer__width-value--start">0</span>
+			<span class="glyph-viewer__width-value glyph-viewer__width-value--end" data-width-value>0</span>
+		</div>
+	</div>
+
+	<div class="glyph-viewer__footer">
+		<p class="glyph-viewer__caption">
+			<span data-caption-char>2</span>
+			<span class="glyph-viewer__caption-sep">/</span>
+			<span data-caption-code>0032</span>
+		</p>
+		<div class="glyph-viewer__controls">
+			<div class="glyph-viewer__weights" role="tablist" aria-label="Font weight">
+				<button type="button" class="glyph-viewer__weight-tab" data-weight="200">Extralight</button>
+				<button type="button" class="glyph-viewer__weight-tab" data-weight="300">Light</button>
+				<button type="button" class="glyph-viewer__weight-tab" data-weight="400" aria-current="true">Regular</button>
+				<button type="button" class="glyph-viewer__weight-tab" data-weight="500">Medium</button>
+				<button type="button" class="glyph-viewer__weight-tab" data-weight="700">Bold</button>
+			</div>
+			<div class="glyph-viewer__face-switch">
+				<span class="glyph-viewer__face-label" data-face-label="headline">Headline</span>
+				<label class="glyph-viewer__switch">
+					<input type="checkbox" data-notch-toggle checked aria-label="Switch display face between Headline and Notch" />
+					<span class="glyph-viewer__switch-track">
+						<span class="glyph-viewer__switch-thumb"></span>
+					</span>
+				</label>
+				<span class="glyph-viewer__face-label" data-face-label="notch">Notch</span>
+			</div>
+		</div>
+	</div>
+</div>
+
+<style>
+	@font-face {
+		font-family: 'Stack Sans Text Display';
+		src: url('../assets/fonts/Stack Sans/Stack_Sans_Text/StackSansText-VariableFont_wght.ttf') format('truetype');
+		font-weight: 200 700;
+		font-display: swap;
+	}
+
+	@font-face {
+		font-family: 'Stack Sans Headline Display';
+		src: url('../assets/fonts/Stack Sans/Stack_Sans_Headline/StackSansHeadline-VariableFont_wght.ttf') format('truetype');
+		font-weight: 200 700;
+		font-display: swap;
+	}
+
+	@font-face {
+		font-family: 'Stack Sans Notch Display';
+		src: url('../assets/fonts/Stack Sans/Stack_Sans_Notch/StackSansNotch-VariableFont_wght.ttf') format('truetype');
+		font-weight: 200 700;
+		font-display: swap;
+	}
+
+	.glyph-viewer {
+		/* Fixed brand-reference colors for this specimen panel (not the
+		   site's own living tokens) — the well is meant to read as a
+		   piece of the actual brand guidelines UI. */
+		--gv-bg: #c6d1e1;
+		--gv-ink: #201c1d;
+		--gv-well-pad-x: var(--space-s);
+
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+		aspect-ratio: var(--ratio);
+		border-radius: var(--radius-well);
+		overflow: hidden;
+		background: var(--gv-bg);
+	}
+
+	.glyph-viewer__well {
+		container-type: size;
+		position: relative;
+		flex: 1 1 auto;
+		min-height: 0;
+	}
+
+	/* Dashed guide lines — position set as a percentage of the well's own
+	   height (via --guide-* custom properties, computed once from the
+	   font's real metrics), so they hold correctly at any size without
+	   a resize listener. Inset from the well's own edges so nothing
+	   touches the card's corners. */
+	.glyph-viewer__guide {
+		position: absolute;
+		left: var(--gv-well-pad-x);
+		right: var(--gv-well-pad-x);
+		border-top: 1px dashed oklch(from var(--gv-ink) l c h / 0.3);
+	}
+
+	.glyph-viewer__guide[data-guide='ascender'] {
+		top: var(--guide-ascender, 8%);
+	}
+	.glyph-viewer__guide[data-guide='cap-height'] {
+		top: var(--guide-cap, 20%);
+	}
+	.glyph-viewer__guide[data-guide='x-height'] {
+		top: var(--guide-x, 40%);
+	}
+	.glyph-viewer__guide[data-guide='baseline'] {
+		top: var(--guide-baseline, 64%);
+	}
+	.glyph-viewer__guide[data-guide='descender'] {
+		top: var(--guide-descender, 78%);
+	}
+
+	.glyph-viewer__guide-label {
+		position: absolute;
+		left: 0;
+		top: 4px;
+		font-size: 10px;
+		letter-spacing: -0.01em;
+		text-transform: uppercase;
+		color: oklch(from var(--gv-ink) l c h / 0.55);
+		white-space: nowrap;
+	}
+
+	.glyph-viewer__glyph {
+		position: absolute;
+		left: 50%;
+		top: var(--glyph-top, 8cqh);
+		transform: translateX(-50%);
+		font-family: 'Stack Sans Headline Display', sans-serif;
+		font-weight: var(--glyph-weight, 400);
+		font-size: var(--glyph-font-size, 68cqh);
+		line-height: var(--glyph-line-height, 84cqh);
+		height: var(--glyph-line-height, 84cqh);
+		color: var(--gv-ink);
+		user-select: none;
+		white-space: nowrap;
+	}
+
+	/* Sized and positioned entirely from JS (--width-bar-left/-width,
+	   set from the currently-shown glyph's own rendered edges, and
+	   --width-row-top, set just below the baseline) — the fallbacks
+	   here only cover the instant before the first measurement runs. */
+	.glyph-viewer__width-row {
+		position: absolute;
+		left: var(--width-bar-left, 35%);
+		width: var(--width-bar-width, 30%);
+		top: var(--width-row-top, 68%);
+		height: 1px;
+	}
+
+	.glyph-viewer__width-line {
+		position: absolute;
+		inset: 0;
+		background: oklch(from var(--gv-ink) l c h / 0.3);
+	}
+
+	.glyph-viewer__width-tick {
+		position: absolute;
+		top: -3px;
+		width: 1px;
+		height: 7px;
+		background: oklch(from var(--gv-ink) l c h / 0.3);
+	}
+	.glyph-viewer__width-tick--start {
+		left: 0;
+	}
+	.glyph-viewer__width-tick--end {
+		right: 0;
+	}
+
+	.glyph-viewer__width-value {
+		position: absolute;
+		top: 10px;
+		font-size: 10px;
+		font-variant-numeric: tabular-nums;
+		color: oklch(from var(--gv-ink) l c h / 0.55);
+		white-space: nowrap;
+	}
+	.glyph-viewer__width-value--start {
+		left: 0;
+		transform: translateX(-50%);
+	}
+	.glyph-viewer__width-value--end {
+		right: 0;
+		transform: translateX(50%);
+	}
+
+	.glyph-viewer__footer {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: var(--space-2xs);
+		padding: var(--space-xs) var(--gv-well-pad-x);
+	}
+
+	.glyph-viewer__caption,
+	.glyph-viewer__guide-label,
+	.glyph-viewer__width-value,
+	.glyph-viewer__weight-tab,
+	.glyph-viewer__face-label {
+		font-family: 'Stack Sans Text Display', sans-serif;
+		letter-spacing: -0.01em;
+	}
+
+	.glyph-viewer__caption {
+		font-size: var(--type-caption-size);
+		color: var(--gv-ink);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.glyph-viewer__caption-sep {
+		color: oklch(from var(--gv-ink) l c h / 0.5);
+		margin-inline: 2px;
+	}
+
+	.glyph-viewer__controls {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-s);
+	}
+
+	.glyph-viewer__weights {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2xs);
+	}
+
+	.glyph-viewer__weight-tab {
+		font-size: 11px;
+		color: var(--gv-ink);
+		opacity: 0.5;
+		transition: opacity 0.15s ease;
+	}
+
+	.glyph-viewer__weight-tab:hover {
+		opacity: 0.75;
+	}
+
+	.glyph-viewer__weight-tab[aria-current='true'] {
+		opacity: 1;
+		font-weight: 600;
+	}
+
+	.glyph-viewer__face-switch {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 11px;
+		color: var(--gv-ink);
+	}
+
+	.glyph-viewer__face-label {
+		opacity: 0.5;
+		transition: opacity 0.15s ease;
+	}
+
+	/* Headline is the default (unchecked) state, so it starts emphasized;
+	   :has() flips both labels together the moment the switch changes. */
+	.glyph-viewer__face-label[data-face-label='headline'] {
+		opacity: 1;
+		font-weight: 600;
+	}
+
+	.glyph-viewer__face-switch:has(input:checked) [data-face-label='headline'] {
+		opacity: 0.5;
+		font-weight: 400;
+	}
+
+	.glyph-viewer__face-switch:has(input:checked) [data-face-label='notch'] {
+		opacity: 1;
+		font-weight: 600;
+	}
+
+	.glyph-viewer__switch {
+		position: relative;
+		display: inline-flex;
+		cursor: pointer;
+	}
+
+	.glyph-viewer__switch input {
+		position: absolute;
+		inset: 0;
+		margin: 0;
+		opacity: 0;
+		cursor: pointer;
+	}
+
+	.glyph-viewer__switch-track {
+		display: inline-flex;
+		align-items: center;
+		width: 28px;
+		height: 16px;
+		padding: 2px;
+		border-radius: var(--radius-pill);
+		background: oklch(from var(--gv-ink) l c h / 0.25);
+		transition: background 0.15s ease;
+	}
+
+	.glyph-viewer__switch-thumb {
+		width: 12px;
+		height: 12px;
+		border-radius: 50%;
+		background: var(--gv-ink);
+		transition: transform 0.15s ease;
+	}
+
+	.glyph-viewer__switch input:checked ~ .glyph-viewer__switch-track {
+		background: oklch(from var(--gv-ink) l c h / 0.45);
+	}
+
+	.glyph-viewer__switch input:checked ~ .glyph-viewer__switch-track .glyph-viewer__switch-thumb {
+		transform: translateX(12px);
+	}
+
+	.glyph-viewer__switch input:focus-visible ~ .glyph-viewer__switch-track {
+		outline: 2px solid var(--gv-ink);
+		outline-offset: 2px;
+	}
+
+	@media (max-width: 768px) {
+		.glyph-viewer__footer {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+
+		.glyph-viewer__controls {
+			flex-wrap: wrap;
+			row-gap: var(--space-2xs);
+		}
+
+		.glyph-viewer__weights {
+			flex-wrap: wrap;
+		}
+	}
+</style>
+
+<script>
+	// The glyphs the cursor cycles through — a spread across case,
+	// numerals, and a few symbols/an accent, picked to show a range of
+	// the typeface's shapes. Order is shuffled on purpose (not grouped
+	// by type) so the cycling doesn't read as marching through buckets.
+	const GLYPHS = [
+		'O', 'i', 'K', '4', '&', 'B', 'a', '1', 's', 'G',
+		'%', 'R', 'e', '8', 'y', '@', 'W', 'M', '#', 'k',
+		'2', 'S', 'É', 'g', 'r', '?', 'A', '6',
+	];
+	const FONT_FAMILY_HEADLINE = 'Stack Sans Headline Display';
+	const FONT_FAMILY_NOTCH = 'Stack Sans Notch Display';
+	// Measuring at a 1000px em means the raw pixel widths Canvas reports
+	// back ARE the per-mille "units" a type spec is usually described
+	// in (the same convention as a 1000-unit-per-em font file) — no
+	// need to know the real font's own unitsPerEm.
+	const REFERENCE_EM = 1000;
+	// How much cumulative cursor travel (px) triggers the next glyph —
+	// tuned to feel like it follows normal reading/scrolling motion
+	// rather than firing on every twitch. Easy to retune from one place.
+	const CURSOR_DISTANCE_THRESHOLD = 200;
+
+	// The well's internal layout, as percentages of its own height.
+	const TOP_PAD = 8;
+	const BOTTOM_PAD = 8;
+	const CONTENT_HEIGHT = 100 - TOP_PAD - BOTTOM_PAD;
+	// How far below the baseline (in the same percentage units) the
+	// width-indicator's tick-line sits.
+	const WIDTH_ROW_BASELINE_GAP = 6;
+
+	const root = document.querySelector<HTMLElement>('[data-glyph-viewer]');
+
+	if (root) {
+		const wellEl = root.querySelector<HTMLElement>('.glyph-viewer__well');
+		const glyphEl = root.querySelector<HTMLElement>('[data-glyph-char]');
+		const captionChar = root.querySelector<HTMLElement>('[data-caption-char]');
+		const captionCode = root.querySelector<HTMLElement>('[data-caption-code]');
+		const widthValueEl = root.querySelector<HTMLElement>('[data-width-value]');
+		const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-weight]'));
+		const notchToggle = root.querySelector<HTMLInputElement>('[data-notch-toggle]');
+
+		let measureCtx: CanvasRenderingContext2D | null = null;
+		let currentChar = '2';
+		let currentFamily = FONT_FAMILY_NOTCH;
+
+		function currentWeight(): number {
+			const active = tabs.find((tab) => tab.getAttribute('aria-current') === 'true');
+			return active ? Number(active.dataset.weight) : 400;
+		}
+
+		function updateWidthIndicator() {
+			if (!glyphEl || !wellEl) return;
+			const wellRect = wellEl.getBoundingClientRect();
+			const glyphRect = glyphEl.getBoundingClientRect();
+			if (!wellRect.width) return;
+			const widthPercent = (glyphRect.width / wellRect.width) * 100;
+			root!.style.setProperty('--width-bar-left', `${50 - widthPercent / 2}%`);
+			root!.style.setProperty('--width-bar-width', `${widthPercent}%`);
+		}
+
+		function showGlyph(char: string) {
+			currentChar = char;
+			if (glyphEl) glyphEl.textContent = char;
+			if (captionChar) captionChar.textContent = char;
+			if (captionCode) {
+				captionCode.textContent = char.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0');
+			}
+			if (widthValueEl && measureCtx) {
+				widthValueEl.textContent = String(Math.round(measureCtx.measureText(char).width));
+			}
+			updateWidthIndicator();
+		}
+
+		async function measureAndApply(weight: number) {
+			// Canvas falls back silently to a system font until the real
+			// one finishes loading — measuring before then would bake in
+			// wrong metrics, so load this exact family+weight first.
+			await document.fonts.load(`${weight} ${REFERENCE_EM}px "${currentFamily}"`).catch(() => {});
+
+			const canvas = document.createElement('canvas');
+			const ctx = canvas.getContext('2d');
+			if (!ctx) return;
+			ctx.font = `${weight} ${REFERENCE_EM}px "${currentFamily}"`;
+			const probe = ctx.measureText('H');
+			const ascent = probe.fontBoundingBoxAscent;
+			const descent = probe.fontBoundingBoxDescent;
+			const capHeight = probe.actualBoundingBoxAscent;
+			const xHeight = ctx.measureText('x').actualBoundingBoxAscent;
+			const total = ascent + descent;
+
+			const ascentPct = CONTENT_HEIGHT * (ascent / total);
+			const descentPct = CONTENT_HEIGHT * (descent / total);
+
+			const ascenderTop = TOP_PAD;
+			const capTop = TOP_PAD + ascentPct * (1 - capHeight / ascent);
+			const xTop = TOP_PAD + ascentPct * (1 - xHeight / ascent);
+			const baselineTop = TOP_PAD + ascentPct;
+			const descenderTop = TOP_PAD + ascentPct + descentPct;
+
+			root!.style.setProperty('--guide-ascender', `${ascenderTop}%`);
+			root!.style.setProperty('--guide-cap', `${capTop}%`);
+			root!.style.setProperty('--guide-x', `${xTop}%`);
+			root!.style.setProperty('--guide-baseline', `${baselineTop}%`);
+			root!.style.setProperty('--guide-descender', `${descenderTop}%`);
+			root!.style.setProperty('--width-row-top', `${baselineTop + WIDTH_ROW_BASELINE_GAP}%`);
+
+			root!.style.setProperty('--glyph-font-size', `${REFERENCE_EM * (CONTENT_HEIGHT / total)}cqh`);
+			root!.style.setProperty('--glyph-line-height', `${CONTENT_HEIGHT}cqh`);
+			root!.style.setProperty('--glyph-top', `${TOP_PAD}cqh`);
+			root!.style.setProperty('--glyph-weight', String(weight));
+			if (glyphEl) glyphEl.style.fontFamily = `"${currentFamily}", sans-serif`;
+
+			measureCtx = ctx;
+			showGlyph(currentChar);
+		}
+
+		measureAndApply(currentWeight()).catch(() => {});
+
+		for (const tab of tabs) {
+			tab.addEventListener('click', () => {
+				for (const t of tabs) t.removeAttribute('aria-current');
+				tab.setAttribute('aria-current', 'true');
+				measureAndApply(Number(tab.dataset.weight)).catch(() => {});
+			});
+		}
+
+		if (notchToggle) {
+			notchToggle.addEventListener('change', () => {
+				currentFamily = notchToggle.checked ? FONT_FAMILY_NOTCH : FONT_FAMILY_HEADLINE;
+				measureAndApply(currentWeight()).catch(() => {});
+			});
+		}
+
+		const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+		// Reduced motion: leave the default resting glyph (G) showing,
+		// weight/face controls still work (a deliberate click, not
+		// ambient motion), just no cursor-driven cycling.
+		if (!reduceMotionQuery.matches) {
+			let inView = false;
+			let lastX: number | null = null;
+			let lastY: number | null = null;
+			let traveled = 0;
+
+			function onMouseMove(e: MouseEvent) {
+				if (!inView) return;
+				if (lastX !== null && lastY !== null) {
+					traveled += Math.hypot(e.clientX - lastX, e.clientY - lastY);
+				}
+				lastX = e.clientX;
+				lastY = e.clientY;
+				if (traveled >= CURSOR_DISTANCE_THRESHOLD) {
+					traveled = 0;
+					let next = currentChar;
+					while (next === currentChar) {
+						next = GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+					}
+					showGlyph(next);
+				}
+			}
+
+			document.addEventListener('mousemove', onMouseMove, { passive: true });
+
+			const observer = new IntersectionObserver(
+				(entries) => {
+					for (const entry of entries) inView = entry.isIntersecting;
+				},
+				{ threshold: 0.2 },
+			);
+			observer.observe(root);
+		}
+	}
+</script>
