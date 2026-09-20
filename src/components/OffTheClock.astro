@@ -166,12 +166,22 @@ const items: Item[] = [
 							</div>
 						)}
 					</div>
-					<p class="type-body otc-caption">{item.caption}</p>
+					<div class="otc-caption">
+						<p class="type-body otc-caption__text">{item.caption}</p>
+						{item.media.type === 'images' && (
+							<div class="otc-dots" aria-hidden="true">
+								{item.media.frames.map((_, frameIndex) => (
+									<span class="otc-dot" data-dot-index={frameIndex} data-active={frameIndex === 0 ? 'true' : undefined} />
+								))}
+							</div>
+						)}
+					</div>
 				</div>
 			))}
 		</div>
 
 		<p class="type-body otc-caption-mobile" aria-live="polite">{items[0].caption}</p>
+		<div class="otc-dots otc-dots-mobile" id="otc-dots-mobile" aria-hidden="true"></div>
 	</div>
 
 	<style>
@@ -187,6 +197,29 @@ const items: Item[] = [
 		}
 
 		.otc-caption-mobile {
+			display: none;
+		}
+
+		/* Desktop-hidden by default, same as .otc-caption-mobile — shown
+		   only inside the mobile breakpoint below. Reuses .otc-dots/
+		   .otc-dot wholesale (styled further up) rather than a parallel
+		   set of rules, since the visual is identical to the per-well
+		   desktop version; only its position (below the shared mobile
+		   caption, not inside a per-well chip) and how it's populated
+		   (JS-built per the current front card, not one static row per
+		   item) differ. */
+		.otc-dots-mobile {
+			display: none;
+		}
+
+		/* `.otc-dots` sets `display: flex` and the browser's default
+		   `[hidden] { display: none }` rule ties with it on specificity
+		   (one class, one attribute selector) — without this, author CSS
+		   silently wins the tie and toggling `hidden` in JS (done for a
+		   video-well front card, which has no frames to count) stops
+		   actually hiding the row. Bit us once already on the nav icon
+		   for the same reason. */
+		.otc-dots-mobile[hidden] {
 			display: none;
 		}
 
@@ -258,6 +291,50 @@ const items: Item[] = [
 			text-align: center;
 		}
 
+		/* A quiet, static frame-count indicator for image-sequence wells
+		   only — there's no equivalent affordance for those the way
+		   video wells get a play/pause button, so without this a
+		   scattered photo well looks identical at rest to one that's
+		   actually a sequence. Lives inside the caption chip itself,
+		   right under the text — sitting outside it, against whatever
+		   the well/page happened to show underneath, read as too low-
+		   contrast to register as intentional. No opacity/transition of
+		   its own: it's inside .otc-caption now, so that chip's own
+		   fade governs it along with the text. Doesn't track which
+		   frame is currently showing beyond the active-dot width below
+		   — no need for anything heavier for a cue that only needs to
+		   say "there's more than one, and here's roughly where". */
+		.otc-dots {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			gap: var(--space-2xs);
+			/* Deliberately tighter than the space scale allows — right
+			   under the caption text, not a normal content gap. */
+			margin-block-start: 4px;
+		}
+
+		.otc-dot {
+			display: block;
+			width: 6px;
+			height: 6px;
+			border-radius: var(--radius-pill);
+			background: var(--color-line);
+			/* Close to SLIDE_MS below (the image scrub's own transition
+			   duration) so the dot widens roughly in step with the
+			   slide, but a little quicker — matching it exactly read as
+			   sluggish. */
+			transition: width 700ms ease-in-out;
+		}
+
+		/* Same "current one widens into a pill" treatment as the What I
+		   Do nav-pill and Also Shipped's carousel dots — color stays
+		   the same here, though, since this is just tracking along with
+		   the scrub, not something to navigate by. */
+		.otc-dot[data-active='true'] {
+			width: 18px;
+		}
+
 		.otc-caption {
 			/* Without this, the caption loses the paint-order fight to
 			   .otc-well on hover: a `transform` (even with position:
@@ -282,9 +359,12 @@ const items: Item[] = [
 			background: var(--color-bg);
 			box-shadow: 0 4px 12px oklch(from var(--color-ink) l c h / 0.12);
 			text-align: center;
-			white-space: nowrap;
 			opacity: 0;
 			transition: opacity 0.2s ease;
+		}
+
+		.otc-caption__text {
+			white-space: nowrap;
 		}
 
 		/* Hovering a well lifts it toward the viewer and reveals its
@@ -345,6 +425,9 @@ const items: Item[] = [
 			}
 
 			.otc-item .otc-caption {
+				/* .otc-dots lives inside .otc-caption now, so hiding the
+				   chip hides the dots along with it — nothing extra to
+				   target here. */
 				display: none;
 			}
 
@@ -353,6 +436,11 @@ const items: Item[] = [
 				margin-block-start: var(--space-l);
 				text-align: center;
 				transition: opacity 0.18s ease;
+			}
+
+			.otc-dots-mobile {
+				display: flex;
+				margin-block-start: var(--space-2xs);
 			}
 		}
 
@@ -366,6 +454,10 @@ const items: Item[] = [
 			.otc-item:hover .otc-well {
 				transform: none;
 			}
+
+			.otc-dot {
+				transition: none;
+			}
 		}
 	</style>
 
@@ -375,9 +467,52 @@ const items: Item[] = [
 		const stack = document.querySelector<HTMLElement>('.otc-stack');
 		const items = stack ? [...stack.querySelectorAll<HTMLElement>('.otc-item')] : [];
 		const mobileCaption = document.querySelector<HTMLElement>('.otc-caption-mobile');
+		const mobileDots = document.querySelector<HTMLElement>('#otc-dots-mobile');
 		const captionsByIndex = items.map(
 			(item) => item.querySelector<HTMLElement>('.otc-caption')?.textContent ?? '',
 		);
+
+		// Which item is currently the mobile "front" card — declared up
+		// here (not inside the mobile drag setup below) so the
+		// image-sequence controllers built next can read it live via
+		// closure, the same way the desktop dots already track their own
+		// item's frame.
+		let order = items.map((_, i) => i);
+
+		// Rebuilds the dot row for whichever item is now front: a plain
+		// static row when it's a video well (nothing to count), one dot
+		// per real frame — reusing the exact .otc-dot markup/CSS the
+		// desktop per-well version uses — when it's an image sequence.
+		// Rebuilt on every toss rather than kept as one fixed-length row,
+		// since different items have different frame counts (type: 6,
+		// pottery: 3, thesis: 5, ...).
+		function renderMobileDots(itemIndex: number) {
+			if (!mobileDots) return;
+			const sequenceEl = items[itemIndex]?.querySelector<HTMLElement>('.otc-sequence');
+			if (!sequenceEl) {
+				mobileDots.replaceChildren();
+				mobileDots.hidden = true;
+				return;
+			}
+			const frameCount = sequenceEl.querySelectorAll('.otc-sequence__frame').length;
+			const realFrameCount = frameCount - 1; // excludes the trailing loop-back clone
+			mobileDots.hidden = false;
+			const frag = document.createDocumentFragment();
+			for (let i = 0; i < realFrameCount; i += 1) {
+				const dot = document.createElement('span');
+				dot.className = 'otc-dot';
+				if (i === 0) dot.dataset.active = 'true';
+				frag.appendChild(dot);
+			}
+			mobileDots.replaceChildren(frag);
+		}
+
+		function setMobileActiveDot(i: number) {
+			if (!mobileDots) return;
+			[...mobileDots.children].forEach((dot, dotIndex) => {
+				(dot as HTMLElement).dataset.active = String(dotIndex === i);
+			});
+		}
 
 		const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 		const mobileQuery = window.matchMedia('(max-width: 768px)');
@@ -435,10 +570,12 @@ const items: Item[] = [
 		// counter lets any timer that was scheduled before a stop()/play()
 		// recognize it's stale and bail out, rather than tracking and
 		// cancelling two separately-timed setTimeouts by hand.
-		function wireImageSequenceWell(sequenceEl: HTMLElement): MediaController {
+		function wireImageSequenceWell(item: HTMLElement, onFrame?: (i: number) => void): MediaController {
+			const sequenceEl = item.querySelector<HTMLElement>('.otc-sequence')!;
 			const track = sequenceEl.querySelector<HTMLElement>('.otc-sequence__track');
 			const frameCount = sequenceEl.querySelectorAll('.otc-sequence__frame').length;
 			const realFrameCount = frameCount - 1; // excludes the trailing clone
+			const dots = [...item.querySelectorAll<HTMLElement>('.otc-dot')];
 
 			const HOLD_MS = 1800;
 			const SLIDE_MS = 1000;
@@ -447,6 +584,16 @@ const items: Item[] = [
 			let generation = 0;
 			let outerTimer: ReturnType<typeof setTimeout> | null = null;
 			let innerTimer: ReturnType<typeof setTimeout> | null = null;
+
+			// Mirrors the "current one widens into a pill" dot treatment
+			// from What I Do's nav-pill and Also Shipped's carousel — just
+			// tracking here, not a nav control, so no click handlers.
+			function setActiveDot(i: number) {
+				dots.forEach((dot, dotIndex) => {
+					dot.dataset.active = String(dotIndex === i);
+				});
+				onFrame?.(i);
+			}
 
 			function goToInstant(i: number) {
 				if (!track) return;
@@ -470,6 +617,7 @@ const items: Item[] = [
 				outerTimer = window.setTimeout(() => {
 					if (myGeneration !== generation || !track) return;
 					index += 1;
+					setActiveDot(index);
 					track.style.transition = `transform ${SLIDE_MS}ms ease`;
 					track.style.transform = `translateX(-${index * 100}%)`;
 
@@ -477,6 +625,7 @@ const items: Item[] = [
 						if (myGeneration !== generation) return;
 						if (index >= realFrameCount) {
 							index = 0;
+							setActiveDot(0);
 							goToInstant(0);
 						}
 						scheduleNext(myGeneration);
@@ -494,16 +643,23 @@ const items: Item[] = [
 					generation += 1;
 					clearTimers();
 					index = 0;
+					setActiveDot(0);
 					goToInstant(0);
 				},
 			};
 		}
 
-		const mediaControllers: MediaController[] = items.map((item) => {
+		const mediaControllers: MediaController[] = items.map((item, i) => {
 			const video = item.querySelector<HTMLVideoElement>('video.otc-media');
 			if (video) return wireVideoWell(video);
-			const sequenceEl = item.querySelector<HTMLElement>('.otc-sequence');
-			return wireImageSequenceWell(sequenceEl!);
+			// Only mirror this item's frame into the mobile dot row while
+			// it's actually the front card — a background well scrubbing
+			// off in the pile (desktop hover-play, if ever added there
+			// too) shouldn't steal the row out from under whatever's
+			// currently shown.
+			return wireImageSequenceWell(item, (frameIndex) => {
+				if (order[0] === i) setMobileActiveDot(frameIndex);
+			});
 		});
 
 		if (stack) wireImageLazyLoad(stack);
@@ -529,9 +685,9 @@ const items: Item[] = [
 			// distance threshold at release it's tossed to the back of
 			// the deck and the next well is revealed; short of that, it
 			// springs back to rest. Loops back to the first after the
-			// last.
-			let order = items.map((_, i) => i);
-
+			// last. (`order` itself is declared further up, alongside the
+			// media controllers that read it.)
+			renderMobileDots(order[0]);
 			if (mobileQuery.matches) mediaControllers[order[0]].play();
 
 			const RANKS = [
@@ -606,6 +762,7 @@ const items: Item[] = [
 				order = [...order.slice(1), frontIndex];
 				layoutMobile(frontIndex);
 				setCaption(captionsByIndex[order[0]], true);
+				renderMobileDots(order[0]);
 				mediaControllers[order[0]].play();
 
 				item.style.transition = `transform ${FLY_MS}ms ease-out, opacity ${FADE_MS}ms ease-out`;
@@ -672,6 +829,7 @@ const items: Item[] = [
 						order = [...order.slice(1), order[0]];
 						layoutMobile();
 						setCaption(captionsByIndex[order[0]], false);
+						renderMobileDots(order[0]);
 						mediaControllers[order[0]].play();
 					} else {
 						item.style.transition = '';
