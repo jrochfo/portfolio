@@ -48,17 +48,42 @@ const acts = [
 // given a very slight per-item skew — not a freeform scatter, but not
 // a sterile grid either. Rollout is still the original placeholder
 // grid below, pending its own content.
-const [conferenceImg, placardImg, whiteboardImg, pubImg, nashville1Img, nashville2Img] = await Promise.all([
+const [
+	conferenceImg,
+	placardImg,
+	whiteboardImg,
+	pubImg,
+	nashville1Img,
+	nashville2Img,
+	brandWorkshopImg,
+	whatHowWhyImg,
+	uxNotificationCardsImg,
+	toneOfVoiceImg,
+	stacksShapeSystemImg,
+	stacksLinkedInMockupImg,
+] = await Promise.all([
 	getImage({ src: londonConference, format: 'webp', width: 900 }),
 	getImage({ src: londonPlacard, format: 'webp', width: 700 }),
 	getImage({ src: londonWhiteboard, format: 'webp', width: 900 }),
 	getImage({ src: londonPub, format: 'webp', width: 700 }),
 	getImage({ src: nashville1, format: 'webp', width: 900 }),
 	getImage({ src: nashville2, format: 'webp', width: 900 }),
-	// The RFP cover and the workshop board (Direction) and every System
-	// asset are SVGs, used directly below via .src — vector, so they
-	// skip the raster pipeline entirely. No resolution/quality tuning
-	// needed; they're crisp at any size for free.
+	// The RFP cover and every other System SVG are simple/small enough
+	// to stay vector, used directly below via .src. These six are the
+	// exception — complex, screenshot-like mockups that were shipping
+	// as multi-hundred-KB to 1.4MB raw SVGs. Rasterizing checked out
+	// visually (verified against the vector originals at 2x zoom,
+	// including the dense sticky-note text) with no perceptible loss —
+	// there's no lightbox on this pinboard, so nothing ever renders
+	// larger than the grid itself. Width is roughly 2x each pin's real
+	// display size for retina headroom; quality 88 (vs. the flatter
+	// ascii visual's 82) since these carry finer text detail.
+	getImage({ src: brandWorkshopSvg, format: 'webp', width: 1600, quality: 88 }),
+	getImage({ src: whatHowWhySvg, format: 'webp', width: 1200, quality: 88 }),
+	getImage({ src: uxNotificationCards, format: 'webp', width: 1200, quality: 88 }),
+	getImage({ src: toneOfVoice, format: 'webp', width: 1920, quality: 88 }),
+	getImage({ src: stacksShapeSystem, format: 'webp', width: 1200, quality: 88 }),
+	getImage({ src: stacksLinkedInMockup, format: 'webp', width: 1200, quality: 88 }),
 ]);
 
 interface Pin {
@@ -88,7 +113,7 @@ const directionRows: Pin[][] = [
 			rot: -0.8,
 		},
 		{
-			src: whatHowWhySvg.src,
+			src: whatHowWhyImg.src,
 			alt: 'A "What, How, Why" brand strategy board from an early remote workshop, covered in sticky notes',
 			ratio: 3191 / 1894,
 			rot: 0.6,
@@ -124,7 +149,7 @@ const directionRows: Pin[][] = [
 	],
 	[
 		{
-			src: brandWorkshopSvg.src,
+			src: brandWorkshopImg.src,
 			alt: 'A personality and tone-of-voice workshop board, with sticky-note reactions to sample marketing copy',
 			ratio: 2400 / 1400,
 			rot: 0.5,
@@ -192,7 +217,7 @@ const systemRows: Pin[][] = [
 	],
 	[
 		{
-			src: toneOfVoice.src,
+			src: toneOfVoiceImg.src,
 			alt: 'A slide reading "The Stack Overflow tone of voice is based on the following principles: simple, spirited, syntax," with a short definition of each',
 			ratio: 3840 / 2160,
 			rot: 0,
@@ -200,13 +225,13 @@ const systemRows: Pin[][] = [
 	],
 	[
 		{
-			src: stacksShapeSystem.src,
+			src: stacksShapeSystemImg.src,
 			alt: 'The full "Stacks" shape system — fifteen named 2D and 3D brand shapes, from Data and DNA to Rotor and Helix',
 			ratio: 1855 / 2315,
 			rot: 0,
 		},
 		{
-			src: stacksLinkedInMockup.src,
+			src: stacksLinkedInMockupImg.src,
 			alt: 'A mockup of a Stack Overflow LinkedIn post using the Stacks shape system',
 			ratio: 1914 / 2315,
 			rot: 0,
@@ -250,7 +275,7 @@ const systemRows: Pin[][] = [
 	],
 	[
 		{
-			src: uxNotificationCards.src,
+			src: uxNotificationCardsImg.src,
 			alt: 'Stacked push-notification cards showing the rebrand carrying into a new product-alert design',
 			ratio: 1880 / 1658,
 			rot: 0,

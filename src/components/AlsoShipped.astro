@@ -75,8 +75,13 @@ async function imageSlide(image: ImageMetadata, alt: string): Promise<ImageSlide
 	return { type: 'image', avif: avif.src, webp: webp.src, fallback: fallback.src, width: image.width, height: image.height, alt };
 }
 
-function video(name: string, poster: ImageMetadata, alt: string): VideoSlide {
-	return { type: 'video', mp4: `/video/also-shipped/${name}.mp4`, webm: `/video/also-shipped/${name}.webm`, poster: poster.src, alt };
+// Mirrors Off The Clock's and What I Do's video() helper — same
+// reasoning: a single well-compressed poster format, not the full
+// avif/webp/fallback triad imageSlide() above uses for lightbox-worthy
+// imagery.
+async function video(name: string, poster: ImageMetadata, alt: string): Promise<VideoSlide> {
+	const resolvedPoster = await getImage({ src: poster, format: 'webp' });
+	return { type: 'video', mp4: `/video/also-shipped/${name}.mp4`, webm: `/video/also-shipped/${name}.webm`, poster: resolvedPoster.src, alt };
 }
 
 interface Project {
@@ -118,11 +123,11 @@ const items: Project[] = await Promise.all([
 		description: 'AI feature launch, product and promo animation.',
 		slug: 'overflow-ai',
 		media: [
-			video('overflow-ai/oai-1', oai1Poster, 'OverflowAI'),
-			video('overflow-ai/oai-2', oai2Poster, 'OverflowAI'),
-			video('overflow-ai/oai-3', oai3Poster, 'OverflowAI'),
-			video('overflow-ai/oai-4', oai4Poster, 'OverflowAI'),
-			video('overflow-ai/oai-5', oai5Poster, 'OverflowAI'),
+			await video('overflow-ai/oai-1', oai1Poster, 'OverflowAI'),
+			await video('overflow-ai/oai-2', oai2Poster, 'OverflowAI'),
+			await video('overflow-ai/oai-3', oai3Poster, 'OverflowAI'),
+			await video('overflow-ai/oai-4', oai4Poster, 'OverflowAI'),
+			await video('overflow-ai/oai-5', oai5Poster, 'OverflowAI'),
 			await imageSlide(oai6, 'OverflowAI'),
 		],
 	}))(),
@@ -134,7 +139,7 @@ const items: Project[] = await Promise.all([
 			await imageSlide(somu1, 'Stack Overflow Meetup'),
 			await imageSlide(somu2, 'Stack Overflow Meetup'),
 			await imageSlide(somu3, 'Stack Overflow Meetup'),
-			video('somu23/somu-4', somu4Poster, 'Stack Overflow Meetup'),
+			await video('somu23/somu-4', somu4Poster, 'Stack Overflow Meetup'),
 			await imageSlide(somu5, 'Stack Overflow Meetup'),
 			await imageSlide(somu6, 'Stack Overflow Meetup'),
 		],
