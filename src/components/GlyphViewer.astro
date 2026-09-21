@@ -18,6 +18,12 @@
 
 <div class="glyph-viewer" data-glyph-viewer>
 	<div class="glyph-viewer__well">
+		<p class="glyph-viewer__caption">
+			<span data-caption-char>2</span>
+			<span class="glyph-viewer__caption-sep">/</span>
+			<span data-caption-code>0032</span>
+		</p>
+
 		<div class="glyph-viewer__guide" data-guide="ascender">
 			<span class="glyph-viewer__guide-label">Ascender</span>
 		</div>
@@ -46,29 +52,22 @@
 	</div>
 
 	<div class="glyph-viewer__footer">
-		<p class="glyph-viewer__caption">
-			<span data-caption-char>2</span>
-			<span class="glyph-viewer__caption-sep">/</span>
-			<span data-caption-code>0032</span>
-		</p>
-		<div class="glyph-viewer__controls">
-			<div class="glyph-viewer__weights" role="tablist" aria-label="Font weight">
-				<button type="button" class="glyph-viewer__weight-tab" data-weight="200">Extralight</button>
-				<button type="button" class="glyph-viewer__weight-tab" data-weight="300">Light</button>
-				<button type="button" class="glyph-viewer__weight-tab" data-weight="400" aria-current="true">Regular</button>
-				<button type="button" class="glyph-viewer__weight-tab" data-weight="500">Medium</button>
-				<button type="button" class="glyph-viewer__weight-tab" data-weight="700">Bold</button>
-			</div>
-			<div class="glyph-viewer__face-switch">
-				<span class="glyph-viewer__face-label" data-face-label="headline">Headline</span>
-				<label class="glyph-viewer__switch">
-					<input type="checkbox" data-notch-toggle checked aria-label="Switch display face between Headline and Notch" />
-					<span class="glyph-viewer__switch-track">
-						<span class="glyph-viewer__switch-thumb"></span>
-					</span>
-				</label>
-				<span class="glyph-viewer__face-label" data-face-label="notch">Notch</span>
-			</div>
+		<div class="glyph-viewer__weights" role="tablist" aria-label="Font weight">
+			<button type="button" class="glyph-viewer__weight-tab" data-weight="200">Extralight</button>
+			<button type="button" class="glyph-viewer__weight-tab" data-weight="300">Light</button>
+			<button type="button" class="glyph-viewer__weight-tab" data-weight="400" aria-current="true">Regular</button>
+			<button type="button" class="glyph-viewer__weight-tab" data-weight="500">Medium</button>
+			<button type="button" class="glyph-viewer__weight-tab" data-weight="700">Bold</button>
+		</div>
+		<div class="glyph-viewer__face-switch">
+			<span class="glyph-viewer__face-label" data-face-label="headline">Headline</span>
+			<label class="glyph-viewer__switch">
+				<input type="checkbox" data-notch-toggle checked aria-label="Switch display face between Headline and Notch" />
+				<span class="glyph-viewer__switch-track">
+					<span class="glyph-viewer__switch-thumb"></span>
+				</span>
+			</label>
+			<span class="glyph-viewer__face-label" data-face-label="notch">Notch</span>
 		</div>
 	</div>
 </div>
@@ -240,7 +239,14 @@
 		letter-spacing: -0.01em;
 	}
 
+	/* Top-left corner of the well itself, level with the guide lines —
+	   the well's own top edge has nothing else up there until the
+	   Ascender line starts a bit further down, so the ID sits in that
+	   free corner rather than competing with the footer's controls. */
 	.glyph-viewer__caption {
+		position: absolute;
+		left: var(--gv-well-pad-x);
+		top: var(--space-2xs);
 		font-size: var(--type-caption-size);
 		color: var(--gv-ink);
 		font-variant-numeric: tabular-nums;
@@ -249,12 +255,6 @@
 	.glyph-viewer__caption-sep {
 		color: oklch(from var(--gv-ink) l c h / 0.5);
 		margin-inline: 2px;
-	}
-
-	.glyph-viewer__controls {
-		display: inline-flex;
-		align-items: center;
-		gap: var(--space-s);
 	}
 
 	.glyph-viewer__weights {
