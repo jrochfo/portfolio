@@ -150,6 +150,11 @@ const scrubColors = SCRUB_VISUALS.map((v) => v.color);
 	const BUILD_FRAMES = 5; // frames 11–15, build up
 	const HOLD_FRAME_COUNT = 6; // number of scrub visuals held on frame 16
 	const COLLAPSE_FRAMES = 5; // frames 17–21, collapse — plays over the LAST scrub visual
+	// The last couple of collapse frames already read as basically
+	// square — cutting to orange right then (instead of waiting for the
+	// literal square at frame 22) makes the switch land with the
+	// collapse instead of after it.
+	const EARLY_ORANGE_FRAMES = 2;
 	const RESET_HOLD_FRAMES = 6; // extra beat on frame 22 right as the bg hard-cuts back to orange
 	const BLINK_FRAMES = 35; // frames 22–56, blinking cursor idle loop
 
@@ -184,10 +189,12 @@ const scrubColors = SCRUB_VISUALS.map((v) => v.color);
 		t -= HOLD_MS;
 		const lastIndex = HOLD_FRAME_COUNT - 1;
 		if (t < COLLAPSE_MS) {
+			const collapseFrame = Math.min(17 + Math.floor(t / SLOW_FRAME_MS), 21);
+			const orangeAlready = collapseFrame >= 22 - EARLY_ORANGE_FRAMES;
 			return {
-				frame: Math.min(17 + Math.floor(t / SLOW_FRAME_MS), 21),
-				bgIndex: lastIndex,
-				color: scrubColors[lastIndex],
+				frame: collapseFrame,
+				bgIndex: orangeAlready ? -1 : lastIndex,
+				color: orangeAlready ? INK : scrubColors[lastIndex],
 			};
 		}
 		t -= COLLAPSE_MS;
