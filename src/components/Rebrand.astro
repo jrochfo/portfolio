@@ -11,19 +11,19 @@ import brandWorkshopSvg from '../assets/work/so-rebrand/direction/brandworkshop-
 import whatHowWhySvg from '../assets/work/so-rebrand/direction/workshop-whathowwhy.svg';
 
 import newLogo from '../assets/work/so-rebrand/systems/systems-1.svg';
-import nashville1 from '../assets/work/so-rebrand/systems/systems-2-1.jpg';
-import nashville2 from '../assets/work/so-rebrand/systems/systems-2-2.jpg';
-import uxNotificationCards from '../assets/work/so-rebrand/systems/systems-3-1.svg';
-import ux404Page from '../assets/work/so-rebrand/systems/systems-3-2.svg';
-import guidelinesWalkthroughPlaceholder from '../assets/work/so-rebrand/systems/systems-4.svg';
-import glyphViewerPlaceholder from '../assets/work/so-rebrand/systems/systems-5-1.svg';
-import typeDetailZoom from '../assets/work/so-rebrand/systems/systems-5-2.svg';
-import toneOfVoice from '../assets/work/so-rebrand/systems/systems-6.svg';
-import stacksShapeSystem from '../assets/work/so-rebrand/systems/systems-7-1.svg';
-import stacksLinkedInMockup from '../assets/work/so-rebrand/systems/systems-7-2.svg';
-import isometricSkewDiagram from '../assets/work/so-rebrand/systems/systems-8-1.svg';
-import isometricSkewPlugin from '../assets/work/so-rebrand/systems/systems-8-2.svg';
-import deckTemplatesPlaceholder from '../assets/work/so-rebrand/systems/systems-9.svg';
+import guidelinesScrollPoster from '../assets/work/so-rebrand/posters/guidelines-scroll-poster.jpg';
+import glyphViewerPlaceholder from '../assets/work/so-rebrand/systems/systems-3-1.svg';
+import typeDetailZoom from '../assets/work/so-rebrand/systems/systems-3-2.svg';
+import toneOfVoice from '../assets/work/so-rebrand/systems/systems-4.svg';
+import stacksShapeSystem from '../assets/work/so-rebrand/systems/systems-5-1.svg';
+import stacksLinkedInMockup from '../assets/work/so-rebrand/systems/systems-5-2.svg';
+import isometricSkewDiagram from '../assets/work/so-rebrand/systems/systems-6-1.svg';
+import isometricSkewPlugin from '../assets/work/so-rebrand/systems/systems-6-2.svg';
+import deckTemplatesPlaceholder from '../assets/work/so-rebrand/systems/systems-7.svg';
+import nashville1 from '../assets/work/so-rebrand/systems/systems-8-1.jpg';
+import nashville2 from '../assets/work/so-rebrand/systems/systems-8-2.jpg';
+import uxNotificationCards from '../assets/work/so-rebrand/systems/systems-9-1.svg';
+import ux404Page from '../assets/work/so-rebrand/systems/systems-9-2.svg';
 
 const acts = [
 	{
@@ -89,6 +89,15 @@ const [
 	getImage({ src: stacksLinkedInMockup, format: 'webp', width: 1200, quality: 88 }),
 ]);
 
+// Mirrors What I Do's / Off The Clock's video() helper — a single
+// well-compressed poster format, not the full avif/webp/fallback triad
+// imageSlide-style helpers use for lightbox-worthy imagery.
+async function video(name: string, poster: ImageMetadata) {
+	const resolvedPoster = await getImage({ src: poster, format: 'webp' });
+	return { mp4: `/video/so-rebrand/${name}.mp4`, webm: `/video/so-rebrand/${name}.webm`, poster: resolvedPoster.src };
+}
+const guidelinesScrollVideo = await video('guidelines-scroll', guidelinesScrollPoster);
+
 interface Pin {
 	src: string;
 	alt: string;
@@ -97,6 +106,7 @@ interface Pin {
 	pinTop?: string; // overrides the pin's default top offset — for an image with its own transparent margin (the workshop board), so the pin lands on the actual slide inside it, not the image's outer edge
 	transparentBg?: boolean; // suppresses the shared neutral placeholder background — for an image with its own transparent gutters (e.g. the type-detail close-up), so the placeholder tone doesn't show through as a faint mat
 	component?: 'glyph-viewer' | 'animated-logo'; // renders a real component in place of the <img> — for the interactive glyph-set viewer and the animated logo well, both of which need live DOM/JS rather than a static image
+	video?: { mp4: string; webm: string; poster: string }; // renders a <video> in place of the <img> — muted/looping, autoplaying only while in view (see the script below)
 }
 
 // Grouped into explicit rows (rather than one auto-flowing list) so
@@ -196,10 +206,11 @@ const systemRows: Pin[][] = [
 	],
 	[
 		{
-			src: guidelinesWalkthroughPlaceholder.src,
-			alt: 'Placeholder for a video walkthrough of the brand guidelines site Jake and Dave built, covering color, type, motion, illustration, and icons in depth',
+			src: guidelinesScrollVideo.poster,
+			alt: 'A scroll through the brand guidelines site Jake and Dave built, shown in a browser window on a desktop monitor',
 			ratio: 3840 / 2160,
 			rot: 0,
+			video: guidelinesScrollVideo,
 		},
 	],
 	[
@@ -343,6 +354,18 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 												<GlyphViewer />
 											) : pin.component === 'animated-logo' ? (
 												<AnimatedLogo />
+											) : pin.video ? (
+												<video
+													class="act__pinboard-img act__pinboard-video"
+													muted
+													loop
+													playsinline
+													preload="none"
+													poster={pin.video.poster}
+													data-mp4={pin.video.mp4}
+													data-webm={pin.video.webm}
+													aria-label={pin.alt}
+												/>
 											) : (
 												<img class="act__pinboard-img" src={pin.src} alt={pin.alt} loading="lazy" />
 											)}
@@ -701,6 +724,50 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 
 		window.addEventListener('load', () => ScrollTrigger.refresh());
 		window.addEventListener('resize', () => ScrollTrigger.refresh());
+	}
+
+	// The guidelines-scroll pin: an ambient, always-looping video (no
+	// play button — it's a passive showcase, not a featured project
+	// clip), lazy-loaded on first approach and paused once it scrolls
+	// out of view so it doesn't keep decoding indefinitely. Reduced
+	// motion: never loads or plays — the poster frame is the whole
+	// story there, same as every other motion piece on this page.
+	if (!reduceMotionQuery.matches) {
+		const pinVideo = document.querySelector<HTMLVideoElement>('.act__pinboard-video');
+		if (pinVideo) {
+			function ensureLoaded(video: HTMLVideoElement) {
+				if (video.dataset.loaded) return;
+				const webm = video.dataset.webm;
+				const mp4 = video.dataset.mp4;
+				if (webm) {
+					const source = document.createElement('source');
+					source.src = webm;
+					source.type = 'video/webm';
+					video.appendChild(source);
+				}
+				if (mp4) {
+					const source = document.createElement('source');
+					source.src = mp4;
+					source.type = 'video/mp4';
+					video.appendChild(source);
+				}
+				video.load();
+				video.dataset.loaded = 'true';
+			}
+
+			const videoObserver = new IntersectionObserver(
+				([entry]) => {
+					if (entry.isIntersecting) {
+						ensureLoaded(pinVideo);
+						pinVideo.play().catch(() => {});
+					} else {
+						pinVideo.pause();
+					}
+				},
+				{ threshold: 0.2 },
+			);
+			videoObserver.observe(pinVideo);
+		}
 	}
 </script>
 </section>
