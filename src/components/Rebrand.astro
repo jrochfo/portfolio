@@ -72,16 +72,19 @@ const [
 	// to stay vector, used directly below via .src. These six are the
 	// exception — complex, screenshot-like mockups that were shipping
 	// as multi-hundred-KB to 1.4MB raw SVGs. Rasterizing checked out
-	// visually (verified against the vector originals at 2x zoom,
-	// including the dense sticky-note text) with no perceptible loss —
-	// there's no lightbox on this pinboard, so nothing ever renders
-	// larger than the grid itself. Width is roughly 2x each pin's real
-	// display size for retina headroom; quality 88 (vs. the flatter
-	// ascii visual's 82) since these carry finer text detail.
-	getImage({ src: brandWorkshopSvg, format: 'webp', width: 1600, quality: 88 }),
-	getImage({ src: whatHowWhySvg, format: 'webp', width: 1200, quality: 88 }),
+	// visually against the vector originals (including the dense
+	// sticky-note text) with no perceptible loss — there's no lightbox
+	// on this pinboard, so nothing ever renders larger than the grid
+	// itself. Width is ~3x each pin's real measured CSS display width
+	// (not the viewBox/container assumption — measured directly, since
+	// the first pass at brandworkshop-1/whatHowWhy/toneOfVoice used too
+	// thin a margin and looked visibly soft on real retina displays);
+	// quality 88 (vs. the flatter ascii visual's 82) since these carry
+	// finer text detail.
+	getImage({ src: brandWorkshopSvg, format: 'webp', width: 3600, quality: 88 }),
+	getImage({ src: whatHowWhySvg, format: 'webp', width: 2400, quality: 88 }),
 	getImage({ src: uxNotificationCards, format: 'webp', width: 1200, quality: 88 }),
-	getImage({ src: toneOfVoice, format: 'webp', width: 1920, quality: 88 }),
+	getImage({ src: toneOfVoice, format: 'webp', width: 3840, quality: 88 }),
 	getImage({ src: stacksShapeSystem, format: 'webp', width: 1200, quality: 88 }),
 	getImage({ src: stacksLinkedInMockup, format: 'webp', width: 1200, quality: 88 }),
 ]);
