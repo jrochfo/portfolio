@@ -35,6 +35,10 @@ const acts = [
 		title: 'System',
 		description:
 			"Logo, type, a brand shape system, tone of voice, and more all came together on a guidelines site our team built end to end. We met with Koto and Stack Overflow's product team in Nashville for a brand-product intensive, sticky notes covering the walls, as we stress-tested the new brand against real interface problems. We left Nashville with a system ready for rollout to both product and marketing.",
+		// The substring below is linked out to the real, live site rather
+		// than duplicated as separate link-text — this stays in sync with
+		// the description above automatically if it's ever reworded.
+		link: { text: 'a guidelines site our team built end to end', href: 'https://stackoverflow.design/' },
 	},
 	{
 		title: 'Rollout',
@@ -340,7 +344,19 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 			{acts.map((act) => (
 				<article class="act">
 					<h2 class="type-h2">{act.title}</h2>
-					<p class="type-body act__desc">{act.description}</p>
+					<p class="type-body act__desc">
+						{act.link ? (
+							<>
+								{act.description.slice(0, act.description.indexOf(act.link.text))}
+								<a href={act.link.href} target="_blank" rel="noopener noreferrer">
+									{act.link.text}
+								</a>
+								{act.description.slice(act.description.indexOf(act.link.text) + act.link.text.length)}
+							</>
+						) : (
+							act.description
+						)}
+					</p>
 					{pinboardsByAct[act.title] ? (
 						<div class={`act__pinboard act__pinboard--${pinboardsByAct[act.title].style}`}>
 							{pinboardsByAct[act.title].rows.map((row) => (
