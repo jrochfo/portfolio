@@ -246,7 +246,10 @@
 	.glyph-viewer__caption {
 		position: absolute;
 		left: var(--gv-well-pad-x);
-		top: var(--space-2xs);
+		/* Matches the footer's own padding below, so the ID sits the same
+		   distance from the well's top edge as the toolbar sits from the
+		   card's bottom edge. */
+		top: var(--space-xs);
 		font-size: var(--type-caption-size);
 		color: var(--gv-ink);
 		font-variant-numeric: tabular-nums;
@@ -264,6 +267,11 @@
 	}
 
 	.glyph-viewer__weight-tab {
+		/* The global button reset (global.css) only strips background/
+		   border — a <button>'s own default padding is still there,
+		   which was pushing "Extralight" in from the row's left edge
+		   even though the row itself was already flush-left. */
+		padding: 0;
 		font-size: 11px;
 		color: var(--gv-ink);
 		opacity: 0.5;

@@ -618,7 +618,16 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 		}
 
 		.act__pinboard-item {
+			/* flex:none switches sizing to fit-content in the cross axis
+			   (since the row uses align-items:flex-start, not the stretch
+			   default) — a plain <img> masks this because its own huge
+			   intrinsic pixel size always exceeds the viewport anyway, but
+			   GlyphViewer (a component with no intrinsic size of its own)
+			   was shrinking to whatever its content's natural width came
+			   out to instead of filling the stacked column. Pin it
+			   explicitly rather than relying on that coincidence. */
 			flex: none;
+			width: 100%;
 		}
 
 		.act__pinboard-img {
