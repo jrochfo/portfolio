@@ -14,6 +14,7 @@
 // with drawImage() + a 'source-in' color fill, which is fully synchronous
 // and leaves no room for a stale mask to linger.
 import newLogoWordmark from '../assets/work/so-rebrand/systems/systems-1-wordmark-mask.svg';
+import combinedLogoLockup from '../assets/work/so-rebrand/systems/systems-1-logo-lockup.svg';
 
 const glyphFrameModules = import.meta.glob<{ default: { src: string } }>(
 	'../assets/work/so-rebrand/systems/glyph-sequence/*.svg',
@@ -24,48 +25,86 @@ const glyphFrames = Object.keys(glyphFrameModules)
 	.map((key) => glyphFrameModules[key].default.src);
 
 // The six background visuals the well scrubs through while the glyph
-// holds on frame 16. `color` is the logo's fill against that
-// background (ink or white only, per brand) — `null` means the visual
-// already carries its own logo treatment (systems-1-scrub-3, the
-// terminal/ascii one) and the glyph+wordmark overlay hides entirely.
-import scrub2 from '../assets/work/so-rebrand/systems/systems-1-scrub-2.jpg';
+// holds on frame 16. `color` is the logo's fill against that background
+// (ink or white only, per brand) — `null` means the visual already
+// carries its own logo treatment (the spacing diagram and the
+// terminal/ascii one) and no overlay shows at all. `overlay` picks which
+// treatment draws the color: 'split' is the usual glyph-canvas +
+// CSS-masked-wordmark pair (sized/positioned to match the original
+// lockup); 'combined' is a single mask (systems-1-logo-lockup.svg) sized
+// to land in that exact same footprint — used for the two video visuals,
+// which needed a single clean overlay rather than the split treatment.
+import scrub2Poster from '../assets/work/so-rebrand/posters/systems-1-scrub-2-poster.jpg';
 import scrub3 from '../assets/work/so-rebrand/systems/systems-1-scrub-3.svg';
 import scrub4 from '../assets/work/so-rebrand/systems/systems-1-scrub-4.svg';
 import scrub5 from '../assets/work/so-rebrand/systems/systems-1-scrub-5.svg';
-import scrub6 from '../assets/work/so-rebrand/systems/systems-1-scrub-6.jpg';
+import scrub6Poster from '../assets/work/so-rebrand/posters/systems-1-scrub-6-poster.jpg';
 import scrub7 from '../assets/work/so-rebrand/systems/systems-1-scrub-7.svg';
 import { getImage } from 'astro:assets';
 
-const scrub2Optimized = await getImage({ src: scrub2, width: 1920, format: 'webp', quality: 70 });
-const scrub3Optimized = await getImage({ src: scrub3, width: 1920, format: 'webp', quality: 82 });
-const scrub6Optimized = await getImage({ src: scrub6, width: 1920, format: 'webp', quality: 70 });
+const scrub2PosterOptimized = await getImage({ src: scrub2Poster, format: 'webp' });
+const scrub6PosterOptimized = await getImage({ src: scrub6Poster, format: 'webp' });
 
 const SCRUB_VISUALS = [
-	{ src: scrub2Optimized.src, color: '#FFFFFF' },
-	{ src: scrub3Optimized.src, color: null },
-	{ src: scrub4.src, color: '#201C1D' },
-	{ src: scrub5.src, color: '#FFFFFF' },
-	{ src: scrub6Optimized.src, color: '#201C1D' },
-	{ src: scrub7.src, color: '#FFFFFF' },
+	{
+		type: 'video' as const,
+		mp4: '/video/so-rebrand/systems-1-scrub-2.mp4',
+		webm: '/video/so-rebrand/systems-1-scrub-2.webm',
+		poster: scrub2PosterOptimized.src,
+		color: '#FFFFFF',
+		overlay: 'combined' as const,
+	},
+	{ type: 'image' as const, src: scrub3.src, color: '#FFFFFF', overlay: 'split' as const },
+	{ type: 'image' as const, src: scrub4.src, color: null, overlay: 'none' as const },
+	{ type: 'image' as const, src: scrub5.src, color: null, overlay: 'none' as const },
+	{
+		type: 'video' as const,
+		mp4: '/video/so-rebrand/systems-1-scrub-6.mp4',
+		webm: '/video/so-rebrand/systems-1-scrub-6.webm',
+		poster: scrub6PosterOptimized.src,
+		color: '#201C1D',
+		overlay: 'combined' as const,
+	},
+	{ type: 'image' as const, src: scrub7.src, color: '#FFFFFF', overlay: 'split' as const },
 ];
-const scrubColors = SCRUB_VISUALS.map((v) => v.color);
+const scrubVisualsData = SCRUB_VISUALS.map((v) => ({ color: v.color, overlay: v.overlay }));
 ---
 
 <div class="animated-logo" data-animated-logo data-glyph-frame-count={glyphFrames.length}>
 	<div class="animated-logo__bg animated-logo__bg--orange" data-bg-orange></div>
 	{
-		SCRUB_VISUALS.map((visual, i) => (
-			<img class="animated-logo__bg" data-bg-index={i} src={visual.src} alt="" aria-hidden="true" loading="eager" hidden />
-		))
+		SCRUB_VISUALS.map((visual, i) =>
+			visual.type === 'video' ? (
+				<video
+					class="animated-logo__bg"
+					data-bg-index={i}
+					muted
+					loop
+					playsinline
+					preload="none"
+					poster={visual.poster}
+					data-mp4={visual.mp4}
+					data-webm={visual.webm}
+					hidden
+				/>
+			) : (
+				<img class="animated-logo__bg" data-bg-index={i} src={visual.src} alt="" aria-hidden="true" loading="eager" hidden />
+			),
+		)
 	}
 
 	<div class="animated-logo__glyph" data-glyph>
 		<canvas data-glyph-canvas></canvas>
 	</div>
 	<div class="animated-logo__wordmark" data-wordmark style={`mask-image:url(${newLogoWordmark.src}); -webkit-mask-image:url(${newLogoWordmark.src});`} />
+	<div
+		class="animated-logo__combined-logo"
+		data-combined-logo
+		style={`mask-image:url(${combinedLogoLockup.src}); -webkit-mask-image:url(${combinedLogoLockup.src});`}
+	/>
 
 	<script type="application/json" data-glyph-frames is:inline set:html={JSON.stringify(glyphFrames)} />
-	<script type="application/json" data-scrub-colors is:inline set:html={JSON.stringify(scrubColors)} />
+	<script type="application/json" data-scrub-visuals is:inline set:html={JSON.stringify(scrubVisualsData)} />
 </div>
 
 <style>
@@ -124,8 +163,28 @@ const scrubColors = SCRUB_VISUALS.map((v) => v.color);
 		-webkit-mask-size: 100% 100%;
 	}
 
+	/* Same overall footprint the glyph+wordmark pair above occupies
+	   together (glyph's own left/top, sized so the combined lockup's own
+	   aspect ratio lands its bottom edge on the wordmark's bottom edge) —
+	   measured directly off both assets' real bounding boxes rather than
+	   assumed, so the logo reads as one constant, unmoving element
+	   whichever of the two overlay treatments is showing. */
+	.animated-logo__combined-logo {
+		position: absolute;
+		left: 4.032%;
+		top: 73.264%;
+		width: 91.763%;
+		height: 20.623%;
+		background-color: var(--logo-color, #201c1d);
+		mask-repeat: no-repeat;
+		mask-size: 100% 100%;
+		-webkit-mask-repeat: no-repeat;
+		-webkit-mask-size: 100% 100%;
+	}
+
 	.animated-logo__glyph[hidden],
-	.animated-logo__wordmark[hidden] {
+	.animated-logo__wordmark[hidden],
+	.animated-logo__combined-logo[hidden] {
 		display: none;
 	}
 </style>
@@ -166,25 +225,38 @@ const scrubColors = SCRUB_VISUALS.map((v) => v.color);
 	const BLINK_MS = RESET_HOLD_MS + BLINK_FRAMES * SLOW_FRAME_MS;
 	const TOTAL_MS = LEAD_MS + BUILD_MS + HOLD_MS + COLLAPSE_MS + BLINK_MS;
 
+	type Overlay = 'split' | 'combined' | 'none';
+
 	interface DisplayState {
 		frame: number;
 		bgIndex: number; // -1 = orange
-		color: string | null; // null = no overlay (the ascii visual)
+		color: string | null; // null = no overlay
+		overlay: Overlay;
 	}
 
-	function computeState(tIn: number, scrubColors: (string | null)[]): DisplayState {
+	interface ScrubVisualData {
+		color: string | null;
+		overlay: Overlay;
+	}
+
+	function computeState(tIn: number, scrubVisuals: ScrubVisualData[]): DisplayState {
 		let t = tIn;
 		if (t < LEAD_MS) {
-			return { frame: Math.min(1 + Math.floor(t / SLOW_FRAME_MS), LEAD_FRAMES), bgIndex: -1, color: INK };
+			return { frame: Math.min(1 + Math.floor(t / SLOW_FRAME_MS), LEAD_FRAMES), bgIndex: -1, color: INK, overlay: 'split' };
 		}
 		t -= LEAD_MS;
 		if (t < BUILD_MS) {
-			return { frame: Math.min(LEAD_FRAMES + 1 + Math.floor(t / SLOW_FRAME_MS), LEAD_FRAMES + BUILD_FRAMES), bgIndex: -1, color: INK };
+			return {
+				frame: Math.min(LEAD_FRAMES + 1 + Math.floor(t / SLOW_FRAME_MS), LEAD_FRAMES + BUILD_FRAMES),
+				bgIndex: -1,
+				color: INK,
+				overlay: 'split',
+			};
 		}
 		t -= BUILD_MS;
 		if (t < HOLD_MS) {
 			const imgIndex = Math.min(Math.floor(t / IMAGE_HOLD_MS), HOLD_FRAME_COUNT - 1);
-			return { frame: 16, bgIndex: imgIndex, color: scrubColors[imgIndex] };
+			return { frame: 16, bgIndex: imgIndex, color: scrubVisuals[imgIndex].color, overlay: scrubVisuals[imgIndex].overlay };
 		}
 		t -= HOLD_MS;
 		const lastIndex = HOLD_FRAME_COUNT - 1;
@@ -194,28 +266,30 @@ const scrubColors = SCRUB_VISUALS.map((v) => v.color);
 			return {
 				frame: collapseFrame,
 				bgIndex: orangeAlready ? -1 : lastIndex,
-				color: orangeAlready ? INK : scrubColors[lastIndex],
+				color: orangeAlready ? INK : scrubVisuals[lastIndex].color,
+				overlay: orangeAlready ? 'split' : scrubVisuals[lastIndex].overlay,
 			};
 		}
 		t -= COLLAPSE_MS;
 		if (t < RESET_HOLD_MS) {
-			return { frame: 22, bgIndex: -1, color: INK };
+			return { frame: 22, bgIndex: -1, color: INK, overlay: 'split' };
 		}
 		t -= RESET_HOLD_MS;
-		return { frame: Math.min(23 + Math.floor(t / SLOW_FRAME_MS), 56), bgIndex: -1, color: INK };
+		return { frame: Math.min(23 + Math.floor(t / SLOW_FRAME_MS), 56), bgIndex: -1, color: INK, overlay: 'split' };
 	}
 
 	const root = document.querySelector<HTMLElement>('[data-animated-logo]');
 	if (root) {
 		const framesEl = root.querySelector<HTMLScriptElement>('[data-glyph-frames]');
-		const colorsEl = root.querySelector<HTMLScriptElement>('[data-scrub-colors]');
+		const visualsEl = root.querySelector<HTMLScriptElement>('[data-scrub-visuals]');
 		const glyphFrames: string[] = framesEl ? JSON.parse(framesEl.textContent || '[]') : [];
-		const scrubColors: (string | null)[] = colorsEl ? JSON.parse(colorsEl.textContent || '[]') : [];
+		const scrubVisuals: ScrubVisualData[] = visualsEl ? JSON.parse(visualsEl.textContent || '[]') : [];
 
 		const orangeBg = root.querySelector<HTMLElement>('[data-bg-orange]');
 		const bgLayers = Array.from(root.querySelectorAll<HTMLElement>('[data-bg-index]'));
 		const glyphEl = root.querySelector<HTMLElement>('[data-glyph]');
 		const wordmarkEl = root.querySelector<HTMLElement>('[data-wordmark]');
+		const combinedLogoEl = root.querySelector<HTMLElement>('[data-combined-logo]');
 		const glyphCanvas = root.querySelector<HTMLCanvasElement>('[data-glyph-canvas]');
 		const glyphCtx = glyphCanvas?.getContext('2d') ?? null;
 
@@ -258,6 +332,30 @@ const scrubColors = SCRUB_VISUALS.map((v) => v.color);
 		}
 		resizeGlyphCanvas();
 
+		// Same lazy-load pattern as every other ambient video on the site
+		// (What I Do, Off The Clock, the guidelines-scroll pin): real
+		// <source> elements only get attached the first time a given
+		// video actually becomes the active background, not on page load.
+		function ensureVideoLoaded(video: HTMLVideoElement) {
+			if (video.dataset.loaded) return;
+			const webm = video.dataset.webm;
+			const mp4 = video.dataset.mp4;
+			if (webm) {
+				const source = document.createElement('source');
+				source.src = webm;
+				source.type = 'video/webm';
+				video.appendChild(source);
+			}
+			if (mp4) {
+				const source = document.createElement('source');
+				source.src = mp4;
+				source.type = 'video/mp4';
+				video.appendChild(source);
+			}
+			video.load();
+			video.dataset.loaded = 'true';
+		}
+
 		// Frame/bg/color only actually change ~24x/sec, but this runs once per
 		// rAF tick — every display refresh, which is 2-6x that on most
 		// screens. Re-writing mask-image (and re-hiding/showing layers) on
@@ -270,14 +368,30 @@ const scrubColors = SCRUB_VISUALS.map((v) => v.color);
 		let lastApplied: DisplayState | null = null;
 
 		function applyState(state: DisplayState) {
-			if (lastApplied && lastApplied.frame === state.frame && lastApplied.bgIndex === state.bgIndex && lastApplied.color === state.color) {
+			if (
+				lastApplied &&
+				lastApplied.frame === state.frame &&
+				lastApplied.bgIndex === state.bgIndex &&
+				lastApplied.color === state.color &&
+				lastApplied.overlay === state.overlay
+			) {
 				return;
 			}
 
 			if (!lastApplied || lastApplied.bgIndex !== state.bgIndex) {
 				if (orangeBg) orangeBg.hidden = state.bgIndex !== -1;
 				for (const layer of bgLayers) {
-					layer.hidden = Number(layer.dataset.bgIndex) !== state.bgIndex;
+					const isActive = Number(layer.dataset.bgIndex) === state.bgIndex;
+					layer.hidden = !isActive;
+					if (layer instanceof HTMLVideoElement) {
+						if (isActive) {
+							ensureVideoLoaded(layer);
+							layer.currentTime = 0;
+							layer.play().catch(() => {});
+						} else if (!layer.paused) {
+							layer.pause();
+						}
+					}
 				}
 			}
 
@@ -285,12 +399,15 @@ const scrubColors = SCRUB_VISUALS.map((v) => v.color);
 				drawGlyph(state.frame, state.color);
 			}
 
-			if (!lastApplied || lastApplied.color !== state.color) {
-				const showOverlay = state.color !== null;
-				if (glyphEl) glyphEl.hidden = !showOverlay;
-				if (wordmarkEl) wordmarkEl.hidden = !showOverlay;
-				if (showOverlay && state.color) {
-					wordmarkEl?.style.setProperty('--logo-color', state.color);
+			if (!lastApplied || lastApplied.color !== state.color || lastApplied.overlay !== state.overlay) {
+				const showSplit = state.color !== null && state.overlay === 'split';
+				const showCombined = state.color !== null && state.overlay === 'combined';
+				if (glyphEl) glyphEl.hidden = !showSplit;
+				if (wordmarkEl) wordmarkEl.hidden = !showSplit;
+				if (combinedLogoEl) combinedLogoEl.hidden = !showCombined;
+				if (state.color) {
+					if (showSplit) wordmarkEl?.style.setProperty('--logo-color', state.color);
+					if (showCombined) combinedLogoEl?.style.setProperty('--logo-color', state.color);
 				}
 			}
 
@@ -302,7 +419,7 @@ const scrubColors = SCRUB_VISUALS.map((v) => v.color);
 		if (reduceMotionQuery.matches) {
 			// Static rest state: frame 16 held, just the first scrub visual.
 			Promise.all(frameImages.map((img) => img.decode().catch(() => {}))).then(() => {
-				applyState({ frame: 16, bgIndex: 0, color: scrubColors[0] });
+				applyState({ frame: 16, bgIndex: 0, color: scrubVisuals[0].color, overlay: scrubVisuals[0].overlay });
 			});
 		} else {
 			let elapsedMs = 0;
@@ -314,7 +431,7 @@ const scrubColors = SCRUB_VISUALS.map((v) => v.color);
 					elapsedMs = (elapsedMs + (now - lastTimestamp)) % TOTAL_MS;
 				}
 				lastTimestamp = now;
-				applyState(computeState(elapsedMs, scrubColors));
+				applyState(computeState(elapsedMs, scrubVisuals));
 				rafId = requestAnimationFrame(tick);
 			}
 
@@ -329,6 +446,9 @@ const scrubColors = SCRUB_VISUALS.map((v) => v.color);
 					rafId = null;
 				}
 				lastTimestamp = null;
+				for (const layer of bgLayers) {
+					if (layer instanceof HTMLVideoElement && !layer.paused) layer.pause();
+				}
 			}
 
 			const observer = new IntersectionObserver(
