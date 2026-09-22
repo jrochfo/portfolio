@@ -14,7 +14,7 @@
 // with drawImage() + a 'source-in' color fill, which is fully synchronous
 // and leaves no room for a stale mask to linger.
 import newLogoWordmark from '../assets/work/so-rebrand/systems/systems-1-wordmark-mask.svg';
-import combinedLogoLockup from '../assets/work/so-rebrand/systems/systems-1-logo-lockup.svg';
+import combinedLogoLockup from '../assets/work/so-rebrand/systems/systems-1-logo16x9.svg';
 
 const glyphFrameModules = import.meta.glob<{ default: { src: string } }>(
 	'../assets/work/so-rebrand/systems/glyph-sequence/*.svg',
@@ -31,9 +31,10 @@ const glyphFrames = Object.keys(glyphFrameModules)
 // terminal/ascii one) and no overlay shows at all. `overlay` picks which
 // treatment draws the color: 'split' is the usual glyph-canvas +
 // CSS-masked-wordmark pair (sized/positioned to match the original
-// lockup); 'combined' is a single mask (systems-1-logo-lockup.svg) sized
-// to land in that exact same footprint — used for the two video visuals,
-// which needed a single clean overlay rather than the split treatment.
+// lockup); 'combined' is a single full-bleed mask (systems-1-logo16x9.svg,
+// the logo's position baked into the file itself) — used for the two
+// video visuals, which needed a single clean overlay rather than the
+// split treatment.
 import scrub2Poster from '../assets/work/so-rebrand/posters/systems-1-scrub-2-poster.jpg';
 import scrub3 from '../assets/work/so-rebrand/systems/systems-1-scrub-3.svg';
 import scrub4 from '../assets/work/so-rebrand/systems/systems-1-scrub-4.svg';
@@ -54,8 +55,8 @@ const SCRUB_VISUALS = [
 		color: '#FFFFFF',
 		overlay: 'combined' as const,
 	},
-	{ type: 'image' as const, src: scrub3.src, color: '#FFFFFF', overlay: 'split' as const },
-	{ type: 'image' as const, src: scrub4.src, color: null, overlay: 'none' as const },
+	{ type: 'image' as const, src: scrub3.src, color: null, overlay: 'none' as const },
+	{ type: 'image' as const, src: scrub4.src, color: '#FFFFFF', overlay: 'split' as const },
 	{ type: 'image' as const, src: scrub5.src, color: null, overlay: 'none' as const },
 	{
 		type: 'video' as const,
@@ -79,7 +80,6 @@ const scrubVisualsData = SCRUB_VISUALS.map((v) => ({ color: v.color, overlay: v.
 					class="animated-logo__bg"
 					data-bg-index={i}
 					muted
-					loop
 					playsinline
 					preload="none"
 					poster={visual.poster}
@@ -163,18 +163,13 @@ const scrubVisualsData = SCRUB_VISUALS.map((v) => ({ color: v.color, overlay: v.
 		-webkit-mask-size: 100% 100%;
 	}
 
-	/* Same overall footprint the glyph+wordmark pair above occupies
-	   together (glyph's own left/top, sized so the combined lockup's own
-	   aspect ratio lands its bottom edge on the wordmark's bottom edge) —
-	   measured directly off both assets' real bounding boxes rather than
-	   assumed, so the logo reads as one constant, unmoving element
-	   whichever of the two overlay treatments is showing. */
+	/* Full-bleed, same as the wordmark — the logo's position within the
+	   3840x2160 frame is baked into the source SVG itself (matching where
+	   the glyph+wordmark pair sits elsewhere), not computed here, so
+	   there's no percentage math that can drift out of alignment. */
 	.animated-logo__combined-logo {
 		position: absolute;
-		left: 4.032%;
-		top: 73.264%;
-		width: 91.763%;
-		height: 20.623%;
+		inset: 0;
 		background-color: var(--logo-color, #201c1d);
 		mask-repeat: no-repeat;
 		mask-size: 100% 100%;
