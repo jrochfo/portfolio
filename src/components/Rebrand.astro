@@ -17,8 +17,8 @@ import typeDetailZoom from '../assets/work/so-rebrand/systems/systems-3-2.svg';
 import toneOfVoice from '../assets/work/so-rebrand/systems/systems-4.svg';
 import stacksShapeSystem from '../assets/work/so-rebrand/systems/systems-5-1.svg';
 import stacksLinkedInMockup from '../assets/work/so-rebrand/systems/systems-5-2.svg';
-import isometricSkewDiagram from '../assets/work/so-rebrand/systems/systems-6-1.svg';
-import isometricSkewPlugin from '../assets/work/so-rebrand/systems/systems-6-2.svg';
+import iconLibrary from '../assets/work/so-rebrand/systems/systems-6-1.svg';
+import iconMascotPoster from '../assets/work/so-rebrand/posters/systems-6-2-poster.jpg';
 import deckTemplatesPlaceholder from '../assets/work/so-rebrand/systems/systems-7.svg';
 import nashville1 from '../assets/work/so-rebrand/systems/systems-8-1.jpg';
 import nashville2 from '../assets/work/so-rebrand/systems/systems-8-2.jpg';
@@ -101,6 +101,7 @@ async function video(name: string, poster: ImageMetadata) {
 	return { mp4: `/video/so-rebrand/${name}.mp4`, webm: `/video/so-rebrand/${name}.webm`, poster: resolvedPoster.src };
 }
 const guidelinesScrollVideo = await video('guidelines-scroll', guidelinesScrollPoster);
+const iconMascotPosterOptimized = await getImage({ src: iconMascotPoster, format: 'webp' });
 
 interface Pin {
 	src: string;
@@ -111,6 +112,7 @@ interface Pin {
 	transparentBg?: boolean; // suppresses the shared neutral placeholder background — for an image with its own transparent gutters (e.g. the type-detail close-up), so the placeholder tone doesn't show through as a faint mat
 	component?: 'glyph-viewer' | 'animated-logo'; // renders a real component in place of the <img> — for the interactive glyph-set viewer and the animated logo well, both of which need live DOM/JS rather than a static image
 	video?: { mp4: string; webm: string; poster: string }; // renders a <video> in place of the <img> — muted/looping, autoplaying only while in view (see the script below)
+	videoPlaylist?: { clips: { mp4: string; webm: string }[]; poster: string }; // like video, but a single <video> that plays each clip in order, advancing to the next (wrapping to the first) on 'ended' — for a sequence of separate clips meant to read as one continuous loop
 }
 
 // Grouped into explicit rows (rather than one auto-flowing list) so
@@ -257,16 +259,26 @@ const systemRows: Pin[][] = [
 	],
 	[
 		{
-			src: isometricSkewDiagram.src,
-			alt: 'A diagram showing how to skew text against isometric shapes at precise pixel offsets',
-			ratio: 2790 / 1987,
+			src: iconLibrary.src,
+			alt: 'The new Stack Overflow icon library — a grid of outlined icons for access, billing, publishing, support, community, and settings',
+			ratio: 2298 / 1527,
 			rot: 0,
+			transparentBg: true,
 		},
 		{
-			src: isometricSkewPlugin.src,
-			alt: 'The Figma plugin settings used to apply that same isometric skew',
-			ratio: 1055 / 1987,
+			src: iconMascotPosterOptimized.src,
+			alt: 'The bracket-character mascot cycling through a sequence of animated expressions',
+			ratio: 1,
 			rot: 0,
+			videoPlaylist: {
+				clips: [
+					{ mp4: '/video/so-rebrand/systems-6-2-1.mp4', webm: '/video/so-rebrand/systems-6-2-1.webm' },
+					{ mp4: '/video/so-rebrand/systems-6-2-2.mp4', webm: '/video/so-rebrand/systems-6-2-2.webm' },
+					{ mp4: '/video/so-rebrand/systems-6-2-3.mp4', webm: '/video/so-rebrand/systems-6-2-3.webm' },
+					{ mp4: '/video/so-rebrand/systems-6-2-4.mp4', webm: '/video/so-rebrand/systems-6-2-4.webm' },
+				],
+				poster: iconMascotPosterOptimized.src,
+			},
 		},
 	],
 	[
@@ -380,6 +392,16 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 													poster={pin.video.poster}
 													data-mp4={pin.video.mp4}
 													data-webm={pin.video.webm}
+													aria-label={pin.alt}
+												/>
+											) : pin.videoPlaylist ? (
+												<video
+													class="act__pinboard-img act__pinboard-video act__pinboard-video-playlist"
+													muted
+													playsinline
+													preload="none"
+													poster={pin.videoPlaylist.poster}
+													data-clips={JSON.stringify(pin.videoPlaylist.clips)}
 													aria-label={pin.alt}
 												/>
 											) : (
@@ -742,47 +764,78 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 		window.addEventListener('resize', () => ScrollTrigger.refresh());
 	}
 
-	// The guidelines-scroll pin: an ambient, always-looping video (no
-	// play button — it's a passive showcase, not a featured project
-	// clip), lazy-loaded on first approach and paused once it scrolls
-	// out of view so it doesn't keep decoding indefinitely. Reduced
-	// motion: never loads or plays — the poster frame is the whole
-	// story there, same as every other motion piece on this page.
+	// Every ambient pinboard video (no play button — these are passive
+	// showcases, not featured project clips): lazy-loaded on first
+	// approach and paused once it scrolls out of view so it doesn't keep
+	// decoding indefinitely. Reduced motion: never loads or plays — the
+	// poster frame is the whole story there, same as every other motion
+	// piece on this page.
 	if (!reduceMotionQuery.matches) {
-		const pinVideo = document.querySelector<HTMLVideoElement>('.act__pinboard-video');
-		if (pinVideo) {
-			function ensureLoaded(video: HTMLVideoElement) {
-				if (video.dataset.loaded) return;
-				const webm = video.dataset.webm;
-				const mp4 = video.dataset.mp4;
-				if (webm) {
-					const source = document.createElement('source');
-					source.src = webm;
-					source.type = 'video/webm';
-					video.appendChild(source);
-				}
-				if (mp4) {
-					const source = document.createElement('source');
-					source.src = mp4;
-					source.type = 'video/mp4';
-					video.appendChild(source);
-				}
-				video.load();
-				video.dataset.loaded = 'true';
-			}
+		function setSources(video: HTMLVideoElement, mp4: string, webm: string) {
+			video.querySelectorAll('source').forEach((el) => el.remove());
+			const webmSource = document.createElement('source');
+			webmSource.src = webm;
+			webmSource.type = 'video/webm';
+			video.appendChild(webmSource);
+			const mp4Source = document.createElement('source');
+			mp4Source.src = mp4;
+			mp4Source.type = 'video/mp4';
+			video.appendChild(mp4Source);
+			video.load();
+		}
 
-			const videoObserver = new IntersectionObserver(
-				([entry]) => {
-					if (entry.isIntersecting) {
-						ensureLoaded(pinVideo);
-						pinVideo.play().catch(() => {});
-					} else {
-						pinVideo.pause();
-					}
-				},
-				{ threshold: 0.2 },
-			);
-			videoObserver.observe(pinVideo);
+		for (const pinVideo of document.querySelectorAll<HTMLVideoElement>('.act__pinboard-video')) {
+			if (pinVideo.classList.contains('act__pinboard-video-playlist')) {
+				// A single <video> that plays several separate clips back to
+				// back as one continuous loop — advances to the next clip
+				// (wrapping to the first) every time the current one ends,
+				// rather than looping the same clip.
+				const clips: { mp4: string; webm: string }[] = JSON.parse(pinVideo.dataset.clips || '[]');
+				if (!clips.length) continue;
+				let clipIndex = 0;
+
+				pinVideo.addEventListener('ended', () => {
+					clipIndex = (clipIndex + 1) % clips.length;
+					setSources(pinVideo, clips[clipIndex].mp4, clips[clipIndex].webm);
+					pinVideo.play().catch(() => {});
+				});
+
+				const playlistObserver = new IntersectionObserver(
+					([entry]) => {
+						if (entry.isIntersecting) {
+							if (!pinVideo.dataset.loaded) {
+								setSources(pinVideo, clips[clipIndex].mp4, clips[clipIndex].webm);
+								pinVideo.dataset.loaded = 'true';
+							}
+							pinVideo.play().catch(() => {});
+						} else {
+							pinVideo.pause();
+						}
+					},
+					{ threshold: 0.2 },
+				);
+				playlistObserver.observe(pinVideo);
+			} else {
+				const mp4 = pinVideo.dataset.mp4;
+				const webm = pinVideo.dataset.webm;
+				if (!mp4 || !webm) continue;
+
+				const videoObserver = new IntersectionObserver(
+					([entry]) => {
+						if (entry.isIntersecting) {
+							if (!pinVideo.dataset.loaded) {
+								setSources(pinVideo, mp4, webm);
+								pinVideo.dataset.loaded = 'true';
+							}
+							pinVideo.play().catch(() => {});
+						} else {
+							pinVideo.pause();
+						}
+					},
+					{ threshold: 0.2 },
+				);
+				videoObserver.observe(pinVideo);
+			}
 		}
 	}
 </script>
