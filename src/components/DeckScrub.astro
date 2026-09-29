@@ -1,0 +1,264 @@
+---
+// A fast flip through twenty Google Slides pages from the template and
+// the decks built on it. Hovering (or tapping, on touch) pauses on the
+// current slide and shows which deck it came from; arrow keys step
+// through while paused. Under reduced motion it never autoplays — it
+// rests on the first slide and steps only when asked.
+import { getImage } from 'astro:assets';
+
+const slideModules = import.meta.glob<{ default: ImageMetadata }>(
+	'../assets/work/so-rebrand/systems/systems-7/*.svg',
+	{ eager: true },
+);
+
+// One entry per file, in file order (systems-7-01 … -20).
+const DECKS = [
+	'Stack Overflow Business Template',
+	'Stack Internal GTM Deck',
+	'Stack Overflow Business Template',
+	'2025 Developer Survey Insights',
+	'Stack Overflow Business Template',
+	'Diagram Playground',
+	'Stack Overflow Business Template',
+	'Stack Internal GTM Deck',
+	'Stack Overflow Business Template',
+	'2025 Developer Survey Insights',
+	'Stack Ads Pitch 2026',
+	'Stack Overflow Business Template',
+	'Stack Internal GTM Deck',
+	'Diagram Playground',
+	'Diagram Playground',
+	'Diagram Playground',
+	'WeAreDevelopers 2026',
+	'Stack Overflow Business Template',
+	'Data Partnership Executive Deck',
+	'KPA Final Report',
+];
+
+// Width is ~2x the row's real display width (~1150px) — these carry
+// small slide text, which went visibly soft on retina at thinner margins.
+const slides = await Promise.all(
+	Object.keys(slideModules)
+		.sort()
+		.map((key) => getImage({ src: slideModules[key].default, format: 'webp', width: 2400, quality: 85 })),
+);
+
+const INTERVAL_MS = 400;
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+<div
+	class="deck-scrub"
+	tabindex="0"
+	role="group"
+	aria-roledescription="slideshow"
+	aria-label={`${slides.length} slides from the Stack Overflow deck template and decks built on it. Hover or press space to pause; arrow keys step through.`}
+	data-interval={INTERVAL_MS}
+>
+	{slides.map((slide, i) => (
+		<img
+			class="deck-scrub__slide"
+			src={i === 0 ? slide.src : undefined}
+			data-src={slide.src}
+			alt={`Slide from the ${DECKS[i]}`}
+			width="2400"
+			height="1350"
+			decoding="async"
+			loading={i === 0 ? 'lazy' : undefined}
+			data-deck={DECKS[i]}
+			hidden={i !== 0}
+		/>
+	))}
+	<p class="deck-scrub__label" aria-live="polite">
+		<span data-count>{pad(1)} / {pad(slides.length)}</span>
+		<span class="deck-scrub__label-sep" aria-hidden="true">·</span>
+		<span data-deck-name>{DECKS[0]}</span>
+	</p>
+</div>
+
+<style>
+	.deck-scrub {
+		position: relative;
+		width: 100%;
+		aspect-ratio: 16 / 9;
+		border-radius: var(--radius-well);
+		overflow: hidden;
+		background: var(--color-neutral);
+		cursor: default;
+	}
+
+	.deck-scrub:focus-visible {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 3px;
+	}
+
+	.deck-scrub__slide {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		display: block;
+	}
+
+	/* The display:block above would otherwise beat the browser's own
+	   [hidden] rule and stack all twenty slides visibly. */
+	.deck-scrub__slide[hidden] {
+		display: none;
+	}
+
+	.deck-scrub__label {
+		position: absolute;
+		left: var(--space-xs);
+		bottom: var(--space-xs);
+		margin: 0;
+		display: flex;
+		gap: var(--space-2xs);
+		max-width: calc(100% - 2 * var(--space-xs));
+		padding: var(--space-2xs) var(--space-xs);
+		border-radius: var(--radius-well);
+		background: var(--color-ink);
+		color: var(--color-bg);
+		font-size: var(--type-caption-size);
+		line-height: var(--type-caption-line-height);
+		letter-spacing: var(--type-caption-letter-spacing);
+		font-weight: var(--type-caption-weight);
+		white-space: nowrap;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.2s ease;
+	}
+
+	[data-count] {
+		font-variant-numeric: tabular-nums;
+	}
+
+	[data-deck-name] {
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.deck-scrub.is-paused .deck-scrub__label {
+		opacity: 1;
+	}
+
+	@media (max-width: 768px) {
+		.deck-scrub__label {
+			left: var(--space-2xs);
+			bottom: var(--space-2xs);
+			max-width: calc(100% - 2 * var(--space-2xs));
+			padding: 4px var(--space-2xs);
+			border-radius: 8px;
+			font-size: 11px;
+			gap: 6px;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.deck-scrub__label {
+			opacity: 1;
+			transition: none;
+		}
+	}
+</style>
+
+<script>
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	const pad = (n: number) => String(n).padStart(2, '0');
+
+	for (const root of document.querySelectorAll<HTMLElement>('.deck-scrub')) {
+		const slides = [...root.querySelectorAll<HTMLImageElement>('.deck-scrub__slide')];
+		const count = root.querySelector<HTMLElement>('[data-count]')!;
+		const deckName = root.querySelector<HTMLElement>('[data-deck-name]')!;
+		const interval = Number(root.dataset.interval) || 400;
+
+		let index = 0;
+		let ready = false;
+		let inView = false;
+		let hovering = false;
+		let userPaused = false;
+		let timer: number | undefined;
+
+		function show(next: number) {
+			slides[index].hidden = true;
+			index = (next + slides.length) % slides.length;
+			slides[index].hidden = false;
+			count.textContent = `${pad(index + 1)} / ${pad(slides.length)}`;
+			deckName.textContent = slides[index].dataset.deck ?? '';
+		}
+
+		function sync() {
+			const running = ready && inView && !hovering && !userPaused && !reduceMotion;
+			if (running && timer === undefined) {
+				timer = window.setInterval(() => show(index + 1), interval);
+			} else if (!running && timer !== undefined) {
+				window.clearInterval(timer);
+				timer = undefined;
+			}
+			root.classList.toggle('is-paused', ready && (hovering || userPaused));
+		}
+
+		// Every slide is fetched and decoded before the first flip, so the
+		// scrub never lands on a frame that's still loading.
+		const loadObserver = new IntersectionObserver(
+			async ([entry]) => {
+				if (!entry.isIntersecting) return;
+				loadObserver.disconnect();
+				for (const img of slides) if (!img.getAttribute('src')) img.src = img.dataset.src!;
+				await Promise.all(slides.map((img) => img.decode().catch(() => {})));
+				ready = true;
+				sync();
+			},
+			{ rootMargin: '600px 0px' },
+		);
+		loadObserver.observe(root);
+
+		new IntersectionObserver(
+			([entry]) => {
+				inView = entry.isIntersecting;
+				sync();
+			},
+			{ threshold: 0.3 },
+		).observe(root);
+
+		root.addEventListener('pointerenter', (e) => {
+			if (e.pointerType !== 'mouse') return;
+			hovering = true;
+			sync();
+		});
+		root.addEventListener('pointerleave', (e) => {
+			if (e.pointerType !== 'mouse') return;
+			hovering = false;
+			sync();
+		});
+
+		root.addEventListener('click', (e) => {
+			const pointer = (e as PointerEvent).pointerType;
+			if (reduceMotion) {
+				if (ready) show(index + 1);
+				return;
+			}
+			if (pointer && pointer !== 'mouse') {
+				userPaused = !userPaused;
+				sync();
+			}
+		});
+
+		root.addEventListener('keydown', (e) => {
+			if (e.key === ' ' || e.key === 'Enter') {
+				e.preventDefault();
+				if (reduceMotion) {
+					if (ready) show(index + 1);
+					return;
+				}
+				userPaused = !userPaused;
+				sync();
+			} else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+				if (!ready) return;
+				e.preventDefault();
+				userPaused = true;
+				show(index + (e.key === 'ArrowRight' ? 1 : -1));
+				sync();
+			}
+		});
+	}
+</script>
