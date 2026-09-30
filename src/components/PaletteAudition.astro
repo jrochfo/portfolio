@@ -12,10 +12,7 @@
 // Contrast is checked by hand: text >= 7:1, titles >= 3:1 (display
 // sizes), accent >= 4.5:1 both as link text and as a button fill.
 //
-// Two families, each an original plus two offshoots that move it in
-// contrast and tone — one richer and higher-contrast, one softer and
-// more muted. The soft offshoots drop below the 7:1 text contrast held
-// elsewhere but stay above 4.5:1 (WCAG AA).
+// Down to two finalists.
 // tint (optional): what the surfaces — panels, bands, wells, hairlines —
 // are mixed from. Defaults to the text color, which is why green text
 // gives mint cards and red-brown text gives pink ones; a separate tint
@@ -24,54 +21,14 @@
 type Side = { bg: string; ink: string; title: string; accent: string; tint?: string };
 const duos: { key: string; name: string; family: string; light: Side; dark: Side }[] = [
 	{
-		key: 'tomato', name: 'Tomato / Ember', family: 'Tomato',
-		light: { bg: '#FFF5EA', ink: '#2A1410', title: '#E3321B', accent: '#C42A15' },
-		dark: { bg: '#1A0F0B', ink: '#FBE9DD', title: '#FF6A3D', accent: '#FF8A5C' },
-	},
-	{
-		key: 'tomato-butter', name: 'Tomato (butter paper)', family: 'Tomato',
+		key: 'tomato-butter', name: 'Butter Tomato', family: 'Finalists',
 		light: { bg: '#FFF7E2', ink: '#2A1410', title: '#E3321B', accent: '#C42A15', tint: '#5E4A1C' },
 		dark: { bg: '#1A1409', ink: '#FBEEDB', title: '#FF6A3D', accent: '#FF8A5C', tint: '#FBE6B8' },
 	},
 	{
-		key: 'tomato-paste', name: 'Tomato Paste', family: 'Tomato',
-		light: { bg: '#FFF0E4', ink: '#1F0806', title: '#D1200E', accent: '#B01C0A' },
-		dark: { bg: '#140604', ink: '#FFEDE3', title: '#FF4B2B', accent: '#FF7A5A' },
-	},
-	{
-		key: 'sun-dried', name: 'Sun-Dried', family: 'Tomato',
-		light: { bg: '#F6EDE3', ink: '#4D3A33', title: '#B8432B', accent: '#9E3A24' },
-		dark: { bg: '#231815', ink: '#DCCDC0', title: '#E0765A', accent: '#E89A7E' },
-	},
-	{
-		key: 'matcha-latte', name: 'Matcha Latte', family: 'Matcha Latte',
-		light: { bg: '#F3EDDA', ink: '#33501A', title: '#5E8A22', accent: '#4A6B1C' },
-		dark: { bg: '#141B0D', ink: '#F1ECD8', title: '#B6DB63', accent: '#E9C98B' },
-	},
-	{
-		key: 'matcha-latte-bright', name: 'Matcha Latte (brighter paper)', family: 'Matcha Latte',
-		light: { bg: '#F9F5E8', ink: '#33501A', title: '#5E8A22', accent: '#4A6B1C' },
-		dark: { bg: '#141B0D', ink: '#F1ECD8', title: '#B6DB63', accent: '#E9C98B' },
-	},
-	{
-		key: 'matcha-latte-papery', name: 'Matcha Latte (bright, papery)', family: 'Matcha Latte',
-		light: { bg: '#F9F5E8', ink: '#33501A', title: '#5E8A22', accent: '#4A6B1C', tint: '#6B5638' },
-		dark: { bg: '#161812', ink: '#F1ECD8', title: '#B6DB63', accent: '#E9C98B', tint: '#EADFC6' },
-	},
-	{
-		key: 'ceremonial-papery', name: 'Ceremonial (papery)', family: 'Matcha Latte',
+		key: 'ceremonial-papery', name: 'Paper Ceremonial', family: 'Finalists',
 		light: { bg: '#F6F1E3', ink: '#1E3A10', title: '#3F7A12', accent: '#2F5F0F', tint: '#6B5638' },
 		dark: { bg: '#12140E', ink: '#EEF3DD', title: '#A6E04A', accent: '#F0D08A', tint: '#EADFC6' },
-	},
-	{
-		key: 'ceremonial', name: 'Ceremonial', family: 'Matcha Latte',
-		light: { bg: '#F2EFE2', ink: '#1E3A10', title: '#3F7A12', accent: '#2F5F0F' },
-		dark: { bg: '#0C1407', ink: '#EEF3DD', title: '#A6E04A', accent: '#F0D08A' },
-	},
-	{
-		key: 'oat-matcha', name: 'Oat Matcha', family: 'Matcha Latte',
-		light: { bg: '#EFE8D8', ink: '#44532E', title: '#72873A', accent: '#56692A' },
-		dark: { bg: '#1C1E14', ink: '#E4E0CC', title: '#B9C77A', accent: '#D6B97F' },
 	},
 ];
 
