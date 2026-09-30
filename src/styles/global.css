@@ -125,7 +125,7 @@ ol {
 	   with a fixed inline padding as the gutter. The 120px figure in
 	   Figma is a simulation of that gutter on a fixed-width frame —
 	   it's not a literal token. */
-	--container-max: 1200px;
+	--container-max: 1320px;
 	--container-margin: 24px;
 
 	/* Components */
