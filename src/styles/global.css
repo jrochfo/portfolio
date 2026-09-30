@@ -138,66 +138,45 @@ ol {
 	--radius-card: 20px;
 	--radius-pill: 999px;
 
-	/* Color — exploration architecture
-	   Formula-driven from five control values, written live by the
-	   dev-only color panel (src/components/ColorExploration.astro,
-	   disabled outside dev — see Base.astro). Every other --color-*
-	   token below is DERIVED from these; once a favorite is found,
-	   only these five values (plus the chosen accent) need to change,
-	   never the formulas or the tokens that use them. OKLCH, not HSL —
-	   its lightness axis is perceptually uniform, so the hue control
-	   doesn't quietly distort contrast as it sweeps warm to cool.
-	   Current values are still wireframe-pragmatic defaults (Temperature
-	   near-neutral, Compression modest, no accent) — nothing here is
-	   the final palette; that's the whole point of the panel. */
-	--neutral-hue: 55; /* degrees; ~50-70 warm/paper, ~30-45 warm gray,
-	                        chroma 0 = neutral regardless of hue,
-	                        ~220-245 cool blue-gray */
-	--neutral-chroma: 0.012; /* tint strength; 0 = neutral gray */
-	--compression: 0.35; /* 0 = surface barely distinguishable from
-	                          field, 1 = a clear step deeper */
-	--ink-lightness: 0.15; /* 0.04 ~ "pure black", else 0.10/0.15/0.20 */
-	--ink-chroma-mix: 1; /* 0 = desaturate ink (pure black), 1 = full
-	                          temperature hue in the ink */
-
-	--color-bg: oklch(0.99 var(--neutral-chroma) var(--neutral-hue)); /* page
-	   background; also anything that must exactly match it (nav, the
-	   pinned-title bar) */
-	--color-ink: oklch(
-		var(--ink-lightness) calc(var(--neutral-chroma) * var(--ink-chroma-mix) * 3) var(--neutral-hue)
-	); /* primary text; also solid dark fills (buttons, tooltips) paired
-	      with --color-bg as their text */
+	/* Color — Butter Ceremonial
+	   Four picked colors per mode (page, text, titles, accent) plus a
+	   surface tint; every other surface is mixed from page + tint, so a
+	   palette change only ever touches the picked values. The tint is
+	   separate from the text color on purpose: mixing surfaces from the
+	   green text turned cards mint, a paper brown keeps them papery.
+	   Dark mode overrides only the picked values (see
+	   :root[data-theme='dark'] below); the mixes follow automatically. */
+	color-scheme: light;
+	--color-bg: #fff7e2; /* page background; also anything that must
+	   exactly match it (nav, the pinned-title bar) */
+	--color-ink: #1e3a10; /* primary text; also solid fills (buttons,
+	   tooltips) paired with --color-bg as their text */
+	--color-title: #3f7a12; /* display, h1, and h2 titles */
+	--color-accent: #2f5f0f; /* links, focus rings, selection, the nav
+	   mark, active tabs, button hover */
+	--color-tint: #5e4a1c; /* what surfaces are mixed from — a warm
+	   paper brown, not the text color */
 
 	--color-surface: var(--color-bg); /* elevated surface that contrasts
-	   against a gray band or panel (testimonial card, the WhatIDo icon
+	   against a band or panel (testimonial card, the WhatIDo icon
 	   chip) — same value as bg by definition, kept as its own token
-	   since the ROLE differs (see the color-token commit for why) */
-	--color-panel: oklch(calc(0.99 - var(--compression) * 0.05) var(--neutral-chroma) var(--neutral-hue)); /* card/panel background */
-	--color-panel-well: oklch(calc(0.99 - var(--compression) * 0.03) var(--neutral-chroma) var(--neutral-hue)); /* media
+	   since the ROLE differs */
+	--color-panel: color-mix(in oklch, var(--color-bg), var(--color-tint) 5%); /* card/panel background */
+	--color-panel-well: color-mix(in oklch, var(--color-bg), var(--color-tint) 3%); /* media
 	   well nested inside a panel — lighter than the panel around it */
-	--color-band: oklch(calc(0.99 - var(--compression) * 0.05) var(--neutral-chroma) var(--neutral-hue)); /* full-bleed
+	--color-band: color-mix(in oklch, var(--color-bg), var(--color-tint) 6%); /* full-bleed
 	   section band background (testimonials, footer) */
-	--color-neutral: oklch(calc(0.99 - var(--compression) * 0.07) var(--neutral-chroma) var(--neutral-hue)); /* standalone
+	--color-neutral: color-mix(in oklch, var(--color-bg), var(--color-tint) 9%); /* standalone
 	   media well on the page background, and neutral chips (secondary
 	   button, nav pill) */
-	--color-line: oklch(calc(0.99 - var(--compression) * 0.12 - 0.05) var(--neutral-chroma) var(--neutral-hue)); /* hairline
-	   borders/dividers — reads a bit more distinct than the surface
-	   fill alone, so it stays visible even at low compression */
-
-	--color-ink-muted: oklch(
-		calc(var(--ink-lightness) + 0.4) calc(var(--neutral-chroma) * var(--ink-chroma-mix) * 2) var(--neutral-hue)
-	); /* secondary/caption-style text — a lighter derivative of ink,
-	      same hue family (Temperature and Ink together determine it) */
+	--color-line: color-mix(in oklch, var(--color-bg), var(--color-tint) 18%); /* hairline
+	   borders/dividers */
+	--color-ink-muted: color-mix(in oklch, var(--color-ink), var(--color-bg) 38%); /* secondary/
+	   caption-style text */
 
 	--color-scrim: rgba(0, 0, 0, 0.55); /* dark overlay for icon/text
 	   legibility over arbitrary video content — deliberately NOT tied
 	   to the palette; it needs to work over unpredictable footage */
-
-	/* Accent — resolved directly by the panel to a real color, or to a
-	   copy of --color-ink itself when "None" is chosen, so every
-	   consumer can reference var(--color-accent) unconditionally
-	   without needing to know whether an accent is active. */
-	--color-accent: var(--color-ink);
 
 	/* Type
 	   Font sizes shift per breakpoint; weight, line-height, and
@@ -258,6 +237,28 @@ ol {
 	--type-caption-line-height: 1.4;
 	--type-caption-letter-spacing: 0.02em;
 	--type-caption-weight: 500;
+}
+
+/* Dark mode — set on <html> by the nav toggle (and, before first paint,
+   by the inline script in Base.astro). Only the picked values change;
+   every mixed surface follows. */
+:root[data-theme='dark'] {
+	color-scheme: dark;
+	--color-bg: #15140b;
+	--color-ink: #f4efd9;
+	--color-title: #a6e04a;
+	--color-accent: #f0d08a;
+	--color-tint: #fbe6b8;
+}
+
+/* Client logos are single-color black marks (the hero row forces them
+   there with a filter); on the dark page they flip to a light version. */
+:root[data-theme='dark'] .hero__logo {
+	filter: brightness(0) invert(1) opacity(0.55);
+}
+
+:root[data-theme='dark'] .testimonial-card__logo {
+	filter: brightness(0) invert(1);
 }
 
 @media (max-width: 768px) {
@@ -416,6 +417,7 @@ main {
 --------------------------------------------------------------- */
 
 .type-display {
+	color: var(--color-title);
 	font-family: var(--font-display);
 	font-size: var(--type-display-size);
 	line-height: var(--type-display-line-height);
@@ -434,6 +436,7 @@ main {
 }
 
 .type-h1 {
+	color: var(--color-title);
 	/* --font-h1 points at --font-text or --font-display depending on
 	   the audition panel's "Display scope" toggle (currently locked
 	   to --font-display — Fraunces for h1 too). */
@@ -451,6 +454,7 @@ main {
 }
 
 .type-h2 {
+	color: var(--color-title);
 	font-family: var(--font-text);
 	font-size: var(--type-h2-size);
 	line-height: var(--type-h2-line-height);

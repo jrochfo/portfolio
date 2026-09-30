@@ -42,9 +42,9 @@ const COLOR_EXPLORATION_ENABLED = false;
 // bolder directions; flip back to compare.
 const COLOR_FAVORITES_ENABLED = false;
 
-// Bold whole-site palette directions (page, text, titles, accent),
-// applied live. Dev-only.
-const PALETTE_AUDITION_ENABLED = true;
+// Light/dark palette duos, applied live — the exploration that picked
+// Butter Ceremonial (now the defaults in global.css). Dev-only; off.
+const PALETTE_AUDITION_ENABLED = false;
 ---
 
 <html lang="en">
@@ -54,6 +54,21 @@ const PALETTE_AUDITION_ENABLED = true;
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
+		<!-- Applies a stored or system dark-mode preference before first
+		     paint, so a dark-mode visitor never sees a flash of the light
+		     page. The nav toggle takes over from here. -->
+		<script is:inline>
+			(function () {
+				var mode = null;
+				try {
+					mode = localStorage.getItem('theme');
+				} catch (e) {}
+				if (mode !== 'dark' && mode !== 'light') {
+					mode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+				}
+				document.documentElement.dataset.theme = mode;
+			})();
+		</script>
 		<!-- Fraunces + Schibsted Grotesk are self-hosted (see the Fonts
 		     section of global.css) — no Google Fonts links needed. -->
 	</head>
