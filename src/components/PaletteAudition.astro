@@ -14,26 +14,15 @@
 //
 // Families, by approach rather than hue:
 // - Harmonic (Tomato): one hue family throughout.
-// - Riso: text is a strong chromatic ink, so bands and panels (mixed
-//   from page + text) come out a contrasting tint against paper-colored
-//   cards; titles add a second voice.
 // - Riso × Matcha: Riso's ink-tinted surfaces with Matcha's greens.
+// - Mono: black and white at three temperatures — warm, cool, pure —
+//   letting the work carry all the color.
 type Side = { bg: string; ink: string; title: string; accent: string };
 const duos: { key: string; name: string; family: string; light: Side; dark: Side }[] = [
 	{
 		key: 'tomato', name: 'Tomato / Ember', family: 'Harmonic',
 		light: { bg: '#FFF5EA', ink: '#2A1410', title: '#E3321B', accent: '#C42A15' },
 		dark: { bg: '#1A0F0B', ink: '#FBE9DD', title: '#FF6A3D', accent: '#FF8A5C' },
-	},
-	{
-		key: 'riso', name: 'Riso', family: 'Riso',
-		light: { bg: '#F5F0E6', ink: '#152C6B', title: '#E0197F', accent: '#0067B8' },
-		dark: { bg: '#101836', ink: '#F2EDE1', title: '#FF5FAE', accent: '#8CB8FF' },
-	},
-	{
-		key: 'matcha-red', name: 'Matcha Riso Red', family: 'Riso × Matcha',
-		light: { bg: '#F6F0E3', ink: '#2E4A12', title: '#E3321B', accent: '#3F6817' },
-		dark: { bg: '#15200A', ink: '#F2EEDC', title: '#FF6A3D', accent: '#B3DB78' },
 	},
 	{
 		key: 'matcha-pink', name: 'Matcha Riso Pink', family: 'Riso × Matcha',
@@ -44,6 +33,21 @@ const duos: { key: string; name: string; family: string; light: Side; dark: Side
 		key: 'matcha-latte', name: 'Matcha Latte', family: 'Riso × Matcha',
 		light: { bg: '#F3EDDA', ink: '#33501A', title: '#5E8A22', accent: '#4A6B1C' },
 		dark: { bg: '#141B0D', ink: '#F1ECD8', title: '#B6DB63', accent: '#E9C98B' },
+	},
+	{
+		key: 'mono-paper', name: 'Paper', family: 'Mono',
+		light: { bg: '#F6F3EC', ink: '#161412', title: '#161412', accent: '#161412' },
+		dark: { bg: '#141210', ink: '#F3EFE7', title: '#F3EFE7', accent: '#F3EFE7' },
+	},
+	{
+		key: 'mono-graphite', name: 'Graphite', family: 'Mono',
+		light: { bg: '#EFF1F3', ink: '#1A1C20', title: '#1A1C20', accent: '#565C64' },
+		dark: { bg: '#15171A', ink: '#E6E9EC', title: '#FFFFFF', accent: '#A3A9B1' },
+	},
+	{
+		key: 'mono-pure', name: 'Pure', family: 'Mono',
+		light: { bg: '#FFFFFF', ink: '#000000', title: '#000000', accent: '#000000' },
+		dark: { bg: '#000000', ink: '#FFFFFF', title: '#FFFFFF', accent: '#FFFFFF' },
 	},
 ];
 
