@@ -15,7 +15,6 @@ import newLogo from '../assets/work/so-rebrand/systems/systems-1.svg';
 import guidelinesScrollPoster from '../assets/work/so-rebrand/posters/guidelines-scroll-poster.jpg';
 import glyphViewerPlaceholder from '../assets/work/so-rebrand/systems/systems-3-1.svg';
 import typeDetailZoom from '../assets/work/so-rebrand/systems/systems-3-2.svg';
-import toneOfVoice from '../assets/work/so-rebrand/systems/systems-4.svg';
 import stacksShapeSystem from '../assets/work/so-rebrand/systems/systems-5-1.svg';
 import stacksLinkedInMockup from '../assets/work/so-rebrand/systems/systems-5-2.svg';
 import iconLibrary from '../assets/work/so-rebrand/systems/systems-6-1.svg';
@@ -77,7 +76,6 @@ const [
 	brandWorkshopImg,
 	whatHowWhyImg,
 	uxNotificationCardsImg,
-	toneOfVoiceImg,
 	stacksShapeSystemImg,
 	stacksLinkedInMockupImg,
 ] = await Promise.all([
@@ -88,7 +86,7 @@ const [
 	getImage({ src: nashville1, format: 'webp', width: 900 }),
 	getImage({ src: nashville2, format: 'webp', width: 900 }),
 	// The RFP cover and every other System SVG are simple/small enough
-	// to stay vector, used directly below via .src. These six are the
+	// to stay vector, used directly below via .src. These five are the
 	// exception — complex, screenshot-like mockups that were shipping
 	// as multi-hundred-KB to 1.4MB raw SVGs. Rasterizing checked out
 	// visually against the vector originals (including the dense
@@ -96,14 +94,13 @@ const [
 	// on this pinboard, so nothing ever renders larger than the grid
 	// itself. Width is ~3x each pin's real measured CSS display width
 	// (not the viewBox/container assumption — measured directly, since
-	// the first pass at brandworkshop-1/whatHowWhy/toneOfVoice used too
+	// the first pass at brandworkshop-1/whatHowWhy used too
 	// thin a margin and looked visibly soft on real retina displays);
 	// quality 88 (vs. the flatter ascii visual's 82) since these carry
 	// finer text detail.
 	getImage({ src: brandWorkshopSvg, format: 'webp', width: 3600, quality: 88 }),
 	getImage({ src: whatHowWhySvg, format: 'webp', width: 2400, quality: 88 }),
 	getImage({ src: uxNotificationCards, format: 'webp', width: 1200, quality: 88 }),
-	getImage({ src: toneOfVoice, format: 'webp', width: 3840, quality: 88 }),
 	getImage({ src: stacksShapeSystem, format: 'webp', width: 1200, quality: 88 }),
 	getImage({ src: stacksLinkedInMockup, format: 'webp', width: 1200, quality: 88 }),
 ]);
@@ -228,8 +225,7 @@ const directionRows: Pin[][] = [
 // deep-dive, product application held back as the closer rather than
 // an early interruption: the brand-guidelines-site walkthrough video,
 // the interactive glyph viewer next to a type-detail close-up, the
-// tone-of-voice principles, the full "Stacks" shape system next to it
-// in use, the icon library next to the animated mascot, the deck
+// full "Stacks" shape system next to it in use, the icon library next to the animated mascot, the deck
 // scrub, and finally the
 // Nashville workshop where Koto met Stack's product team next to two
 // examples of the system solving real product problems — proof it
@@ -258,14 +254,6 @@ const systemRows: Pin[][] = [
 			ratio: 1944 / 2370,
 			rot: 0,
 			transparentBg: true,
-		},
-	],
-	[
-		{
-			src: toneOfVoiceImg.src,
-			alt: 'A slide reading "The Stack Overflow tone of voice is based on the following principles: simple, spirited, syntax," with a short definition of each',
-			ratio: 3840 / 2160,
-			rot: 0,
 		},
 	],
 	[
