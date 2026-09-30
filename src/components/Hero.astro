@@ -93,7 +93,7 @@ const ring: RingItem[] = [
 			))}
 		</div>
 		<div class="container hero__text">
-			<h1 class="type-display hero__headline">Hi, I’m Jake.<img class="hero__headshot" src={headshotImg.src} alt="" width="240" height="240" /> <span class="hero__headline-line">I make brands move.</span></h1>
+			<h1 class="type-display hero__headline">Hi, I’m <img class="hero__headshot" src={headshotImg.src} alt="" width="240" height="240" /> Jake. <span class="hero__headline-line">I make brands move.</span></h1>
 			<p class="type-h3 hero__subhead">
 				Motion, systems, and strategy, most recently Stack Overflow's rebrand with Koto, from
 				first workshops to full rollout.
@@ -216,20 +216,19 @@ const ring: RingItem[] = [
 		max-width: 900px;
 	}
 
-	/* A small portrait tucked right up against "Jake.", tilted a hair
-	   so it reads as leaning on the word. Sized in em so it tracks the
+	/* A small portrait between "I’m" and "Jake", tilted a hair toward
+	   the name so it reads as leaning on it. Sized in em so it tracks the
 	   display type at every breakpoint. Decorative — the name is
 	   already in the text. */
 	.hero__headshot {
 		display: inline-block;
 		width: 0.78em;
 		height: 0.78em;
-		margin-inline-start: 0.08em;
 		vertical-align: -0.04em;
 		border-radius: 50%;
 		object-fit: cover;
 		object-position: 50% 38%;
-		rotate: -5deg;
+		rotate: 5deg;
 	}
 
 	/* Always breaks after the greeting, never mid-phrase. */
