@@ -1,5 +1,6 @@
 ---
 import { Image, getImage } from 'astro:assets';
+import headshot from '../assets/about/headshot.jpg';
 import koto from '../assets/work/so-rebrand/direction/london-1.jpg';
 import nashville from '../assets/work/so-rebrand/systems/systems-8-1.jpg';
 import ae from '../assets/work/off-the-clock/type/ae-1.png';
@@ -38,6 +39,9 @@ const logos = [
 // site. Order alternates shapes and photo/graphic/video so neighbors
 // never look alike. Images are ~2x their largest on-screen size (the
 // focused, front-most slot).
+// ~2x its largest on-screen size (it's sized in em off the display type).
+const headshotImg = await getImage({ src: headshot, format: 'webp', width: 240, quality: 82 });
+
 const webp = (src: ImageMetadata) => getImage({ src, format: 'webp', width: 900, quality: 80 });
 const [kotoImg, nashvilleImg, trustLayerImg, aeImg, mascotImg, rolloutImg, charcoalImg, freedImg, raycatImg, oai1Img, oai5Img, somu4Img] =
 	await Promise.all(
@@ -89,7 +93,7 @@ const ring: RingItem[] = [
 			))}
 		</div>
 		<div class="container hero__text">
-			<h1 class="type-display hero__headline">Hi, I’m Jake. <span class="hero__headline-line">I make brands move.</span></h1>
+			<h1 class="type-display hero__headline">Hi, I’m Jake.<img class="hero__headshot" src={headshotImg.src} alt="" width="240" height="240" /> <span class="hero__headline-line">I make brands move.</span></h1>
 			<p class="type-h3 hero__subhead">
 				Motion, systems, and strategy, most recently Stack Overflow's rebrand with Koto, from
 				first workshops to full rollout.
@@ -210,6 +214,22 @@ const ring: RingItem[] = [
 
 	.hero__headline {
 		max-width: 900px;
+	}
+
+	/* A small portrait tucked right up against "Jake.", tilted a hair
+	   so it reads as leaning on the word. Sized in em so it tracks the
+	   display type at every breakpoint. Decorative — the name is
+	   already in the text. */
+	.hero__headshot {
+		display: inline-block;
+		width: 0.78em;
+		height: 0.78em;
+		margin-inline-start: 0.08em;
+		vertical-align: -0.04em;
+		border-radius: 50%;
+		object-fit: cover;
+		object-position: 50% 38%;
+		rotate: -5deg;
 	}
 
 	/* Always breaks after the greeting, never mid-phrase. */
