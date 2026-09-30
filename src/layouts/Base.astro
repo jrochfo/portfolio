@@ -12,10 +12,9 @@ interface Props {
 	title?: string;
 	navLabel?: string;
 	navHref?: string;
-	navIcon?: 'toolbox' | 'pencil' | 'eraser' | 'ink' | 'stamp';
 }
 
-const { title = 'Jake Rochford', navLabel, navHref, navIcon } = Astro.props;
+const { title = 'Jake Rochford', navLabel, navHref } = Astro.props;
 
 // Type decision is locked (Fraunces + Schibsted Grotesk, both
 // self-hosted — see the Fonts section of global.css), so the
@@ -59,7 +58,7 @@ const PALETTE_AUDITION_ENABLED = true;
 		     section of global.css) — no Google Fonts links needed. -->
 	</head>
 	<body>
-		<Nav label={navLabel} href={navHref} icon={navIcon} />
+		<Nav label={navLabel} href={navHref} />
 
 		<main>
 			<slot />
