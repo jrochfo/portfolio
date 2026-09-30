@@ -257,27 +257,29 @@ const ring: RingItem[] = [
 	}
 
 	@media (max-width: 768px) {
+		/* The stage just takes whatever height the logo row leaves, and
+		   the ring's focused item is sized by the script to fill the gap
+		   between the buttons and the logos. */
 		.hero__stage {
-			min-height: 520px;
-			--item-h: clamp(90px, 15vh, 140px);
-		}
-
-		.hero__clients-label {
-			/* Slightly more room than the desktop --space-xs gap before
-			   the logo grid starts. */
-			margin-block-end: var(--space-s);
+			min-height: 0;
+			padding-block-start: var(--space-s);
+			--item-h: 120px;
 		}
 
 		.hero__logos {
 			display: grid;
-			grid-template-columns: repeat(2, 1fr);
-			/* Equal-width columns/rows so each logo centers within its own
-			   cell — column-wise vertically, row-wise horizontally —
-			   rather than the pair just hugging together. */
+			/* Three across, two rows — half the height of a two-column
+			   grid, which leaves the ring room to breathe. */
+			grid-template-columns: repeat(3, 1fr);
 			justify-items: center;
 			align-items: center;
-			row-gap: var(--space-s);
+			row-gap: var(--space-xs);
 			column-gap: var(--space-2xs);
+		}
+
+		.hero__logo {
+			height: 24px;
+			max-width: 100%;
 		}
 	}
 	</style>
@@ -304,6 +306,7 @@ const ring: RingItem[] = [
 		let radius = 0;
 		let tilt = 0;
 		let centerY = 0;
+		let small = false;
 
 		const smoothstep = (a: number, b: number, v: number) => {
 			const t = Math.min(1, Math.max(0, (v - a) / (b - a)));
@@ -318,7 +321,10 @@ const ring: RingItem[] = [
 			const h = stage.clientHeight;
 			// Just under half the viewport: the sides graze the screen edges
 			// and the items crowd together into a dense ring.
-			radius = Math.max(w * 0.46, 340);
+			small = w < 768;
+			// Phones: a ring about as wide as the screen, so the focused
+			// item's neighbors just peek in from the edges.
+			radius = small ? w * 0.95 : Math.max(w * 0.46, 340);
 			perspective = radius * 4;
 			const frontScale = perspective / (perspective - radius);
 			const backScale = perspective / (perspective + radius);
@@ -333,9 +339,12 @@ const ring: RingItem[] = [
 			const floor = clients ? clients.top : mid + h / 2;
 			// A little more room above the focused item than below it.
 			const gap = floor - actions.bottom;
-			const itemTop = actions.bottom + Math.max(44, gap * 0.13);
-			const itemBottom = floor - Math.max(28, gap * 0.08);
-			const itemH = Math.max(140, (itemBottom - itemTop) / frontScale);
+			const itemTop = actions.bottom + (small ? Math.max(20, gap * 0.08) : Math.max(44, gap * 0.13));
+			const itemBottom = floor - (small ? Math.max(12, gap * 0.05) : Math.max(28, gap * 0.08));
+			let itemH = Math.max(small ? 80 : 140, (itemBottom - itemTop) / frontScale);
+			// …but never so tall that the widest (16:9) item, in front,
+			// runs off the sides of a phone screen.
+			if (small) itemH = Math.min(itemH, (w * 0.86 * 9) / 16 / frontScale);
 			stage.style.setProperty('--item-h', `${itemH.toFixed(1)}px`);
 			const backY = headline.top + headline.height / 2 - mid;
 			const frontY = (itemTop + itemBottom) / 2 - mid;
@@ -367,7 +376,9 @@ const ring: RingItem[] = [
 			for (let i = 0; i < n; i++) {
 				// The back of the ring fades out entirely, leaving the space
 				// behind the hero text clear.
-				const opacity = 1 - smoothstep(0.3, 0.8, depth[i]);
+				// Phones fade the sides out sooner — on a narrow screen they'd
+				// otherwise sit right behind the subhead.
+				const opacity = small ? 1 - smoothstep(0.1, 0.4, depth[i]) : 1 - smoothstep(0.3, 0.8, depth[i]);
 				const el = items[i];
 				el.style.opacity = opacity.toFixed(3);
 				el.style.visibility = opacity < 0.01 ? 'hidden' : 'visible';
