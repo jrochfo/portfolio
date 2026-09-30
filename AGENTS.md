@@ -64,32 +64,26 @@ complete, tokens defined); build phase is transcribing that spec.
   (src/components/FontAudition.astro) is still in the codebase,
   disabled via FONT_AUDITION_ENABLED in Base.astro, for testing future
   type changes the same way.
-- Color: mid-exploration. The neutral ramp (--color-bg/panel/band/
-  neutral/line/ink/ink-muted) is formula-driven from five control
-  variables (--neutral-hue, --neutral-chroma, --compression,
-  --ink-lightness, --ink-chroma-mix) in OKLCH, so a small set of
-  values determines the whole system — see the Color section of
-  global.css for the formulas. The original open-ended tinkering tool
-  (src/components/_archive/ColorExploration.astro — Temperature/
-  Compression/Ink sliders, an 8-swatch Accent grid, unlimited saved
-  favorites) did its job and is archived (COLOR_EXPLORATION_ENABLED in
-  Base.astro, currently false). Its successor,
-  src/components/ColorFavorites.astro (enabled via
-  COLOR_FAVORITES_ENABLED in Base.astro), is a dev-only panel exposing
-  just the four favorites Jake narrowed it to — Rust, Teal, Moss,
-  Cobalt — plus a token readout; no sliders, nothing new to save. Pick
-  a final one there, then commit its values as the literal defaults
-  and turn the panel off. --color-accent currently drives the nav-pill
-  active tab, WhatIDo card icons, focus rings, ::selection, link-hover
-  underlines, body-copy link color, and button hover states — plus the
-  nav toolbox icon and the Hero 3D toolbox model's texture, both of
-  which live-update off a `color-accent-change` custom event
-  dispatched whenever the accent changes (see Nav.astro and
-  Hero.astro). Nothing here is final — it's still the token *layer*,
-  tuned further once real content (video, images) is in place. Roles
-  that are only coincidentally the same value today (e.g. a card panel
-  and a full-bleed section band) still get separate tokens, so the
-  real palette can tell them apart later without a find-and-replace.
+- Color: Butter Ceremonial (chosen via a light/dark palette-duo
+  exploration; on the hero-ring branch). Each mode picks four values —
+  --color-bg (buttery paper), --color-ink (deep forest green),
+  --color-title (display/h1/h2), --color-accent — plus --color-tint,
+  what the surfaces (--color-panel/panel-well/band/neutral/line) are
+  color-mixed from. The tint is a paper brown rather than the ink so
+  cards stay papery instead of turning green. --color-ink-muted mixes
+  ink toward bg. Dark mode lives in :root[data-theme='dark'] in
+  global.css and overrides only the picked values; the mixes follow.
+  The nav's round toggle (left of About) sets <html data-theme>, stores
+  the choice in localStorage ('theme'), defaults to the system setting,
+  and an inline script in Base.astro applies it before first paint.
+  Client logos flip light in dark mode (global.css). Roles that are
+  only coincidentally the same value today (e.g. a card panel and a
+  full-bleed band) still get separate tokens. Retired dev panels:
+  src/components/PaletteAudition.astro (the duos exploration,
+  PALETTE_AUDITION_ENABLED), ColorFavorites.astro, and
+  _archive/ColorExploration.astro — all off in Base.astro, and the
+  latter two still write the old formula variables, which no longer
+  exist in global.css.
 - Tooltips / transient overlays (e.g. the About page's "Email copied"):
   caption type, --radius-well, solid dark fill (no translucency),
   fade in/out only. No animation under `prefers-reduced-motion: reduce`
