@@ -319,6 +319,17 @@ const ring: RingItem[] = [
 		let perspective = 0;
 		let maxBlur = 0;
 
+		// Where an element will sit once its load-in drift is done: its
+		// on-screen box minus whatever vertical `translate` it still has.
+		// Placing the ring from the mid-drift position made it jump when
+		// the text settled.
+		function restingRect(el: Element | null) {
+			if (!el) return undefined;
+			const r = el.getBoundingClientRect();
+			const dy = parseFloat(getComputedStyle(el).translate.split(' ')[1] ?? '0') || 0;
+			return { top: r.top - dy, bottom: r.bottom - dy, height: r.height };
+		}
+
 		function measure() {
 			if (!stage || !items.length) return;
 			const w = stage.clientWidth;
@@ -337,9 +348,9 @@ const ring: RingItem[] = [
 			// centered in it, and the back of the ring lines up with the
 			// headline behind the text.
 			const mid = stage.getBoundingClientRect().top + h / 2;
-			const headline = stage.querySelector('.hero__headline')!.getBoundingClientRect();
-			const actions = stage.querySelector('.hero__actions')!.getBoundingClientRect();
-			const clients = document.querySelector('.hero__clients')?.getBoundingClientRect();
+			const headline = restingRect(stage.querySelector('.hero__headline'))!;
+			const actions = restingRect(stage.querySelector('.hero__actions'))!;
+			const clients = restingRect(document.querySelector('.hero__clients'));
 			const floor = clients ? clients.top : mid + h / 2;
 			// A little more room above the focused item than below it.
 			const gap = floor - actions.bottom;
@@ -436,13 +447,6 @@ const ring: RingItem[] = [
 				measure();
 				render();
 			}).observe(stage);
-			// The ring is placed from the headline's and buttons' positions,
-			// which are still mid-drift during the load-in reveal — measure
-			// again once the buttons have settled.
-			stage.querySelector('.hero__actions')?.addEventListener('transitionend', () => {
-				measure();
-				render();
-			});
 
 			if (!reduceMotion) {
 				pending = gsap.delayedCall(HOLD, spin);
