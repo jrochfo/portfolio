@@ -173,9 +173,9 @@ ol {
 	   borders/dividers */
 	--color-ink-muted: color-mix(in oklch, var(--color-ink), var(--color-bg) 38%); /* secondary/
 	   caption-style text */
-	--color-logo: color-mix(in oklch, var(--color-accent), var(--color-bg) 40%); /* client
-	   logos (hero row, testimonial cards) — a muted accent, so they sit
-	   in the palette in both modes */
+	--color-logo: color-mix(in oklch, var(--color-ink), var(--color-bg) 50%); /* client
+	   logos (hero row, testimonial cards) — muted body text in light
+	   mode, so the hero isn't all green; muted accent in dark (below) */
 
 	--color-scrim: rgba(0, 0, 0, 0.55); /* dark overlay for icon/text
 	   legibility over arbitrary video content — deliberately NOT tied
@@ -252,6 +252,7 @@ ol {
 	--color-title: #a6e04a;
 	--color-accent: #f0d08a;
 	--color-tint: #fbe6b8;
+	--color-logo: color-mix(in oklch, var(--color-accent), var(--color-bg) 40%);
 }
 
 @media (max-width: 768px) {
