@@ -289,14 +289,19 @@ const chip = (s: Side) =>
 		// text color, at roughly the steps the committed ramp uses.
 		const mix = (bg: string, ink: string, pct: number) => `color-mix(in oklch, ${bg}, ${ink} ${pct}%)`;
 
+		// "Current" has no dark side of its own yet — a stand-in so the
+		// toggle does something there too: the committed ink as the page,
+		// cream as the text.
+		const CURRENT_DARK: Side = { bg: '#1B1512', ink: '#F7F1EA', title: '#F7F1EA', accent: '#F7F1EA' };
+
 		function apply() {
 			const duo = duos[index];
-			if (!duo) {
+			if (!duo && mode === 'light') {
 				TOKENS.forEach((t) => root.style.removeProperty(t));
 				root.classList.remove('palette-dark');
 				current.textContent = 'Current';
 			} else {
-				const p = duo[mode];
+				const p = duo ? duo[mode] : CURRENT_DARK;
 				const set = (t: string, v: string) => root.style.setProperty(t, v);
 				set('--color-bg', p.bg);
 				set('--color-surface', p.bg);
@@ -310,12 +315,12 @@ const chip = (s: Side) =>
 				set('--color-accent', p.accent);
 				set('--color-title', p.title);
 				root.classList.toggle('palette-dark', mode === 'dark');
-				current.textContent = duo.name;
+				current.textContent = duo ? duo.name : 'Current';
 			}
 			rows.forEach((r) => r.setAttribute('aria-pressed', String(Number(r.dataset.index) === index)));
 			modeButtons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
 			try {
-				localStorage.setItem(STORE, JSON.stringify({ key: duo?.key ?? 'current', mode }));
+				localStorage.setItem(STORE, duo?.key ?? 'current');
 			} catch {}
 		}
 
@@ -325,12 +330,17 @@ const chip = (s: Side) =>
 				apply();
 			}),
 		);
+		// Mode belongs to the nav's toggle — these buttons just ask it to
+		// switch, and the panel follows the 'theme-change' it announces.
 		modeButtons.forEach((b) =>
 			b.addEventListener('click', () => {
-				mode = b.dataset.mode as 'light' | 'dark';
-				apply();
+				window.dispatchEvent(new CustomEvent('theme-set', { detail: { mode: b.dataset.mode } }));
 			}),
 		);
+		window.addEventListener('theme-change', (e) => {
+			mode = (e as CustomEvent<{ mode: 'light' | 'dark' }>).detail.mode;
+			apply();
+		});
 		panel.querySelectorAll<HTMLButtonElement>('[data-step]').forEach((b) =>
 			b.addEventListener('click', () => {
 				const n = duos.length + 1;
@@ -341,12 +351,10 @@ const chip = (s: Side) =>
 		panel.querySelector('[data-toggle]')!.addEventListener('click', () => panel.classList.toggle('is-collapsed'));
 
 		try {
-			const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
-			if (saved) {
-				index = duos.findIndex((d) => d.key === saved.key);
-				mode = saved.mode === 'dark' ? 'dark' : 'light';
-			}
+			const key = localStorage.getItem(STORE);
+			if (key) index = duos.findIndex((d) => d.key === key);
 		} catch {}
+		mode = root.dataset.theme === 'dark' ? 'dark' : 'light';
 		apply();
 	}
 </script>

@@ -1,5 +1,6 @@
 ---
 import iconJr from '../assets/icons/nav/jr.svg';
+import iconDarkMode from '../assets/icons/functions/dark-mode.svg';
 
 interface Props {
 	label?: string;
@@ -27,9 +28,34 @@ const isHome = Astro.url.pathname === '/';
 				<span class="type-h3">Jake Rochford</span>
 			</a>
 		)}
-		<a href={href} class="button type-caption">{label}</a>
+		<div class="site-nav__actions">
+			<button
+				type="button"
+				class="button button--secondary type-caption site-nav__theme"
+				id="theme-toggle"
+				aria-label="Dark mode"
+				aria-pressed="false"
+			>
+				<span class="site-nav__theme-icon" style={`--icon-src: url(${iconDarkMode.src})`} aria-hidden="true" />
+			</button>
+			<a href={href} class="button type-caption">{label}</a>
+		</div>
 	</div>
 </nav>
+
+<style is:global>
+	/* A brief crossfade while switching modes, not a standing
+	   transition on everything — added and removed by the toggle's
+	   script. Skipped under reduced motion (the script never adds it). */
+	:root.theme-switching,
+	:root.theme-switching * {
+		transition:
+			background-color 0.3s ease,
+			color 0.3s ease,
+			border-color 0.3s ease,
+			fill 0.3s ease !important;
+	}
+</style>
 
 <style>
 	.site-nav {
@@ -68,6 +94,37 @@ const isHome = Astro.url.pathname === '/';
 		text-decoration: none;
 	}
 
+	.site-nav__actions {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2xs);
+	}
+
+	/* A circle exactly as tall as the About button: the same caption
+	   line box plus the same vertical padding, used for both sides. */
+	.site-nav__theme {
+		--size: calc(var(--type-caption-size) * var(--type-caption-line-height) + 2 * var(--button-pad-y));
+		width: var(--size);
+		height: var(--size);
+		padding: 0;
+	}
+
+	/* On = filled, the same ink-on-page treatment as the primary
+	   button beside it. */
+	.site-nav__theme[aria-pressed='true'] {
+		background: var(--color-ink);
+		color: var(--color-bg);
+	}
+
+	.site-nav__theme-icon {
+		display: block;
+		width: 18px;
+		height: 18px;
+		background-color: currentColor;
+		-webkit-mask: var(--icon-src) center / contain no-repeat;
+		mask: var(--icon-src) center / contain no-repeat;
+	}
+
 	/* The JR mark, filled with whatever accent is active — a CSS mask
 	   over a solid fill, so it repaints with the token automatically. */
 	.site-nav__icon {
@@ -93,6 +150,48 @@ const isHome = Astro.url.pathname === '/';
 	}
 	updateScrolledState();
 	window.addEventListener('scroll', updateScrolledState, { passive: true });
+
+	// Light/dark mode. The choice is stored per visitor; with none stored,
+	// it follows the system setting. Mode lives on <html data-theme> and
+	// is announced with a 'theme-change' event so whatever supplies the
+	// actual colors can react — for now, the dev palette panel, which
+	// also asks for changes through 'theme-set'.
+	const themeToggle = document.querySelector<HTMLButtonElement>('#theme-toggle');
+	const THEME_STORE = 'theme';
+	const html = document.documentElement;
+	let switchTimer: number | undefined;
+
+	function setTheme(mode: 'light' | 'dark', animate: boolean) {
+		if (animate && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+			html.classList.add('theme-switching');
+			window.clearTimeout(switchTimer);
+			switchTimer = window.setTimeout(() => html.classList.remove('theme-switching'), 350);
+		}
+		html.dataset.theme = mode;
+		themeToggle?.setAttribute('aria-pressed', String(mode === 'dark'));
+		try {
+			localStorage.setItem(THEME_STORE, mode);
+		} catch {}
+		window.dispatchEvent(new CustomEvent('theme-change', { detail: { mode } }));
+	}
+
+	let storedTheme: string | null = null;
+	try {
+		storedTheme = localStorage.getItem(THEME_STORE);
+	} catch {}
+	setTheme(
+		storedTheme === 'dark' || storedTheme === 'light'
+			? storedTheme
+			: window.matchMedia('(prefers-color-scheme: dark)').matches
+				? 'dark'
+				: 'light',
+		false,
+	);
+	themeToggle?.addEventListener('click', () => setTheme(html.dataset.theme === 'dark' ? 'light' : 'dark', true));
+	window.addEventListener('theme-set', (e) => {
+		const mode = (e as CustomEvent<{ mode: 'light' | 'dark' }>).detail?.mode;
+		if (mode) setTheme(mode, true);
+	});
 
 	document.querySelector<HTMLButtonElement>('#nav-scroll-top')?.addEventListener('click', () => {
 		const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
