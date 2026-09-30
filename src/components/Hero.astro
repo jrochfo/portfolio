@@ -7,6 +7,11 @@ import ae from '../assets/work/off-the-clock/type/ae-1.png';
 import mascotPoster from '../assets/work/so-rebrand/posters/systems-6-2-poster.jpg';
 import rolloutPoster from '../assets/work/so-rebrand/posters/rollout-3-1-poster.jpg';
 import charcoalPoster from '../assets/work/off-the-clock/charcoal-Ink/posters/charcoal-ink-poster.jpg';
+import freedPoster from '../assets/work/what-i-do/posters/motion-freed-poster.jpg';
+import raycatPoster from '../assets/work/off-the-clock/raycat/posters/raycat-poster.jpg';
+import oai1Poster from '../assets/work/also-shipped/overflow-ai/posters/oai-1-poster.jpg';
+import oai5Poster from '../assets/work/also-shipped/overflow-ai/posters/oai-5-poster.jpg';
+import somu4Poster from '../assets/work/also-shipped/somu23/posters/somu-4-poster.jpg';
 import logoStack from '../assets/logos/Logo_Stack.svg';
 import logoKoto from '../assets/logos/Logo_Koto.svg';
 import logoFreed from '../assets/logos/Logo_Freed.svg';
@@ -35,9 +40,18 @@ const logos = [
 // never look alike. Images are ~2x their largest on-screen size (the
 // focused, front-most slot).
 const webp = (src: ImageMetadata) => getImage({ src, format: 'webp', width: 900, quality: 80 });
-const [kotoImg, nashvilleImg, somuImg, aeImg, mascotImg, rolloutImg, charcoalImg] = await Promise.all(
-	[koto, nashville, somu, ae, mascotPoster, rolloutPoster, charcoalPoster].map(webp),
-);
+const [kotoImg, nashvilleImg, somuImg, aeImg, mascotImg, rolloutImg, charcoalImg, freedImg, raycatImg, oai1Img, oai5Img, somu4Img] =
+	await Promise.all(
+		[koto, nashville, somu, ae, mascotPoster, rolloutPoster, charcoalPoster, freedPoster, raycatPoster, oai1Poster, oai5Poster, somu4Poster].map(webp),
+	);
+
+const clip = (poster: string, path: string, ratio: number): RingItem => ({
+	kind: 'video',
+	poster,
+	mp4: `/video/${path}.mp4`,
+	webm: `/video/${path}.webm`,
+	ratio,
+});
 
 type RingItem =
 	| { kind: 'image'; src: string; ratio: number }
@@ -45,12 +59,17 @@ type RingItem =
 
 const ring: RingItem[] = [
 	{ kind: 'image', src: kotoImg.src, ratio: 1 },
-	{ kind: 'video', poster: rolloutImg.src, mp4: '/video/so-rebrand/rollout-3-1.mp4', webm: '/video/so-rebrand/rollout-3-1.webm', ratio: 16 / 9 },
+	clip(rolloutImg.src, 'so-rebrand/rollout-3-1', 16 / 9),
+	clip(raycatImg.src, 'off-the-clock/raycat', 4 / 3),
 	{ kind: 'image', src: aeImg.src, ratio: 4 / 3 },
-	{ kind: 'video', poster: mascotImg.src, mp4: '/video/so-rebrand/systems-6-2-2.mp4', webm: '/video/so-rebrand/systems-6-2-2.webm', ratio: 1 },
+	clip(oai1Img.src, 'also-shipped/overflow-ai/oai-1', 16 / 9),
+	clip(mascotImg.src, 'so-rebrand/systems-6-2-2', 1),
 	{ kind: 'image', src: somuImg.src, ratio: 16 / 9 },
-	{ kind: 'video', poster: charcoalImg.src, mp4: '/video/off-the-clock/charcoal-ink.mp4', webm: '/video/off-the-clock/charcoal-ink.webm', ratio: 4 / 3 },
+	clip(freedImg.src, 'what-i-do/motion-freed', 16 / 9),
+	clip(charcoalImg.src, 'off-the-clock/charcoal-ink', 4 / 3),
+	clip(oai5Img.src, 'also-shipped/overflow-ai/oai-5', 16 / 9),
 	{ kind: 'image', src: nashvilleImg.src, ratio: 1 },
+	clip(somu4Img.src, 'also-shipped/somu23/somu-4', 16 / 9),
 ];
 ---
 
@@ -124,8 +143,9 @@ const ring: RingItem[] = [
 		   stage for the front of the ring to come to rest in. */
 		place-items: start center;
 		min-height: 560px;
-		padding-block-start: clamp(var(--space-l), 9vh, 120px);
-		/* Front-most item height; everything else scales from it. */
+		padding-block-start: clamp(var(--space-m), 4vh, 56px);
+		/* Base item height — the script overrides it so the focused item
+		   fills the space between the buttons and the logos. */
 		--item-h: clamp(120px, 21vh, 230px);
 	}
 
@@ -163,6 +183,7 @@ const ring: RingItem[] = [
 	   against the ring items instead (the script's range is 100–900). */
 	.hero__text {
 		position: relative;
+		isolation: auto;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -183,6 +204,18 @@ const ring: RingItem[] = [
 	.hero__subhead {
 		position: relative;
 		z-index: 700;
+	}
+
+	/* A soft wash of the page color behind the headline and subhead, so
+	   they stay readable over the busy, blurred back of the ring without
+	   a hard box around them. Same layer as the text, painted first. */
+	.hero__text::before {
+		content: '';
+		position: absolute;
+		z-index: 699;
+		inset: -8% -12% 22%;
+		background: radial-gradient(closest-side, var(--color-bg) 55%, transparent);
+		pointer-events: none;
 	}
 
 	.hero__headline {
@@ -269,7 +302,6 @@ const ring: RingItem[] = [
 		const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 		const stage = document.querySelector<HTMLElement>('.hero__stage');
 		const items = stage ? [...stage.querySelectorAll<HTMLElement>('.hero__ring-item')] : [];
-		const videos = items.map((el) => el.querySelector('video')).filter((v): v is HTMLVideoElement => !!v);
 
 		const TAU = Math.PI * 2;
 		const STEP = TAU / items.length;
@@ -293,29 +325,29 @@ const ring: RingItem[] = [
 			if (!stage || !items.length) return;
 			const w = stage.clientWidth;
 			const h = stage.clientHeight;
-			const itemH = items[0].offsetHeight;
-			// Wider than half the viewport, so the ring's sides run
-			// off-screen and it reads as bigger than the page.
-			radius = Math.max(w * 0.6, 360);
+			// Just under half the viewport: the sides graze the screen edges
+			// and the items crowd together into a dense ring.
+			radius = Math.max(w * 0.46, 340);
 			perspective = radius * 4;
 			const frontScale = perspective / (perspective - radius);
 			const backScale = perspective / (perspective + radius);
-			// The oval is placed from the real layout: the back of the ring
-			// lines up with the headline, and the front item comes to rest
-			// just below the buttons (or as low as the stage allows, on
-			// short screens — the buttons stay on top either way).
-			const stageBox = stage.getBoundingClientRect();
-			const mid = stageBox.top + h / 2;
+			// Sized and placed from the real layout: the focused (front)
+			// item fills the space between the buttons and the logo row,
+			// centered in it, and the back of the ring lines up with the
+			// headline behind the text.
+			const mid = stage.getBoundingClientRect().top + h / 2;
 			const headline = stage.querySelector('.hero__headline')!.getBoundingClientRect();
 			const actions = stage.querySelector('.hero__actions')!.getBoundingClientRect();
-			const frontHalf = (itemH * frontScale) / 2;
+			const clients = document.querySelector('.hero__clients')?.getBoundingClientRect();
+			const floor = clients ? clients.top : mid + h / 2;
+			const margin = Math.max(16, (floor - actions.bottom) * 0.06);
+			const itemH = Math.max(140, (floor - actions.bottom - 2 * margin) / frontScale);
+			stage.style.setProperty('--item-h', `${itemH.toFixed(1)}px`);
 			const backY = headline.top + headline.height / 2 - mid;
-			const wantFrontY = actions.bottom - mid + h * 0.05 + frontHalf;
-			const maxFrontY = h / 2 - h * 0.03 - frontHalf;
-			const frontY = Math.min(wantFrontY, maxFrontY);
+			const frontY = (actions.bottom + floor) / 2 - mid;
 			tilt = Math.max(0, (frontY - backY) / (frontScale + backScale));
 			centerY = backY + tilt * backScale;
-			maxBlur = w < 768 ? 6 : 10;
+			maxBlur = 10;
 		}
 
 		function render() {
@@ -327,11 +359,26 @@ const ring: RingItem[] = [
 				const y = centerY / scale + tilt * Math.cos(theta);
 				// 0 at the very front, 1 at the very back.
 				const depth = (1 - z / radius) / 2;
-				const blur = depth ** 1.4 * maxBlur;
+				// Blur by angle from front rather than depth, so it ramps up
+				// right away — even the immediate neighbors soften, leaving
+				// the focused item as the one sharp thing.
+				const fromFront = Math.abs(Math.atan2(Math.sin(theta), Math.cos(theta))) / (Math.PI / 2);
+				const blur = Math.min(1, fromFront) ** 0.8 * maxBlur;
 				el.style.transform = `translate3d(${(x * scale).toFixed(1)}px, ${(y * scale).toFixed(1)}px, 0) scale(${scale.toFixed(3)})`;
 				el.style.filter = blur < 0.25 ? 'none' : `blur(${blur.toFixed(1)}px)`;
 				el.style.zIndex = String(Math.round(500 + (z / radius) * 400));
+				const video = el.querySelector('video');
+				// Only the front half of the ring plays — the back is too
+				// blurred to read, and eight clips decoding at once is a lot.
+				if (video) setPlaying(video, inView && !reduceMotion && depth < 0.55);
 			});
+		}
+
+		let inView = false;
+		function setPlaying(video: HTMLVideoElement, play: boolean) {
+			if (play === !video.paused) return;
+			if (play) video.play().catch(() => {});
+			else video.pause();
 		}
 
 		let focus = 0;
@@ -376,10 +423,10 @@ const ring: RingItem[] = [
 				// Nothing spins or plays while the hero is off-screen.
 				new IntersectionObserver(
 					([entry]) => {
-						const on = entry.isIntersecting;
-						timeline?.paused(!on);
-						pending?.paused(!on);
-						videos.forEach((v) => (on ? v.play().catch(() => {}) : v.pause()));
+						inView = entry.isIntersecting;
+						timeline?.paused(!inView);
+						pending?.paused(!inView);
+						render();
 					},
 					{ threshold: 0.05 },
 				).observe(stage);
