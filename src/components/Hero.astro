@@ -167,7 +167,18 @@ const ring: RingItem[] = [
 		border-radius: var(--radius-well);
 		overflow: hidden;
 		background: var(--color-neutral);
-		will-change: transform, filter;
+		/* A slight feather on every edge, so where items overlap they
+		   melt into each other instead of cutting a hard line. */
+		--feather: 10px;
+		-webkit-mask-image:
+			linear-gradient(to right, transparent, #000 var(--feather), #000 calc(100% - var(--feather)), transparent),
+			linear-gradient(to bottom, transparent, #000 var(--feather), #000 calc(100% - var(--feather)), transparent);
+		-webkit-mask-composite: source-in;
+		mask-image:
+			linear-gradient(to right, transparent, #000 var(--feather), #000 calc(100% - var(--feather)), transparent),
+			linear-gradient(to bottom, transparent, #000 var(--feather), #000 calc(100% - var(--feather)), transparent);
+		mask-composite: intersect;
+		will-change: transform, filter, opacity;
 	}
 
 	.hero__ring-item img,
@@ -183,7 +194,6 @@ const ring: RingItem[] = [
 	   against the ring items instead (the script's range is 100–900). */
 	.hero__text {
 		position: relative;
-		isolation: auto;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -206,17 +216,6 @@ const ring: RingItem[] = [
 		z-index: 700;
 	}
 
-	/* A soft wash of the page color behind the headline and subhead, so
-	   they stay readable over the busy, blurred back of the ring without
-	   a hard box around them. Same layer as the text, painted first. */
-	.hero__text::before {
-		content: '';
-		position: absolute;
-		z-index: 699;
-		inset: -8% -12% 22%;
-		background: radial-gradient(closest-side, var(--color-bg) 55%, transparent);
-		pointer-events: none;
-	}
 
 	.hero__headline {
 		/* Narrower than the container so it reliably wraps to
@@ -359,13 +358,13 @@ const ring: RingItem[] = [
 				const y = centerY / scale + tilt * Math.cos(theta);
 				// 0 at the very front, 1 at the very back.
 				const depth = (1 - z / radius) / 2;
-				// Blur by angle from front rather than depth, so it ramps up
-				// right away — even the immediate neighbors soften, leaving
-				// the focused item as the one sharp thing.
-				const fromFront = Math.abs(Math.atan2(Math.sin(theta), Math.cos(theta))) / (Math.PI / 2);
-				const blur = Math.min(1, fromFront) ** 0.8 * maxBlur;
+				const blur = depth ** 1.4 * maxBlur;
+				// Fades toward the back so the text in front of it reads on
+				// its own: full strength at the front, ~15% at the very back.
+				const opacity = 1 - 0.85 * depth ** 0.9;
 				el.style.transform = `translate3d(${(x * scale).toFixed(1)}px, ${(y * scale).toFixed(1)}px, 0) scale(${scale.toFixed(3)})`;
 				el.style.filter = blur < 0.25 ? 'none' : `blur(${blur.toFixed(1)}px)`;
+				el.style.opacity = opacity.toFixed(3);
 				el.style.zIndex = String(Math.round(500 + (z / radius) * 400));
 				const video = el.querySelector('video');
 				// Only the front half of the ring plays — the back is too
