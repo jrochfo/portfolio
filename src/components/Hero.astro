@@ -170,6 +170,25 @@ const ring: RingItem[] = [
 		--item-h: clamp(120px, 21vh, 230px);
 	}
 
+	/* The whole stage is a handle for turning the ring (see the drag
+	   script) — sideways drags turn it, vertical ones still scroll. */
+	.hero__stage {
+		cursor: grab;
+		touch-action: pan-y;
+	}
+
+	.hero__stage.is-dragging {
+		cursor: grabbing;
+	}
+
+	.hero__stage.is-dragging .hero__actions {
+		pointer-events: none;
+	}
+
+	.hero__actions a {
+		cursor: pointer;
+	}
+
 	.hero__ring {
 		position: absolute;
 		inset: 0;
@@ -440,7 +459,7 @@ const ring: RingItem[] = [
 		}
 
 		let focus = 0;
-		let timeline: gsap.core.Timeline | null = null;
+		let timeline: gsap.core.Animation | null = null;
 		let pending: gsap.core.Tween | null = null;
 
 		// One cycle: speed up, whip around at least one full turn, then
@@ -493,6 +512,96 @@ const ring: RingItem[] = [
 			};
 			window.setTimeout(() => window.setInterval(slide, HOLD_MS + SLIDE_MS), i * 1400);
 		});
+
+		// --- Dragging. A sideways drag anywhere on the stage (except the
+		// buttons) takes the ring over from the auto-spin and turns it
+		// under the pointer; letting go carries the flick's speed into a
+		// settle on the nearest item, which becomes the new focus, and
+		// the auto-spin picks up from there after a longer rest than
+		// usual, so it doesn't feel like it's snatching the ring back.
+		const DRAG_SLOP = 6; // px before a press counts as a drag
+		const RESUME_HOLD = HOLD + 1.5;
+		let press: { id: number; x: number; y: number; angle: number } | null = null;
+		let dragging = false;
+		let samples: { t: number; angle: number }[] = [];
+
+		// Angle per pixel, so the front item tracks the pointer 1:1.
+		const perPixel = () => 1 / (radius * (perspective / (perspective - radius)));
+
+		function startDrag() {
+			dragging = true;
+			stage!.classList.add('is-dragging');
+			timeline?.kill();
+			pending?.kill();
+			timeline = pending = null;
+		}
+
+		function settle() {
+			// Angular speed over the last ~80ms of the drag, in rad/s.
+			const now = performance.now();
+			const recent = samples.filter((s) => now - s.t < 80);
+			const first = recent[0];
+			const last = recent[recent.length - 1];
+			const dt = first && last && last.t > first.t ? (last.t - first.t) / 1000 : 0;
+			const v = dt ? (last.angle - first.angle) / dt : 0;
+			// Coast about a third of a second's worth of the flick, then
+			// land on whichever item is nearest there.
+			const projected = state.angle + v * 0.35;
+			const k = Math.round(-projected / STEP);
+			const target = -k * STEP;
+			const n = items.length;
+			focus = ((k % n) + n) % n;
+			const resume = () => {
+				timeline = null;
+				if (!reduceMotion) pending = gsap.delayedCall(RESUME_HOLD, spin).paused(!inView);
+			};
+			if (reduceMotion) {
+				state.angle = target;
+				render();
+				return resume();
+			}
+			// power3.out starts at 3·d/t — pick t so that matches the
+			// flick's speed, so there's no hitch at release.
+			const d = Math.abs(target - state.angle);
+			const t = Math.abs(v) > 0.05 ? Math.min(1.6, Math.max(0.45, (3 * d) / Math.abs(v))) : 0.6;
+			timeline = gsap.to(state, { angle: target, duration: t, ease: 'power3.out', onUpdate: render, onComplete: resume });
+			timeline.paused(!inView);
+		}
+
+		stage?.addEventListener('pointerdown', (e) => {
+			if (press || e.button !== 0 || (e.target as Element).closest('a, button')) return;
+			press = { id: e.pointerId, x: e.clientX, y: e.clientY, angle: state.angle };
+		});
+
+		stage?.addEventListener('pointermove', (e) => {
+			if (!press || e.pointerId !== press.id) return;
+			const dx = e.clientX - press.x;
+			if (!dragging) {
+				const dy = e.clientY - press.y;
+				if (Math.abs(dx) < DRAG_SLOP || Math.abs(dx) < Math.abs(dy)) return;
+				startDrag();
+				stage.setPointerCapture(e.pointerId);
+				// Start from here, not the press point, so it doesn't jump.
+				press.x = e.clientX;
+				press.angle = state.angle;
+			}
+			state.angle = press.angle + (e.clientX - press.x) * perPixel();
+			samples.push({ t: performance.now(), angle: state.angle });
+			if (samples.length > 12) samples.shift();
+			render();
+		});
+
+		const endPress = (e: PointerEvent) => {
+			if (!press || e.pointerId !== press.id) return;
+			press = null;
+			if (!dragging) return;
+			dragging = false;
+			stage!.classList.remove('is-dragging');
+			settle();
+			samples = [];
+		};
+		stage?.addEventListener('pointerup', endPress);
+		stage?.addEventListener('pointercancel', endPress);
 
 		if (stage && items.length) {
 			measure();
