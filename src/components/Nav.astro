@@ -109,11 +109,10 @@ const isHome = Astro.url.pathname === '/';
 		padding: 0;
 	}
 
-	/* On = filled, the same ink-on-page treatment as the primary
-	   button beside it. */
+	/* Always the secondary fill; "on" shows only in the icon, which
+	   picks up the accent while dark mode is active. */
 	.site-nav__theme[aria-pressed='true'] {
-		background: var(--color-ink);
-		color: var(--color-bg);
+		color: var(--color-accent);
 	}
 
 	.site-nav__theme-icon {
