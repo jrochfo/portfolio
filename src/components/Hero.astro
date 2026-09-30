@@ -335,8 +335,8 @@ const ring: RingItem[] = [
 			const floor = clients ? clients.top : mid + h / 2;
 			// A little more room above the focused item than below it.
 			const gap = floor - actions.bottom;
-			const itemTop = actions.bottom + Math.max(32, gap * 0.1);
-			const itemBottom = floor - Math.max(12, gap * 0.04);
+			const itemTop = actions.bottom + Math.max(44, gap * 0.13);
+			const itemBottom = floor - Math.max(28, gap * 0.08);
 			const itemH = Math.max(140, (itemBottom - itemTop) / frontScale);
 			stage.style.setProperty('--item-h', `${itemH.toFixed(1)}px`);
 			const backY = headline.top + headline.height / 2 - mid;
