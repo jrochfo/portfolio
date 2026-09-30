@@ -26,6 +26,19 @@ import nashville2 from '../assets/work/so-rebrand/systems/systems-8-2.jpg';
 import uxNotificationCards from '../assets/work/so-rebrand/systems/systems-9-1.svg';
 import ux404Page from '../assets/work/so-rebrand/systems/systems-9-2.svg';
 
+import rollout2Poster from '../assets/work/so-rebrand/posters/rollout-2-poster.jpg';
+import rollout31Poster from '../assets/work/so-rebrand/posters/rollout-3-1-poster.jpg';
+import rollout32Poster from '../assets/work/so-rebrand/posters/rollout-3-2-poster.jpg';
+import rollout41Poster from '../assets/work/so-rebrand/posters/rollout-4-1-poster.jpg';
+import rollout42Poster from '../assets/work/so-rebrand/posters/rollout-4-2-poster.jpg';
+import figmaCoversDesktop from '../assets/work/so-rebrand/rollout/rollout-5-desktop.png';
+import figmaCoversMobile from '../assets/work/so-rebrand/rollout/rollout-5-mobile.png';
+import pencilPhoto from '../assets/work/so-rebrand/rollout/rollout-6-1.png';
+import shirtPhoto from '../assets/work/so-rebrand/rollout/rollout-6-2.png';
+import stickerPhoto from '../assets/work/so-rebrand/rollout/rollout-6-right.png';
+import iconPlay from '../assets/icons/functions/play.svg';
+import iconPause from '../assets/icons/functions/pause.svg';
+
 const acts = [
 	{
 		title: 'Direction',
@@ -51,8 +64,7 @@ const acts = [
 // two-column grid (occasional full-width rows for hero pieces), each
 // photo/document held down by a small pushpin at its top-center and
 // given a very slight per-item skew — not a freeform scatter, but not
-// a sterile grid either. Rollout is still the original placeholder
-// grid below, pending its own content.
+// a sterile grid either.
 const [
 	conferenceImg,
 	placardImg,
@@ -102,6 +114,24 @@ async function video(name: string, poster: ImageMetadata) {
 	return { mp4: `/video/so-rebrand/${name}.mp4`, webm: `/video/so-rebrand/${name}.webm`, poster: resolvedPoster.src };
 }
 const guidelinesScrollVideo = await video('guidelines-scroll', guidelinesScrollPoster);
+const [rollout2Video, rollout31Video, rollout32Video, rollout41Video, rollout42Video] = await Promise.all([
+	video('rollout-2', rollout2Poster),
+	video('rollout-3-1', rollout31Poster),
+	video('rollout-3-2', rollout32Poster),
+	video('rollout-4-1', rollout41Poster),
+	video('rollout-4-2', rollout42Poster),
+]);
+
+// The covers collage is a different arrangement at phone width (2 wide
+// instead of 4) so each cover stays legible; rows 6's product shots are
+// ~2x their real display width, same retina margin as the SVGs above.
+const [figmaCoversDesktopImg, figmaCoversMobileImg, pencilImg, shirtImg, stickerImg] = await Promise.all([
+	getImage({ src: figmaCoversDesktop, format: 'webp', width: 2400, quality: 85 }),
+	getImage({ src: figmaCoversMobile, format: 'webp', width: 1200, quality: 85 }),
+	getImage({ src: pencilPhoto, format: 'webp', width: 1400, quality: 85 }),
+	getImage({ src: shirtPhoto, format: 'webp', width: 1400, quality: 85 }),
+	getImage({ src: stickerPhoto, format: 'webp', width: 1200, quality: 85 }),
+]);
 const iconMascotPosterOptimized = await getImage({ src: iconMascotPoster, format: 'webp' });
 
 interface Pin {
@@ -113,6 +143,9 @@ interface Pin {
 	transparentBg?: boolean; // suppresses the shared neutral placeholder background — for an image with its own transparent gutters (e.g. the type-detail close-up), so the placeholder tone doesn't show through as a faint mat
 	component?: 'glyph-viewer' | 'animated-logo' | 'deck-scrub'; // renders a real component in place of the <img> — for the interactive glyph-set viewer and the animated logo well, both of which need live DOM/JS rather than a static image
 	video?: { mp4: string; webm: string; poster: string }; // renders a <video> in place of the <img> — muted/looping, autoplaying only while in view (see the script below)
+	controls?: boolean; // adds the play/pause button (with progress ring) to a video pin — hover-revealed on desktop, always visible on touch and under reduced motion, where it's the only way to start playback
+	mobile?: { src: string; ratio: number }; // a separate image and aspect ratio swapped in at the mobile breakpoint via <picture> — for a collage rearranged to stay legible at phone width
+	stack?: Pin[]; // renders these pins as one vertical column in place of a single image; paired with one other pin in its row, the column's width is solved so both sides end at exactly the same height (see stackWidth below)
 	videoPlaylist?: { clips: { mp4: string; webm: string }[]; poster: string }; // like video, but a single <video> that plays each clip in order, advancing to the next (wrapping to the first) on 'ended' — for a sequence of separate clips meant to read as one continuous loop
 }
 
@@ -191,26 +224,15 @@ const directionRows: Pin[][] = [
 // story — a system being *engineered* — so it reads as a clean,
 // systematic grid instead. Sequenced as one uninterrupted kit-first
 // deep-dive, product application held back as the closer rather than
-// an early interruption: the new logo full-width as the opening beat,
-// a placeholder for the brand-guidelines-site walkthrough video, the
-// interactive glyph viewer (placeholder for now) next to a
-// type-detail close-up, the tone-of-voice principles, the full
-// "Stacks" shape system next to it in use, the isometric-skew
-// construction method next to the plugin setting that produces it, a
-// placeholder for the deck-template library video, and finally the
+// an early interruption: the brand-guidelines-site walkthrough video,
+// the interactive glyph viewer next to a type-detail close-up, the
+// tone-of-voice principles, the full "Stacks" shape system next to it
+// in use, the icon library next to the animated mascot, the deck
+// scrub, and finally the
 // Nashville workshop where Koto met Stack's product team next to two
 // examples of the system solving real product problems — proof it
 // works, closing System out and setting up Rollout right after.
 const systemRows: Pin[][] = [
-	[
-		{
-			src: newLogo.src,
-			alt: 'The new Stack Overflow logo lockup animating in against a scrub through brand guideline visuals, then settling back on the rebrand’s orange',
-			ratio: 3840 / 2160,
-			rot: 0,
-			component: 'animated-logo',
-		},
-	],
 	[
 		{
 			src: guidelinesScrollVideo.poster,
@@ -321,6 +343,110 @@ const systemRows: Pin[][] = [
 	],
 ];
 
+// Rollout opens on the animated logo (moved from System — it plays as
+// the brand arriving everywhere, a better first beat for the final act),
+// then the product launch video and its supporting motion, the Figma
+// cover collage, and closes on physical swag.
+const rolloutRows: Pin[][] = [
+	[
+		{
+			src: newLogo.src,
+			alt: 'The new Stack Overflow logo lockup animating in against a scrub through brand guideline visuals, then settling back on the rebrand’s orange',
+			ratio: 3840 / 2160,
+			rot: 0,
+			component: 'animated-logo',
+		},
+	],
+	[
+		{
+			src: rollout2Video.poster,
+			alt: 'A Stack Internal product walkthrough: documents ingested from Confluence, Markdown, and PDFs, then scored for answer depth, fluency, coherence, and coverage',
+			ratio: 16 / 9,
+			rot: 0,
+			video: rollout2Video,
+			controls: true,
+		},
+	],
+	[
+		{
+			src: rollout31Video.poster,
+			alt: 'Stacks of isometric brand shapes shifting from a question, “What’s missing?”, to a clock and the word “Trust.”',
+			ratio: 16 / 9,
+			rot: 0,
+			video: rollout31Video,
+			controls: true,
+		},
+		{
+			src: rollout32Video.poster,
+			alt: 'Kinetic type reading “Stack Internal is the trust layer for AI at work.”',
+			ratio: 16 / 9,
+			rot: 0,
+			video: rollout32Video,
+			controls: true,
+		},
+	],
+	[
+		{
+			src: rollout41Video.poster,
+			alt: 'A question to Stack Internal answered in chat, citing one recent source corroborated by two others',
+			ratio: 16 / 9,
+			rot: 0,
+			video: rollout41Video,
+			controls: true,
+		},
+		{
+			src: rollout42Video.poster,
+			alt: 'Kinetic type with a ticking counter: the curation engine for 17 years, now in your AI stack',
+			ratio: 16 / 9,
+			rot: 0,
+			video: rollout42Video,
+			controls: true,
+		},
+	],
+	[
+		{
+			src: figmaCoversDesktopImg.src,
+			alt: 'Sixteen Figma file covers built on the rebrand’s cover template, one per project — events, launches, the podcast, the developer survey, swag, and more',
+			ratio: 3840 / 2160,
+			rot: 0,
+			mobile: { src: figmaCoversMobileImg.src, ratio: 3840 / 7248 },
+		},
+	],
+	[
+		{
+			src: pencilImg.src,
+			alt: '',
+			ratio: 16 / 9,
+			rot: 0,
+			stack: [
+				{ src: pencilImg.src, alt: 'An orange Stack Overflow pencil', ratio: 16 / 9, rot: 0 },
+				{ src: shirtImg.src, alt: 'A grey t-shirt reading “not a robot,” with the Stack Overflow logo on the sleeve', ratio: 16 / 9, rot: 0 },
+			],
+		},
+		{
+			src: stickerImg.src,
+			alt: 'Stack Overflow brand-shape stickers on a laptop, beside the keyboard',
+			ratio: 1756 / 2337,
+			rot: 0,
+		},
+	],
+];
+
+// Width of a stacked column so it ends level with the one pin beside
+// it. With row width T and gap g, a column of pins with ratios r_i
+// (height = W·Σ1/r_i + (n−1)g) and a neighbor of ratio r_c (height =
+// W_c / r_c), equal heights solve to W = (T − g(1 + r_c(n−1))) / (1 + r_c·Σ1/r_i).
+function stackWidth(row: Pin[]) {
+	const stackPin = row.find((pin) => pin.stack);
+	const side = row.find((pin) => !pin.stack);
+	if (!stackPin?.stack || !side || row.length !== 2) return undefined;
+	const k = stackPin.stack.reduce((sum, pin) => sum + 1 / pin.ratio, 0);
+	const n = stackPin.stack.length;
+	const a = 1 + side.ratio * (n - 1);
+	const b = 1 + side.ratio * k;
+	return `calc((100% - var(--row-gap) * ${a.toFixed(5)}) / ${b.toFixed(5)})`;
+}
+
 interface ActPinboard {
 	rows: Pin[][];
 	// 'scattered': Direction's corkboard — skewed, pinned, hand-tuned
@@ -332,11 +458,11 @@ interface ActPinboard {
 }
 
 // Looked up by act title — an act with an entry here gets a real pin
-// board; without one (Rollout, for now) it falls back to the original
-// placeholder grid.
+// board; without one it falls back to the original placeholder grid.
 const pinboardsByAct: Record<string, ActPinboard> = {
 	Direction: { rows: directionRows, style: 'scattered' },
 	System: { rows: systemRows, style: 'plain' },
+	Rollout: { rows: rolloutRows, style: 'plain' },
 };
 ---
 
@@ -375,8 +501,14 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 						<div class={`act__pinboard act__pinboard--${pinboardsByAct[act.title].style}`}>
 							{pinboardsByAct[act.title].rows.map((row) => (
 								<div class={`act__pinboard-row ${row.length === 1 ? 'act__pinboard-row--full' : ''}`}>
-									{row.map((pin) => (
-										<div class="act__pinboard-item" style={`--ratio:${pin.ratio}; --rot:${pin.rot}deg; --pin-top:${pin.pinTop ?? '-6px'}; --item-bg:${pin.transparentBg ? 'none' : 'var(--color-neutral)'};`}>
+									{row.map((pin) => pin.stack ? (
+										<div class="act__pinboard-item act__pinboard-item--stack" style={`--stack-width:${stackWidth(row)};`}>
+											{pin.stack.map((item) => (
+												<img class="act__pinboard-img" style={`--ratio:${item.ratio}; --rot:${item.rot}deg; --item-bg:var(--color-neutral);`} src={item.src} alt={item.alt} loading="lazy" />
+											))}
+										</div>
+									) : (
+										<div class="act__pinboard-item" style={`--ratio:${pin.ratio}; --rot:${pin.rot}deg; --pin-top:${pin.pinTop ?? '-6px'}; --item-bg:${pin.transparentBg ? 'none' : 'var(--color-neutral)'};${pin.mobile ? ` --ratio-mobile:${pin.mobile.ratio};` : ''}`}>
 											{pinboardsByAct[act.title].style === 'scattered' && (
 												<span class="act__pinboard-pin" aria-hidden="true"></span>
 											)}
@@ -387,6 +519,7 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 											) : pin.component === 'deck-scrub' ? (
 												<DeckScrub />
 											) : pin.video ? (
+												<>
 												<video
 													class="act__pinboard-img act__pinboard-video"
 													muted
@@ -398,6 +531,17 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 													data-webm={pin.video.webm}
 													aria-label={pin.alt}
 												/>
+												{pin.controls && (
+													<button type="button" class="act__playbtn" aria-label="Play video" aria-pressed="false">
+														<svg class="act__progress-ring" viewBox="0 0 32 32" aria-hidden="true">
+															<circle class="act__progress-ring-track" cx="16" cy="16" r="15" />
+															<circle class="act__progress-ring-bar" cx="16" cy="16" r="15" />
+														</svg>
+														<span class="act__icon act__play-icon" style={`--icon-src: url(${iconPlay.src})`} aria-hidden="true" />
+														<span class="act__icon act__pause-icon" style={`--icon-src: url(${iconPause.src})`} aria-hidden="true" />
+													</button>
+												)}
+												</>
 											) : pin.videoPlaylist ? (
 												<video
 													class="act__pinboard-img act__pinboard-video act__pinboard-video-playlist"
@@ -408,6 +552,11 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 													data-clips={JSON.stringify(pin.videoPlaylist.clips)}
 													aria-label={pin.alt}
 												/>
+											) : pin.mobile ? (
+												<picture>
+													<source media="(max-width: 768px)" srcset={pin.mobile.src} />
+													<img class="act__pinboard-img" src={pin.src} alt={pin.alt} loading="lazy" />
+												</picture>
 											) : (
 												<img class="act__pinboard-img" src={pin.src} alt={pin.alt} loading="lazy" />
 											)}
@@ -519,9 +668,10 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 	}
 
 	.act__pinboard-row {
+		--row-gap: var(--space-s);
 		display: flex;
 		align-items: flex-start;
-		gap: var(--space-s);
+		gap: var(--row-gap);
 	}
 
 	.act__pinboard-row + .act__pinboard-row {
@@ -554,7 +704,7 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 	   exceptions above — closer to the plain grid this act used as a
 	   placeholder before real content arrived. */
 	.act__pinboard--plain .act__pinboard-row {
-		gap: var(--space-xs);
+		--row-gap: var(--space-xs);
 	}
 
 	.act__pinboard--plain .act__pinboard-row + .act__pinboard-row {
@@ -589,6 +739,31 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 		   via the row's own gap) end up visually identical — both are
 		   this same 14px plus the shared var(--space-m) rhythm. */
 		margin-block-start: 14px;
+	}
+
+	/* A column of pins sharing one row slot. Its width comes from
+	   stackWidth() in the frontmatter, solved so the column and the pin
+	   beside it end at exactly the same height; the gap inside the column
+	   is the row's own gap, which that math assumes. */
+	.act__pinboard-item--stack {
+		flex: none;
+		width: var(--stack-width);
+		display: flex;
+		flex-direction: column;
+		gap: var(--row-gap);
+	}
+
+	/* Its neighbor takes all of the remaining width — its own ratio as
+	   flex-grow would be below 1 for a portrait image, and flex only
+	   hands out that fraction of the free space. */
+	@media (min-width: 769px) {
+		.act__pinboard-item--stack + .act__pinboard-item {
+			flex: 1 1 0;
+		}
+	}
+
+	picture {
+		display: block;
 	}
 
 	.act__pinboard-img {
@@ -671,6 +846,92 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 		box-shadow: 0 3px 4px oklch(from var(--color-ink) l c h / 0.35);
 	}
 
+	/* Manual play/pause for the featured Rollout videos — the same
+	   control as What I Do's cards: hidden until hover on pointer
+	   devices, always visible on touch and under reduced motion, where
+	   it's the only way to start playback. */
+	.act__playbtn {
+		position: absolute;
+		right: var(--space-2xs);
+		bottom: var(--space-2xs);
+		z-index: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		border-radius: var(--radius-pill);
+		background: oklch(from var(--color-ink) l c h / 0.55);
+		color: var(--color-bg);
+		opacity: 1;
+		transition: opacity 0.15s ease;
+	}
+
+	@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+		.act__playbtn {
+			opacity: 0;
+		}
+
+		.act__pinboard-item:hover .act__playbtn,
+		.act__playbtn:focus-visible {
+			opacity: 1;
+		}
+	}
+
+	.act__icon {
+		display: block;
+		width: 14px;
+		height: 14px;
+		background-color: currentColor;
+		-webkit-mask-image: var(--icon-src);
+		mask-image: var(--icon-src);
+		-webkit-mask-repeat: no-repeat;
+		mask-repeat: no-repeat;
+		-webkit-mask-position: center;
+		mask-position: center;
+		-webkit-mask-size: contain;
+		mask-size: contain;
+	}
+
+	.act__progress-ring {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
+		transform: rotate(-90deg);
+	}
+
+	.act__progress-ring-track,
+	.act__progress-ring-bar {
+		fill: none;
+		stroke-width: 2;
+	}
+
+	.act__progress-ring-track {
+		stroke: oklch(from var(--color-bg) l c h / 0.3);
+	}
+
+	.act__progress-ring-bar {
+		stroke: var(--color-bg);
+		stroke-linecap: round;
+		/* 2 * PI * r(15); JS only moves the dashoffset. */
+		stroke-dasharray: 94.2478;
+		stroke-dashoffset: 94.2478;
+	}
+
+	.act__pause-icon {
+		display: none;
+	}
+
+	.act__playbtn[aria-pressed='true'] .act__play-icon {
+		display: none;
+	}
+
+	.act__playbtn[aria-pressed='true'] .act__pause-icon {
+		display: block;
+	}
+
 	@media (max-width: 768px) {
 		.act__pinboard-row {
 			/* A single-column scroll of content, not a shared-height row,
@@ -698,6 +959,7 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 		.act__pinboard-img {
 			/* No skew on mobile — the pin stays, the tilt goes. */
 			transform: none;
+			aspect-ratio: var(--ratio-mobile, var(--ratio));
 		}
 
 		.act__pinboard-row--full .act__pinboard-img {
@@ -768,79 +1030,117 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 		window.addEventListener('resize', () => ScrollTrigger.refresh());
 	}
 
-	// Every ambient pinboard video (no play button — these are passive
-	// showcases, not featured project clips): lazy-loaded on first
-	// approach and paused once it scrolls out of view so it doesn't keep
-	// decoding indefinitely. Reduced motion: never loads or plays — the
-	// poster frame is the whole story there, same as every other motion
-	// piece on this page.
-	if (!reduceMotionQuery.matches) {
-		function setSources(video: HTMLVideoElement, mp4: string, webm: string) {
-			video.querySelectorAll('source').forEach((el) => el.remove());
-			const webmSource = document.createElement('source');
-			webmSource.src = webm;
-			webmSource.type = 'video/webm';
-			video.appendChild(webmSource);
-			const mp4Source = document.createElement('source');
-			mp4Source.src = mp4;
-			mp4Source.type = 'video/mp4';
-			video.appendChild(mp4Source);
-			video.load();
+	// Every pinboard video: lazy-loaded on first approach, autoplaying
+	// while in view and paused once it scrolls out so it doesn't keep
+	// decoding. Reduced motion: nothing loads or plays on its own — the
+	// poster is the whole story, unless the video has a play button
+	// (the featured Rollout clips), which then starts it on request.
+	function setSources(video: HTMLVideoElement, mp4: string, webm: string) {
+		video.querySelectorAll('source').forEach((el) => el.remove());
+		const webmSource = document.createElement('source');
+		webmSource.src = webm;
+		webmSource.type = 'video/webm';
+		video.appendChild(webmSource);
+		const mp4Source = document.createElement('source');
+		mp4Source.src = mp4;
+		mp4Source.type = 'video/mp4';
+		video.appendChild(mp4Source);
+		video.load();
+	}
+
+	// Matches stroke-dasharray in the CSS — 2 * PI * r(15).
+	const RING_CIRCUMFERENCE = 94.2478;
+
+	for (const pinVideo of document.querySelectorAll<HTMLVideoElement>('.act__pinboard-video')) {
+		if (pinVideo.classList.contains('act__pinboard-video-playlist')) {
+			if (reduceMotionQuery.matches) continue;
+			// A single <video> that plays several separate clips back to
+			// back as one continuous loop — advances to the next clip
+			// (wrapping to the first) every time the current one ends,
+			// rather than looping the same clip.
+			const clips: { mp4: string; webm: string }[] = JSON.parse(pinVideo.dataset.clips || '[]');
+			if (!clips.length) continue;
+			let clipIndex = 0;
+
+			pinVideo.addEventListener('ended', () => {
+				clipIndex = (clipIndex + 1) % clips.length;
+				setSources(pinVideo, clips[clipIndex].mp4, clips[clipIndex].webm);
+				pinVideo.play().catch(() => {});
+			});
+
+			new IntersectionObserver(
+				([entry]) => {
+					if (entry.isIntersecting) {
+						if (!pinVideo.dataset.loaded) {
+							setSources(pinVideo, clips[clipIndex].mp4, clips[clipIndex].webm);
+							pinVideo.dataset.loaded = 'true';
+						}
+						pinVideo.play().catch(() => {});
+					} else {
+						pinVideo.pause();
+					}
+				},
+				{ threshold: 0.2 },
+			).observe(pinVideo);
+			continue;
 		}
 
-		for (const pinVideo of document.querySelectorAll<HTMLVideoElement>('.act__pinboard-video')) {
-			if (pinVideo.classList.contains('act__pinboard-video-playlist')) {
-				// A single <video> that plays several separate clips back to
-				// back as one continuous loop — advances to the next clip
-				// (wrapping to the first) every time the current one ends,
-				// rather than looping the same clip.
-				const clips: { mp4: string; webm: string }[] = JSON.parse(pinVideo.dataset.clips || '[]');
-				if (!clips.length) continue;
-				let clipIndex = 0;
+		const mp4 = pinVideo.dataset.mp4;
+		const webm = pinVideo.dataset.webm;
+		if (!mp4 || !webm) continue;
 
-				pinVideo.addEventListener('ended', () => {
-					clipIndex = (clipIndex + 1) % clips.length;
-					setSources(pinVideo, clips[clipIndex].mp4, clips[clipIndex].webm);
+		function ensureLoaded() {
+			if (pinVideo.dataset.loaded) return;
+			setSources(pinVideo, mp4!, webm!);
+			pinVideo.dataset.loaded = 'true';
+		}
+
+		// Set once someone pauses by hand, so scrolling back into view
+		// doesn't override their choice.
+		let userPaused = false;
+
+		const btn = pinVideo.nextElementSibling?.classList.contains('act__playbtn')
+			? (pinVideo.nextElementSibling as HTMLButtonElement)
+			: null;
+		if (btn) {
+			const bar = btn.querySelector<SVGCircleElement>('.act__progress-ring-bar');
+			const syncButton = () => {
+				btn.setAttribute('aria-pressed', String(!pinVideo.paused));
+				btn.setAttribute('aria-label', pinVideo.paused ? 'Play video' : 'Pause video');
+			};
+			pinVideo.addEventListener('play', syncButton);
+			pinVideo.addEventListener('pause', syncButton);
+			pinVideo.addEventListener('timeupdate', () => {
+				if (!bar) return;
+				const progress = pinVideo.duration ? pinVideo.currentTime / pinVideo.duration : 0;
+				bar.style.strokeDashoffset = String(RING_CIRCUMFERENCE * (1 - progress));
+			});
+			btn.addEventListener('click', () => {
+				ensureLoaded();
+				if (pinVideo.paused) {
+					userPaused = false;
 					pinVideo.play().catch(() => {});
-				});
-
-				const playlistObserver = new IntersectionObserver(
-					([entry]) => {
-						if (entry.isIntersecting) {
-							if (!pinVideo.dataset.loaded) {
-								setSources(pinVideo, clips[clipIndex].mp4, clips[clipIndex].webm);
-								pinVideo.dataset.loaded = 'true';
-							}
-							pinVideo.play().catch(() => {});
-						} else {
-							pinVideo.pause();
-						}
-					},
-					{ threshold: 0.2 },
-				);
-				playlistObserver.observe(pinVideo);
-			} else {
-				const mp4 = pinVideo.dataset.mp4;
-				const webm = pinVideo.dataset.webm;
-				if (!mp4 || !webm) continue;
-
-				const videoObserver = new IntersectionObserver(
-					([entry]) => {
-						if (entry.isIntersecting) {
-							if (!pinVideo.dataset.loaded) {
-								setSources(pinVideo, mp4, webm);
-								pinVideo.dataset.loaded = 'true';
-							}
-							pinVideo.play().catch(() => {});
-						} else {
-							pinVideo.pause();
-						}
-					},
-					{ threshold: 0.2 },
-				);
-				videoObserver.observe(pinVideo);
-			}
+				} else {
+					userPaused = true;
+					pinVideo.pause();
+				}
+			});
 		}
+
+		if (reduceMotionQuery.matches) continue;
+
+		new IntersectionObserver(
+			([entry]) => {
+				if (entry.isIntersecting) {
+					if (userPaused) return;
+					ensureLoaded();
+					pinVideo.play().catch(() => {});
+				} else {
+					pinVideo.pause();
+				}
+			},
+			{ threshold: 0.2 },
+		).observe(pinVideo);
 	}
 </script>
 </section>
