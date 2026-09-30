@@ -172,9 +172,14 @@ const ring: RingItem[] = [
 
 	/* The whole stage is a handle for turning the ring (see the drag
 	   script) — sideways drags turn it, vertical ones still scroll. */
+	/* No text selection in here: a drag would otherwise highlight the
+	   headline and buttons as it passes over them (the text already
+	   ignores the pointer, so nothing selectable is lost). */
 	.hero__stage {
 		cursor: grab;
 		touch-action: pan-y;
+		-webkit-user-select: none;
+		user-select: none;
 	}
 
 	.hero__stage.is-dragging {
@@ -531,6 +536,7 @@ const ring: RingItem[] = [
 		function startDrag() {
 			dragging = true;
 			stage!.classList.add('is-dragging');
+			window.getSelection()?.removeAllRanges();
 			timeline?.kill();
 			pending?.kill();
 			timeline = pending = null;
