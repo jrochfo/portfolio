@@ -90,7 +90,7 @@ const ring: RingItem[] = [
 			))}
 		</div>
 		<div class="container hero__text">
-			<h1 class="type-display hero__headline">Brand design, built and run from the inside.</h1>
+			<h1 class="type-display hero__headline">Hi, I’m Jake. <span class="hero__headline-line">I make brands move.</span></h1>
 			<p class="type-h3 hero__subhead">
 				Motion, systems, and strategy, most recently Stack Overflow's rebrand with Koto, from
 				first workshops to full rollout.
@@ -207,9 +207,12 @@ const ring: RingItem[] = [
 
 
 	.hero__headline {
-		/* Narrower than the container so it reliably wraps to
-		   "Brand design, built and run" / "from the inside." */
 		max-width: 900px;
+	}
+
+	/* Always breaks after the greeting, never mid-phrase. */
+	.hero__headline-line {
+		display: block;
 	}
 
 	.hero__subhead {
