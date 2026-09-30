@@ -64,12 +64,11 @@ const testimonials = [
 	<div class="testimonials__strip">
 		{testimonials.map((t) => (
 			<article class="testimonial-card">
-				<Image
-					src={t.logo}
-					alt={t.company}
-					height={28}
-					densities={[1, 2]}
+				<span
 					class="testimonial-card__logo"
+					role="img"
+					aria-label={t.company}
+					style={`--logo-src: url(${t.logo.src}); aspect-ratio: ${t.logo.width} / ${t.logo.height};`}
 				/>
 				<p
 					class={`type-h3 testimonial-card__quote ${t.placeholder ? 'testimonial-card__quote--placeholder' : ''}`}
@@ -153,7 +152,14 @@ const testimonials = [
 			scroll-snap-align: start;
 		}
 
+		/* The logo SVG as a mask over the palette's logo color — see the
+		   hero logo row. */
 		.testimonial-card__logo {
+			display: block;
+			height: 28px;
+			background-color: var(--color-logo);
+			-webkit-mask: var(--logo-src) center / contain no-repeat;
+			mask: var(--logo-src) center / contain no-repeat;
 			flex-shrink: 0;
 			width: auto;
 			/* Flex column's default stretch would otherwise center/stretch

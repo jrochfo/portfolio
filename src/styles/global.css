@@ -173,6 +173,9 @@ ol {
 	   borders/dividers */
 	--color-ink-muted: color-mix(in oklch, var(--color-ink), var(--color-bg) 38%); /* secondary/
 	   caption-style text */
+	--color-logo: color-mix(in oklch, var(--color-accent), var(--color-bg) 40%); /* client
+	   logos (hero row, testimonial cards) — a muted accent, so they sit
+	   in the palette in both modes */
 
 	--color-scrim: rgba(0, 0, 0, 0.55); /* dark overlay for icon/text
 	   legibility over arbitrary video content — deliberately NOT tied
@@ -249,16 +252,6 @@ ol {
 	--color-title: #a6e04a;
 	--color-accent: #f0d08a;
 	--color-tint: #fbe6b8;
-}
-
-/* Client logos are single-color black marks (the hero row forces them
-   there with a filter); on the dark page they flip to a light version. */
-:root[data-theme='dark'] .hero__logo {
-	filter: brightness(0) invert(1) opacity(0.55);
-}
-
-:root[data-theme='dark'] .testimonial-card__logo {
-	filter: brightness(0) invert(1);
 }
 
 @media (max-width: 768px) {
