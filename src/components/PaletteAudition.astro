@@ -8,19 +8,33 @@
 // Contrast is checked by hand: text >= 7:1, titles >= 3:1 (display
 // sizes), accent >= 4.5:1 both as link text on the page and as a
 // button fill behind page-colored text.
+// Grouped by approach, not hue:
+// - Harmonic (after Tomato): one hue family runs through everything —
+//   a tinted page, a deep shade of it for text, the loud version for
+//   titles and accent.
+// - Riso (after Riso): text is a strong chromatic ink rather than
+//   near-black, so cards and panels (mixed from page + text) come out a
+//   contrasting temperature from the paper; titles add a second voice.
+// - Dark (after Night Market / Terminal): a deep chromatic page with
+//   tinted text, never pure black on white.
 const palettes = [
-	{ key: 'current', name: 'Current', note: 'The site as committed', bg: '', ink: '', title: '', accent: '' },
-	{ key: 'shibuya', name: 'Shibuya Pop', note: 'Bubblegum, navy, tomato, cobalt', bg: '#FFE9F1', ink: '#1C1F5C', title: '#F2301F', accent: '#2E55FF' },
-	{ key: 'katamari', name: 'Katamari', note: 'Butter, plum, magenta, sky', bg: '#FFF4BF', ink: '#2B1740', title: '#D4006F', accent: '#0071C2' },
-	{ key: 'parappa', name: 'Parappa', note: 'Sky, ink, orange, raspberry', bg: '#DDF1FF', ink: '#171B2E', title: '#F2541B', accent: '#B81B4E' },
-	{ key: 'tomato', name: 'Tomato', note: 'Cream and one loud red', bg: '#FFF5EA', ink: '#2A1410', title: '#E3321B', accent: '#C42A15' },
-	{ key: 'riso', name: 'Riso', note: 'Paper, riso blue, fluoro pink', bg: '#F5F0E6', ink: '#152C6B', title: '#E0197F', accent: '#0067B8' },
-	{ key: 'lemon', name: 'Lemon Lime', note: 'Pale lime, forest, vermilion', bg: '#F3FBD3', ink: '#103228', title: '#1E7A3C', accent: '#BC351A' },
-	{ key: 'grape', name: 'Grape Soda', note: 'Lavender, grape, burnt orange', bg: '#EFE8FF', ink: '#22113F', title: '#6E2BDB', accent: '#A83700' },
-	{ key: 'peach', name: 'Peach Fizz', note: 'Peach, cocoa, pink, blue', bg: '#FFE8DA', ink: '#3A1B0E', title: '#E83562', accent: '#1F4FD1' },
-	{ dark: true, key: 'cobalt', name: 'Cobalt Flood', note: 'The whole page goes blue', bg: '#2344D8', ink: '#FFFFFF', title: '#FFE24A', accent: '#FFE24A' },
-	{ dark: true, key: 'night', name: 'Night Market', note: 'Dark indigo, pink, mint', bg: '#15122C', ink: '#F3EEFF', title: '#FF9EDB', accent: '#7EF2C6' },
-	{ dark: true, key: 'terminal', name: 'Terminal', note: 'Dark green, phosphor, pink', bg: '#0E1510', ink: '#DCF4D6', title: '#9CFF6E', accent: '#FF8AD8' },
+	{ group: '', key: 'current', name: 'Current', note: 'The site as committed', bg: '', ink: '', title: '', accent: '' },
+	{ group: 'Harmonic', key: 'tomato', name: 'Tomato', note: 'Cream, cocoa, one loud red', bg: '#FFF5EA', ink: '#2A1410', title: '#E3321B', accent: '#C42A15' },
+	{ group: 'Harmonic', key: 'marmalade', name: 'Marmalade', note: 'Apricot cream, burnt brown, orange', bg: '#FFF4E4', ink: '#2E1A06', title: '#E0620A', accent: '#B84E06' },
+	{ group: 'Harmonic', key: 'plum', name: 'Plum Jam', note: 'Blush, aubergine, raspberry', bg: '#FCF0F4', ink: '#33101F', title: '#C2185B', accent: '#A3154C' },
+	{ group: 'Harmonic', key: 'ultramarine', name: 'Ultramarine', note: 'Ice, navy, electric blue', bg: '#F1F3FF', ink: '#0E1A4F', title: '#2D4BFF', accent: '#2440E0' },
+	{ group: 'Harmonic', key: 'matcha', name: 'Matcha', note: 'Pale sage, forest, leaf', bg: '#F3F5E6', ink: '#1C2A12', title: '#4F7A1C', accent: '#3F6817' },
+	{ group: 'Riso', key: 'riso', name: 'Riso', note: 'Paper, riso blue, fluoro pink', bg: '#F5F0E6', ink: '#152C6B', title: '#E0197F', accent: '#0067B8' },
+	{ group: 'Riso', key: 'riso-teal', name: 'Riso Teal', note: 'Paper, teal ink, fluoro orange', bg: '#F6F1E4', ink: '#0B4A4F', title: '#F2542D', accent: '#0B6E75' },
+	{ group: 'Riso', key: 'riso-green', name: 'Riso Green', note: 'Paper, green ink, fluoro pink', bg: '#F4EFE3', ink: '#0F4D2E', title: '#E8338E', accent: '#0E6B3E' },
+	{ group: 'Riso', key: 'riso-violet', name: 'Riso Violet', note: 'Paper, violet ink, orange', bg: '#F7F1E6', ink: '#3B1C7A', title: '#E5470C', accent: '#4B2A99' },
+	{ group: 'Riso', key: 'riso-burgundy', name: 'Riso Burgundy', note: 'Cool paper, burgundy ink, blue', bg: '#EEF2F0', ink: '#5A0F24', title: '#3150E8', accent: '#7A1430' },
+	{ group: 'Dark', dark: true, key: 'night', name: 'Night Market', note: 'Dark indigo, pink, mint', bg: '#15122C', ink: '#F3EEFF', title: '#FF9EDB', accent: '#7EF2C6' },
+	{ group: 'Dark', dark: true, key: 'terminal', name: 'Terminal', note: 'Dark green, phosphor, pink', bg: '#0E1510', ink: '#DCF4D6', title: '#9CFF6E', accent: '#FF8AD8' },
+	{ group: 'Dark', dark: true, key: 'ember', name: 'Ember', note: 'Charred brown, cream, flame (the dark Tomato)', bg: '#1A0F0B', ink: '#FBE9DD', title: '#FF6A3D', accent: '#FF8A5C' },
+	{ group: 'Dark', dark: true, key: 'deep-sea', name: 'Deep Sea', note: 'Abyss teal, aqua, amber', bg: '#07161F', ink: '#DDF3F6', title: '#5CE1E6', accent: '#FFB86B' },
+	{ group: 'Dark', dark: true, key: 'plum-night', name: 'Plum Night', note: 'Dark plum, pink, lime', bg: '#1B0E20', ink: '#F6E8F5', title: '#FF7AC8', accent: '#B8F28A' },
+	{ group: 'Dark', dark: true, key: 'moss-night', name: 'Moss Night', note: 'Dark moss, chartreuse, coral', bg: '#101A12', ink: '#EAF2DC', title: '#D8F36A', accent: '#FF9E7A' },
 ];
 ---
 
@@ -33,15 +47,18 @@ const palettes = [
 		<button type="button" class="palette-audition__toggle" data-toggle aria-label="Collapse palettes">–</button>
 	</div>
 	<div class="palette-audition__grid">
-		{palettes.map((p) => (
-			<button type="button" class="palette-audition__swatch" data-key={p.key} title={p.note}>
-				<span class="palette-audition__chip" style={p.bg ? `background:${p.bg}` : 'background:#fbf6ef'}>
-					<span style={`background:${p.title || '#1a1411'}`} />
-					<span style={`background:${p.ink || '#1a1411'}`} />
-					<span style={`background:${p.accent || '#1a1411'}`} />
-				</span>
-				<span class="palette-audition__name">{p.name}</span>
-			</button>
+		{palettes.map((p, i) => (
+			<>
+				{p.group && p.group !== palettes[i - 1]?.group && <span class="palette-audition__group">{p.group}</span>}
+				<button type="button" class="palette-audition__swatch" data-key={p.key} title={p.note}>
+					<span class="palette-audition__chip" style={p.bg ? `background:${p.bg}` : 'background:#fbf6ef'}>
+						<span style={`background:${p.title || '#1a1411'}`} />
+						<span style={`background:${p.ink || '#1a1411'}`} />
+						<span style={`background:${p.accent || '#1a1411'}`} />
+					</span>
+					<span class="palette-audition__name">{p.name}</span>
+				</button>
+			</>
 		))}
 	</div>
 </div>
@@ -120,6 +137,15 @@ const palettes = [
 		display: none;
 	}
 
+	.palette-audition__group {
+		grid-column: 1 / -1;
+		margin-top: 4px;
+		font-size: 10px;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: #777;
+	}
+
 	.palette-audition__swatch {
 		display: flex;
 		flex-direction: column;
@@ -161,7 +187,7 @@ const palettes = [
 </style>
 
 <script>
-	type Palette = { dark?: boolean; key: string; name: string; note: string; bg: string; ink: string; title: string; accent: string };
+	type Palette = { group: string; dark?: boolean; key: string; name: string; note: string; bg: string; ink: string; title: string; accent: string };
 
 	const panel = document.querySelector<HTMLElement>('.palette-audition');
 	const STORE = 'palette-audition';
