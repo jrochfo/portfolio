@@ -1,62 +1,99 @@
 ---
-// Dev-only: flips the whole site between bold palette directions live,
-// to explore past the muted Rust/Teal/Moss/Cobalt favorites (which are
-// still in ColorFavorites.astro, just switched off in Base.astro). Each
-// palette names four roles — page, text, titles, accent — and every
-// other surface (panels, bands, wells, hairlines, muted text) is mixed
-// from the page and text colors, so a palette is only ever four picks.
+// Dev-only: flips the whole site between light/dark palette duos live —
+// a rehearsal for a real light/dark toggle in the nav. The muted
+// Rust/Teal/Moss/Cobalt favorites are still in ColorFavorites.astro,
+// just switched off in Base.astro.
+//
+// Each side of a duo names four roles — page, text, titles, accent —
+// and every other surface (panels, bands, wells, hairlines, muted text)
+// is mixed from page and text, so a palette is only ever four picks.
+// The two sides of a duo share a hue thread (usually the title color's
+// family) so switching reads as the same brand with the lights off.
 // Contrast is checked by hand: text >= 7:1, titles >= 3:1 (display
-// sizes), accent >= 4.5:1 both as link text on the page and as a
-// button fill behind page-colored text.
-// Grouped by approach, not hue:
-// - Harmonic (after Tomato): one hue family runs through everything —
-//   a tinted page, a deep shade of it for text, the loud version for
-//   titles and accent.
-// - Riso (after Riso): text is a strong chromatic ink rather than
-//   near-black, so cards and panels (mixed from page + text) come out a
-//   contrasting temperature from the paper; titles add a second voice.
-// - Dark (after Night Market / Terminal): a deep chromatic page with
-//   tinted text, never pure black on white.
-const palettes = [
-	{ group: '', key: 'current', name: 'Current', note: 'The site as committed', bg: '', ink: '', title: '', accent: '' },
-	{ group: 'Harmonic', key: 'tomato', name: 'Tomato', note: 'Cream, cocoa, one loud red', bg: '#FFF5EA', ink: '#2A1410', title: '#E3321B', accent: '#C42A15' },
-	{ group: 'Harmonic', key: 'marmalade', name: 'Marmalade', note: 'Apricot cream, burnt brown, orange', bg: '#FFF4E4', ink: '#2E1A06', title: '#E0620A', accent: '#B84E06' },
-	{ group: 'Harmonic', key: 'plum', name: 'Plum Jam', note: 'Blush, aubergine, raspberry', bg: '#FCF0F4', ink: '#33101F', title: '#C2185B', accent: '#A3154C' },
-	{ group: 'Harmonic', key: 'ultramarine', name: 'Ultramarine', note: 'Ice, navy, electric blue', bg: '#F1F3FF', ink: '#0E1A4F', title: '#2D4BFF', accent: '#2440E0' },
-	{ group: 'Harmonic', key: 'matcha', name: 'Matcha', note: 'Pale sage, forest, leaf', bg: '#F3F5E6', ink: '#1C2A12', title: '#4F7A1C', accent: '#3F6817' },
-	{ group: 'Riso', key: 'riso', name: 'Riso', note: 'Paper, riso blue, fluoro pink', bg: '#F5F0E6', ink: '#152C6B', title: '#E0197F', accent: '#0067B8' },
-	{ group: 'Riso', key: 'riso-teal', name: 'Riso Teal', note: 'Paper, teal ink, fluoro orange', bg: '#F6F1E4', ink: '#0B4A4F', title: '#F2542D', accent: '#0B6E75' },
-	{ group: 'Riso', key: 'riso-green', name: 'Riso Green', note: 'Paper, green ink, fluoro pink', bg: '#F4EFE3', ink: '#0F4D2E', title: '#E8338E', accent: '#0E6B3E' },
-	{ group: 'Riso', key: 'riso-violet', name: 'Riso Violet', note: 'Paper, violet ink, orange', bg: '#F7F1E6', ink: '#3B1C7A', title: '#E5470C', accent: '#4B2A99' },
-	{ group: 'Riso', key: 'riso-burgundy', name: 'Riso Burgundy', note: 'Cool paper, burgundy ink, blue', bg: '#EEF2F0', ink: '#5A0F24', title: '#3150E8', accent: '#7A1430' },
-	{ group: 'Dark', dark: true, key: 'night', name: 'Night Market', note: 'Dark indigo, pink, mint', bg: '#15122C', ink: '#F3EEFF', title: '#FF9EDB', accent: '#7EF2C6' },
-	{ group: 'Dark', dark: true, key: 'terminal', name: 'Terminal', note: 'Dark green, phosphor, pink', bg: '#0E1510', ink: '#DCF4D6', title: '#9CFF6E', accent: '#FF8AD8' },
-	{ group: 'Dark', dark: true, key: 'ember', name: 'Ember', note: 'Charred brown, cream, flame (the dark Tomato)', bg: '#1A0F0B', ink: '#FBE9DD', title: '#FF6A3D', accent: '#FF8A5C' },
-	{ group: 'Dark', dark: true, key: 'deep-sea', name: 'Deep Sea', note: 'Abyss teal, aqua, amber', bg: '#07161F', ink: '#DDF3F6', title: '#5CE1E6', accent: '#FFB86B' },
-	{ group: 'Dark', dark: true, key: 'plum-night', name: 'Plum Night', note: 'Dark plum, pink, lime', bg: '#1B0E20', ink: '#F6E8F5', title: '#FF7AC8', accent: '#B8F28A' },
-	{ group: 'Dark', dark: true, key: 'moss-night', name: 'Moss Night', note: 'Dark moss, chartreuse, coral', bg: '#101A12', ink: '#EAF2DC', title: '#D8F36A', accent: '#FF9E7A' },
+// sizes), accent >= 4.5:1 both as link text and as a button fill.
+//
+// Families, by approach rather than hue:
+// - Harmonic (Tomato, Marmalade, Matcha): one hue family throughout.
+// - Riso: text is a strong chromatic ink, so bands and panels (mixed
+//   from page + text) come out a contrasting tint against paper-colored
+//   cards; titles add a second voice.
+// - Riso × Matcha: Riso's ink-tinted surfaces with Matcha's greens.
+type Side = { bg: string; ink: string; title: string; accent: string };
+const duos: { key: string; name: string; family: string; light: Side; dark: Side }[] = [
+	{
+		key: 'tomato', name: 'Tomato / Ember', family: 'Harmonic',
+		light: { bg: '#FFF5EA', ink: '#2A1410', title: '#E3321B', accent: '#C42A15' },
+		dark: { bg: '#1A0F0B', ink: '#FBE9DD', title: '#FF6A3D', accent: '#FF8A5C' },
+	},
+	{
+		key: 'marmalade', name: 'Marmalade', family: 'Harmonic',
+		light: { bg: '#FFF4E4', ink: '#2E1A06', title: '#E0620A', accent: '#B84E06' },
+		dark: { bg: '#1C1207', ink: '#FCEBD4', title: '#FF8A2B', accent: '#FFB066' },
+	},
+	{
+		key: 'matcha', name: 'Matcha / Moss Night', family: 'Harmonic',
+		light: { bg: '#F3F5E6', ink: '#1C2A12', title: '#4F7A1C', accent: '#3F6817' },
+		dark: { bg: '#101A12', ink: '#EAF2DC', title: '#D8F36A', accent: '#FF9E7A' },
+	},
+	{
+		key: 'riso', name: 'Riso', family: 'Riso',
+		light: { bg: '#F5F0E6', ink: '#152C6B', title: '#E0197F', accent: '#0067B8' },
+		dark: { bg: '#101836', ink: '#F2EDE1', title: '#FF5FAE', accent: '#8CB8FF' },
+	},
+	{
+		key: 'riso-teal', name: 'Riso Teal', family: 'Riso',
+		light: { bg: '#F6F1E4', ink: '#0B4A4F', title: '#F2542D', accent: '#0B6E75' },
+		dark: { bg: '#08282A', ink: '#EFEBDD', title: '#FF7A52', accent: '#5ED6D0' },
+	},
+	{
+		key: 'riso-green', name: 'Riso Green', family: 'Riso',
+		light: { bg: '#F4EFE3', ink: '#0F4D2E', title: '#E8338E', accent: '#0E6B3E' },
+		dark: { bg: '#0B2518', ink: '#EEF0E2', title: '#FF6FB2', accent: '#86DDA2' },
+	},
+	{
+		key: 'matcha-red', name: 'Matcha Riso Red', family: 'Riso × Matcha',
+		light: { bg: '#F6F0E3', ink: '#2E4A12', title: '#E3321B', accent: '#3F6817' },
+		dark: { bg: '#15200A', ink: '#F2EEDC', title: '#FF6A3D', accent: '#B3DB78' },
+	},
+	{
+		key: 'matcha-pink', name: 'Matcha Riso Pink', family: 'Riso × Matcha',
+		light: { bg: '#F5F1E6', ink: '#35531A', title: '#E0337F', accent: '#46681C' },
+		dark: { bg: '#121C0B', ink: '#EEF2DC', title: '#FF7AC0', accent: '#B9E07A' },
+	},
+	{
+		key: 'matcha-latte', name: 'Matcha Latte', family: 'Riso × Matcha',
+		light: { bg: '#F3EDDA', ink: '#33501A', title: '#5E8A22', accent: '#4A6B1C' },
+		dark: { bg: '#141B0D', ink: '#F1ECD8', title: '#B6DB63', accent: '#E9C98B' },
+	},
 ];
+
+const chip = (s: Side) =>
+	`background:${s.bg};--c1:${s.title};--c2:${s.ink};--c3:${s.accent}`;
 ---
 
-<div class="palette-audition" data-palettes={JSON.stringify(palettes)}>
+<div class="palette-audition" data-duos={JSON.stringify(duos)}>
 	<div class="palette-audition__head">
-		<span class="palette-audition__label">Palettes</span>
 		<span class="palette-audition__current" data-current>Current</span>
-		<button type="button" class="palette-audition__step" data-step="-1" aria-label="Previous palette">‹</button>
-		<button type="button" class="palette-audition__step" data-step="1" aria-label="Next palette">›</button>
+		<div class="palette-audition__mode" role="group" aria-label="Mode">
+			<button type="button" data-mode="light">Light</button>
+			<button type="button" data-mode="dark">Dark</button>
+		</div>
+		<button type="button" class="palette-audition__step" data-step="-1" aria-label="Previous duo">‹</button>
+		<button type="button" class="palette-audition__step" data-step="1" aria-label="Next duo">›</button>
 		<button type="button" class="palette-audition__toggle" data-toggle aria-label="Collapse palettes">–</button>
 	</div>
-	<div class="palette-audition__grid">
-		{palettes.map((p, i) => (
+	<div class="palette-audition__list">
+		<button type="button" class="palette-audition__row" data-index="-1">
+			<span class="palette-audition__chip palette-audition__chip--current"></span>
+			<span class="palette-audition__name">Current (as committed)</span>
+		</button>
+		{duos.map((d, i) => (
 			<>
-				{p.group && p.group !== palettes[i - 1]?.group && <span class="palette-audition__group">{p.group}</span>}
-				<button type="button" class="palette-audition__swatch" data-key={p.key} title={p.note}>
-					<span class="palette-audition__chip" style={p.bg ? `background:${p.bg}` : 'background:#fbf6ef'}>
-						<span style={`background:${p.title || '#1a1411'}`} />
-						<span style={`background:${p.ink || '#1a1411'}`} />
-						<span style={`background:${p.accent || '#1a1411'}`} />
-					</span>
-					<span class="palette-audition__name">{p.name}</span>
+				{d.family !== duos[i - 1]?.family && <span class="palette-audition__group">{d.family}</span>}
+				<button type="button" class="palette-audition__row" data-index={i}>
+					<span class="palette-audition__chip" style={chip(d.light)}><i /><i /><i /></span>
+					<span class="palette-audition__chip" style={chip(d.dark)}><i /><i /><i /></span>
+					<span class="palette-audition__name">{d.name}</span>
 				</button>
 			</>
 		))}
@@ -73,8 +110,8 @@ const palettes = [
 	}
 
 	/* Client logos are forced to black site-wide; on a dark palette they
-	   vanish, so the preview flips them light. A real dark palette would
-	   need this handled properly, alongside any dark-on-light images. */
+	   vanish, so the preview flips them light. A real dark mode would
+	   handle this properly, alongside any dark-on-light images. */
 	:root.palette-dark .hero__logo,
 	:root.palette-dark .testimonial-card__logo {
 		filter: brightness(0) invert(1) opacity(0.7);
@@ -89,7 +126,7 @@ const palettes = [
 		left: 16px;
 		bottom: 16px;
 		z-index: 9999;
-		width: 300px;
+		width: 320px;
 		padding: 12px;
 		border-radius: 12px;
 		background: #fff;
@@ -104,15 +141,32 @@ const palettes = [
 		gap: 6px;
 	}
 
-	.palette-audition__label {
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
-		color: #777;
-	}
-
 	.palette-audition__current {
 		flex: 1;
 		font-weight: 600;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.palette-audition__mode {
+		display: flex;
+		border: 1px solid #ddd;
+		border-radius: 6px;
+		overflow: hidden;
+	}
+
+	.palette-audition__mode button {
+		padding: 4px 8px;
+		background: #fff;
+		color: #1a1a1a;
+		font: inherit;
+		cursor: pointer;
+	}
+
+	.palette-audition__mode button[aria-pressed='true'] {
+		background: #1a1a1a;
+		color: #fff;
 	}
 
 	.palette-audition__step,
@@ -126,30 +180,31 @@ const palettes = [
 		cursor: pointer;
 	}
 
-	.palette-audition__grid {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 6px;
+	.palette-audition__list {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
 		margin-top: 10px;
+		max-height: 60vh;
+		overflow-y: auto;
 	}
 
-	.palette-audition.is-collapsed .palette-audition__grid {
+	.palette-audition.is-collapsed .palette-audition__list {
 		display: none;
 	}
 
 	.palette-audition__group {
-		grid-column: 1 / -1;
-		margin-top: 4px;
+		margin-top: 6px;
 		font-size: 10px;
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
 		color: #777;
 	}
 
-	.palette-audition__swatch {
+	.palette-audition__row {
 		display: flex;
-		flex-direction: column;
-		gap: 4px;
+		align-items: center;
+		gap: 6px;
 		padding: 4px;
 		border-radius: 8px;
 		border: 2px solid transparent;
@@ -160,26 +215,40 @@ const palettes = [
 		cursor: pointer;
 	}
 
-	.palette-audition__swatch[aria-pressed='true'] {
+	.palette-audition__row[aria-pressed='true'] {
 		border-color: #1a1a1a;
 	}
 
 	.palette-audition__chip {
 		display: flex;
 		gap: 3px;
-		padding: 8px 6px;
+		padding: 6px;
 		border-radius: 5px;
-		box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+		box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
 	}
 
-	.palette-audition__chip span {
-		width: 12px;
-		height: 12px;
+	.palette-audition__chip i {
+		width: 10px;
+		height: 10px;
 		border-radius: 50%;
+		background: var(--c1);
+	}
+
+	.palette-audition__chip i:nth-child(2) {
+		background: var(--c2);
+	}
+
+	.palette-audition__chip i:nth-child(3) {
+		background: var(--c3);
+	}
+
+	.palette-audition__chip--current {
+		width: 54px;
+		height: 22px;
+		background: #fbf6ef;
 	}
 
 	.palette-audition__name {
-		font-size: 11px;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -187,10 +256,11 @@ const palettes = [
 </style>
 
 <script>
-	type Palette = { group: string; dark?: boolean; key: string; name: string; note: string; bg: string; ink: string; title: string; accent: string };
+	type Side = { bg: string; ink: string; title: string; accent: string };
+	type Duo = { key: string; name: string; family: string; light: Side; dark: Side };
 
 	const panel = document.querySelector<HTMLElement>('.palette-audition');
-	const STORE = 'palette-audition';
+	const STORE = 'palette-audition-duo';
 	const TOKENS = [
 		'--color-bg',
 		'--color-surface',
@@ -206,22 +276,27 @@ const palettes = [
 	];
 
 	if (panel) {
-		const palettes: Palette[] = JSON.parse(panel.dataset.palettes || '[]');
+		const duos: Duo[] = JSON.parse(panel.dataset.duos || '[]');
 		const root = document.documentElement;
 		const current = panel.querySelector<HTMLElement>('[data-current]')!;
-		const swatches = [...panel.querySelectorAll<HTMLButtonElement>('.palette-audition__swatch')];
-		let index = 0;
+		const rows = [...panel.querySelectorAll<HTMLButtonElement>('.palette-audition__row')];
+		const modeButtons = [...panel.querySelectorAll<HTMLButtonElement>('[data-mode]')];
+		// -1 is "Current": the committed tokens, no overrides.
+		let index = -1;
+		let mode: 'light' | 'dark' = 'light';
 
 		// Every surface besides the four named roles is a mix of page and
 		// text color, at roughly the steps the committed ramp uses.
 		const mix = (bg: string, ink: string, pct: number) => `color-mix(in oklch, ${bg}, ${ink} ${pct}%)`;
 
-		function apply(i: number) {
-			index = (i + palettes.length) % palettes.length;
-			const p = palettes[index];
-			if (!p.bg) {
+		function apply() {
+			const duo = duos[index];
+			if (!duo) {
 				TOKENS.forEach((t) => root.style.removeProperty(t));
+				root.classList.remove('palette-dark');
+				current.textContent = 'Current';
 			} else {
+				const p = duo[mode];
 				const set = (t: string, v: string) => root.style.setProperty(t, v);
 				set('--color-bg', p.bg);
 				set('--color-surface', p.bg);
@@ -234,26 +309,44 @@ const palettes = [
 				set('--color-ink-muted', mix(p.ink, p.bg, 38));
 				set('--color-accent', p.accent);
 				set('--color-title', p.title);
+				root.classList.toggle('palette-dark', mode === 'dark');
+				current.textContent = duo.name;
 			}
-			root.classList.toggle('palette-dark', !!p.dark);
-			current.textContent = p.name;
-			swatches.forEach((s, j) => s.setAttribute('aria-pressed', String(j === index)));
+			rows.forEach((r) => r.setAttribute('aria-pressed', String(Number(r.dataset.index) === index)));
+			modeButtons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
 			try {
-				localStorage.setItem(STORE, p.key);
+				localStorage.setItem(STORE, JSON.stringify({ key: duo?.key ?? 'current', mode }));
 			} catch {}
 		}
 
-		swatches.forEach((s, j) => s.addEventListener('click', () => apply(j)));
+		rows.forEach((r) =>
+			r.addEventListener('click', () => {
+				index = Number(r.dataset.index);
+				apply();
+			}),
+		);
+		modeButtons.forEach((b) =>
+			b.addEventListener('click', () => {
+				mode = b.dataset.mode as 'light' | 'dark';
+				apply();
+			}),
+		);
 		panel.querySelectorAll<HTMLButtonElement>('[data-step]').forEach((b) =>
-			b.addEventListener('click', () => apply(index + Number(b.dataset.step))),
+			b.addEventListener('click', () => {
+				const n = duos.length + 1;
+				index = ((index + 1 + Number(b.dataset.step) + n) % n) - 1;
+				apply();
+			}),
 		);
 		panel.querySelector('[data-toggle]')!.addEventListener('click', () => panel.classList.toggle('is-collapsed'));
 
-		let saved = 0;
 		try {
-			const key = localStorage.getItem(STORE);
-			saved = Math.max(0, palettes.findIndex((p) => p.key === key));
+			const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
+			if (saved) {
+				index = duos.findIndex((d) => d.key === saved.key);
+				mode = saved.mode === 'dark' ? 'dark' : 'light';
+			}
 		} catch {}
-		apply(saved);
+		apply();
 	}
 </script>

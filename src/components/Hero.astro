@@ -28,11 +28,10 @@ const logos = [
 	{ src: logoFreed, alt: 'Freed' },
 	{ src: logoTulip, alt: 'Tulip' },
 	{ src: logoUpstatement, alt: 'Upstatement' },
-	// Pega's mark is duotone (two distinct gray fills for its two wings) —
-	// brightness(0) crushes any opaque color to pure black regardless of
-	// original luminance, flattening that distinction. Grayscale instead,
-	// which maps by luminance and keeps the two tones apart.
-	{ src: logoPega, alt: 'Pegasystems', duotone: true },
+	// Pega's lighter wing is the same color at partial opacity in the
+	// source SVG, so it stays distinct under the shared single-color
+	// filter on any background.
+	{ src: logoPega, alt: 'Pegasystems' },
 ];
 
 // The ring of work orbiting the hero text, pulled from elsewhere on the
@@ -116,7 +115,7 @@ const ring: RingItem[] = [
 					src={logo.src}
 					alt={logo.alt}
 					height={LOGO_HEIGHT}
-					class={`hero__logo ${logo.duotone ? 'hero__logo--duotone' : ''}`}
+					class="hero__logo"
 				/>
 			))}
 		</div>
@@ -252,13 +251,6 @@ const ring: RingItem[] = [
 		width: auto;
 		/* Monochrome regardless of each source SVG's own colors. */
 		filter: brightness(0) opacity(0.45);
-	}
-
-	.hero__logo--duotone {
-		/* brightness(0) crushes every opaque fill to identical pure
-		   black, which erases a duotone mark's two distinct grays.
-		   grayscale() maps by luminance instead, keeping them apart. */
-		filter: grayscale(1) opacity(0.45);
 	}
 
 	@media (max-width: 768px) {

@@ -60,6 +60,9 @@ a {
 button {
 	background: none;
 	border: none;
+	/* Buttons don't inherit text color by default — they'd stay the
+	   browser's black regardless of the page's ink. */
+	color: inherit;
 	cursor: pointer;
 }
 
