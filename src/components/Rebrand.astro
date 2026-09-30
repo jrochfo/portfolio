@@ -459,12 +459,12 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 <section class="rebrand">
 	<div class="rebrand__pinned-title">
 		<div class="container">
-			<h1 class="type-h1">The Stack Overflow rebrand.</h1>
+			<h1 class="type-h1" data-reveal>The Stack Overflow rebrand.</h1>
 		</div>
 	</div>
 
 	<div class="rebrand__body container">
-		<p class="type-h3 rebrand__description">
+		<p class="type-h3 rebrand__description" data-reveal>
 			Fifteen years in, with AI upending how developers work, Stack Overflow needed more than
 			a refresh. We helped Stack prove that in an increasingly automated world, verified
 			knowledge (from actual human brains) is still king.
@@ -473,8 +473,8 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 		<div class="rebrand__acts">
 			{acts.map((act) => (
 				<article class="act">
-					<h2 class="type-h2">{act.title}</h2>
-					<p class="type-body act__desc">
+					<h2 class="type-h2" data-reveal>{act.title}</h2>
+					<p class="type-body act__desc" data-reveal>
 						{act.link ? (
 							<>
 								{act.description.slice(0, act.description.indexOf(act.link.text))}
@@ -490,7 +490,7 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 					{pinboardsByAct[act.title] ? (
 						<div class={`act__pinboard act__pinboard--${pinboardsByAct[act.title].style}`}>
 							{pinboardsByAct[act.title].rows.map((row) => (
-								<div class={`act__pinboard-row ${row.length === 1 ? 'act__pinboard-row--full' : ''}`}>
+								<div class={`act__pinboard-row ${row.length === 1 ? 'act__pinboard-row--full' : ''}`} data-reveal>
 									{row.map((pin) => pin.stack ? (
 										<div class="act__pinboard-item act__pinboard-item--stack" style={`--stack-width:${stackWidth(row)};`}>
 											{pin.stack.map((item) => (
@@ -563,7 +563,7 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 							<div class="act__gallery-item" aria-hidden="true"></div>
 						</div>
 					)}
-					{act.credits && <p class="type-caption act__credits">{act.credits}</p>}
+					{act.credits && <p class="type-caption act__credits" data-reveal>{act.credits}</p>}
 				</article>
 			))}
 		</div>

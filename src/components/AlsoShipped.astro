@@ -149,12 +149,12 @@ const items: Project[] = await Promise.all([
 
 <section class="also-shipped">
 	<div class="container">
-		<h2 class="type-h1">Also Shipped.</h2>
+		<h2 class="type-h1" data-reveal>Also Shipped.</h2>
 	</div>
 
 	<div class="container also-shipped__grid">
 		{items.map((item) => (
-			<article class="ship-card" data-project={item.slug}>
+			<article class="ship-card" data-project={item.slug} data-reveal>
 				<h3 class="type-h3">{item.title}</h3>
 				<p class="type-body ship-card__desc">{item.description}</p>
 

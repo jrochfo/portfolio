@@ -255,6 +255,38 @@ ol {
 	--color-logo: color-mix(in oklch, var(--color-accent), var(--color-bg) 40%);
 }
 
+/* Soft reveal: marked elements fade in with a small upward drift, the
+   hero in a fixed cascade on load and everything else as it scrolls
+   into view (see the reveal script in Base.astro). Only active under
+   .reveal-ready, which the head script sets — so with scripts off,
+   under reduced motion, or on back/forward navigation, everything is
+   simply visible. Opacity and translate only: no layout shift. */
+.reveal-ready [data-reveal] {
+	transition:
+		opacity 0.7s ease,
+		translate 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+	transition-delay: var(--reveal-delay, 0ms);
+}
+
+.reveal-ready [data-reveal]:not(.is-revealed) {
+	opacity: 0;
+	translate: 0 10px;
+}
+
+/* The ring fades and settles in scale rather than drifting — it's
+   positioned by its own script and reads better growing in place. */
+.reveal-ready [data-reveal='fade']:not(.is-revealed) {
+	translate: none;
+	scale: 0.97;
+}
+
+.reveal-ready [data-reveal='fade'] {
+	transition:
+		opacity 1s ease,
+		scale 1.2s cubic-bezier(0.2, 0.7, 0.2, 1);
+	transition-delay: var(--reveal-delay, 0ms);
+}
+
 @media (max-width: 768px) {
 	:root {
 		--space-m: 32px;

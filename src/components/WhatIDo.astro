@@ -65,10 +65,10 @@ const sections = [
 
 <section class="what-i-do">
 	<div class="container">
-		<h2 class="type-h1">What I do.</h2>
+		<h2 class="type-h1" data-reveal>What I do.</h2>
 	</div>
 
-	<div class="card-strip">
+	<div class="card-strip" data-reveal>
 		{sections.map((section, i) => (
 			<article class="card" data-card-index={i}>
 				<div class="card__title-row">
@@ -108,7 +108,7 @@ const sections = [
 		))}
 	</div>
 
-	<div class="container what-i-do__nav-wrap">
+	<div class="container what-i-do__nav-wrap" data-reveal>
 		<nav class="nav-pill" aria-label="What I do sections">
 			{sections.map((section, i) => (
 				<button type="button" class="nav-pill__tab" data-tab-index={i} aria-current={i === 0 ? 'true' : undefined}>

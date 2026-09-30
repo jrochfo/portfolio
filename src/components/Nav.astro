@@ -16,7 +16,7 @@ const isHome = Astro.url.pathname === '/';
 ---
 
 <nav class="site-nav">
-	<div class="site-nav__inner container">
+	<div class="site-nav__inner container" data-reveal>
 		{isHome ? (
 			<button type="button" class="site-nav__brand" id="nav-scroll-top" aria-label="Back to top">
 				<span class="site-nav__icon" style={`--icon-src: url(${iconJr.src})`} aria-hidden="true" />

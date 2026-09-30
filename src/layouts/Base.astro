@@ -67,6 +67,18 @@ const PALETTE_AUDITION_ENABLED = false;
 					mode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 				}
 				document.documentElement.dataset.theme = mode;
+				// Soft reveals — skipped under reduced motion, and on
+				// back/forward navigation, where the page should just be
+				// there. If the reveal script never runs, drop the class so
+				// nothing stays hidden.
+				var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+				var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+				if (!reduce && !(nav && nav.type === 'back_forward')) {
+					document.documentElement.classList.add('reveal-ready');
+					setTimeout(function () {
+						if (!window.__revealStarted) document.documentElement.classList.remove('reveal-ready');
+					}, 4000);
+				}
 			})();
 		</script>
 		<!-- Fraunces + Schibsted Grotesk are self-hosted (see the Fonts
@@ -86,6 +98,39 @@ const PALETTE_AUDITION_ENABLED = false;
 		{COLOR_EXPLORATION_ENABLED && import.meta.env.DEV && <ColorExploration />}
 		{COLOR_FAVORITES_ENABLED && import.meta.env.DEV && <ColorFavorites />}
 		{PALETTE_AUDITION_ENABLED && import.meta.env.DEV && <PaletteAudition />}
+
+		<script>
+			// Reveals each [data-reveal] element the first time it scrolls
+			// into view. Elements that arrive together are staggered top to
+			// bottom, left to right — unless they set their own delay (the
+			// hero's fixed load-in cascade).
+			const root = document.documentElement;
+			(window as Window & { __revealStarted?: boolean }).__revealStarted = true;
+			if (root.classList.contains('reveal-ready')) {
+				const STAGGER = 70;
+				const observer = new IntersectionObserver(
+					(entries) => {
+						entries
+							.filter((e) => e.isIntersecting)
+							.sort(
+								(a, b) =>
+									a.boundingClientRect.top - b.boundingClientRect.top ||
+									a.boundingClientRect.left - b.boundingClientRect.left,
+							)
+							.forEach((entry, i) => {
+								const el = entry.target as HTMLElement;
+								if (!el.style.getPropertyValue('--reveal-delay')) {
+									el.style.setProperty('--reveal-delay', `${i * STAGGER}ms`);
+								}
+								el.classList.add('is-revealed');
+								observer.unobserve(el);
+							});
+					},
+					{ rootMargin: '0px 0px -6% 0px', threshold: 0.05 },
+				);
+				document.querySelectorAll('[data-reveal]').forEach((el) => observer.observe(el));
+			}
+		</script>
 	</body>
 </html>
 
