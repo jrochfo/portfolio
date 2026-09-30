@@ -12,37 +12,41 @@
 // Contrast is checked by hand: text >= 7:1, titles >= 3:1 (display
 // sizes), accent >= 4.5:1 both as link text and as a button fill.
 //
-// Families, by approach rather than hue:
-// - Harmonic (Tomato): one hue family throughout.
-// - Riso × Matcha: Riso's ink-tinted surfaces with Matcha's greens.
-// - Mono: black and white at three temperatures — warm, cool, pure —
-//   letting the work carry all the color.
+// Two families, each an original plus two offshoots that move it in
+// contrast and tone — one richer and higher-contrast, one softer and
+// more muted. The soft offshoots drop below the 7:1 text contrast held
+// elsewhere but stay above 4.5:1 (WCAG AA).
 type Side = { bg: string; ink: string; title: string; accent: string };
 const duos: { key: string; name: string; family: string; light: Side; dark: Side }[] = [
 	{
-		key: 'tomato', name: 'Tomato / Ember', family: 'Harmonic',
+		key: 'tomato', name: 'Tomato / Ember', family: 'Tomato',
 		light: { bg: '#FFF5EA', ink: '#2A1410', title: '#E3321B', accent: '#C42A15' },
 		dark: { bg: '#1A0F0B', ink: '#FBE9DD', title: '#FF6A3D', accent: '#FF8A5C' },
 	},
 	{
-		key: 'matcha-latte', name: 'Matcha Latte', family: 'Riso × Matcha',
+		key: 'tomato-paste', name: 'Tomato Paste', family: 'Tomato',
+		light: { bg: '#FFF0E4', ink: '#1F0806', title: '#D1200E', accent: '#B01C0A' },
+		dark: { bg: '#140604', ink: '#FFEDE3', title: '#FF4B2B', accent: '#FF7A5A' },
+	},
+	{
+		key: 'sun-dried', name: 'Sun-Dried', family: 'Tomato',
+		light: { bg: '#F6EDE3', ink: '#4D3A33', title: '#B8432B', accent: '#9E3A24' },
+		dark: { bg: '#231815', ink: '#DCCDC0', title: '#E0765A', accent: '#E89A7E' },
+	},
+	{
+		key: 'matcha-latte', name: 'Matcha Latte', family: 'Matcha Latte',
 		light: { bg: '#F3EDDA', ink: '#33501A', title: '#5E8A22', accent: '#4A6B1C' },
 		dark: { bg: '#141B0D', ink: '#F1ECD8', title: '#B6DB63', accent: '#E9C98B' },
 	},
 	{
-		key: 'mono-paper', name: 'Paper', family: 'Mono',
-		light: { bg: '#F6F3EC', ink: '#161412', title: '#161412', accent: '#161412' },
-		dark: { bg: '#141210', ink: '#F3EFE7', title: '#F3EFE7', accent: '#F3EFE7' },
+		key: 'ceremonial', name: 'Ceremonial', family: 'Matcha Latte',
+		light: { bg: '#F2EFE2', ink: '#1E3A10', title: '#3F7A12', accent: '#2F5F0F' },
+		dark: { bg: '#0C1407', ink: '#EEF3DD', title: '#A6E04A', accent: '#F0D08A' },
 	},
 	{
-		key: 'mono-graphite', name: 'Graphite', family: 'Mono',
-		light: { bg: '#EFF1F3', ink: '#1A1C20', title: '#1A1C20', accent: '#565C64' },
-		dark: { bg: '#15171A', ink: '#E6E9EC', title: '#FFFFFF', accent: '#A3A9B1' },
-	},
-	{
-		key: 'mono-pure', name: 'Pure', family: 'Mono',
-		light: { bg: '#FFFFFF', ink: '#000000', title: '#000000', accent: '#000000' },
-		dark: { bg: '#000000', ink: '#FFFFFF', title: '#FFFFFF', accent: '#FFFFFF' },
+		key: 'oat-matcha', name: 'Oat Matcha', family: 'Matcha Latte',
+		light: { bg: '#EFE8D8', ink: '#44532E', title: '#72873A', accent: '#56692A' },
+		dark: { bg: '#1C1E14', ink: '#E4E0CC', title: '#B9C77A', accent: '#D6B97F' },
 	},
 ];
 
