@@ -2,7 +2,12 @@
 import { getImage } from 'astro:assets';
 import koto from '../assets/work/so-rebrand/direction/london-1.jpg';
 import nashville from '../assets/work/so-rebrand/systems/systems-8-1.jpg';
-import ae from '../assets/work/off-the-clock/type/ae-1.png';
+import ae1 from '../assets/work/off-the-clock/type/ae-1.png';
+import ae2 from '../assets/work/off-the-clock/type/ae-2.png';
+import ae3 from '../assets/work/off-the-clock/type/ae-3.png';
+import qoph1 from '../assets/work/off-the-clock/type/qoph-1.png';
+import qoph2 from '../assets/work/off-the-clock/type/qoph-2.png';
+import qoph3 from '../assets/work/off-the-clock/type/qoph-3.png';
 import mascotPoster from '../assets/work/so-rebrand/posters/systems-6-2-poster.jpg';
 import rolloutPoster from '../assets/work/so-rebrand/posters/rollout-3-1-poster.jpg';
 import trustLayerPoster from '../assets/work/so-rebrand/posters/rollout-3-2-poster.jpg';
@@ -39,10 +44,13 @@ const logos = [
 // never look alike. Images are ~2x their largest on-screen size (the
 // focused, front-most slot).
 const webp = (src: ImageMetadata) => getImage({ src, format: 'webp', width: 900, quality: 80 });
-const [kotoImg, nashvilleImg, trustLayerImg, aeImg, mascotImg, rolloutImg, guidelinesImg, freedImg, raycatImg, oai1Img, oai5Img, somu4Img] =
+const [kotoImg, nashvilleImg, trustLayerImg, mascotImg, rolloutImg, guidelinesImg, freedImg, raycatImg, oai1Img, oai5Img, somu4Img] =
 	await Promise.all(
-		[koto, nashville, trustLayerPoster, ae, mascotPoster, rolloutPoster, guidelinesPoster, freedPoster, raycatPoster, oai1Poster, oai5Poster, somu4Poster].map(webp),
+		[koto, nashville, trustLayerPoster, mascotPoster, rolloutPoster, guidelinesPoster, freedPoster, raycatPoster, oai1Poster, oai5Poster, somu4Poster].map(webp),
 	);
+// The type specimens, sliding through their frames the same way the
+// Off the Clock card does.
+const typeFrames = (await Promise.all([ae1, ae2, ae3, qoph1, qoph2, qoph3].map(webp))).map((r) => r.src);
 
 const clip = (poster: string, path: string, ratio: number): RingItem => ({
 	kind: 'video',
@@ -54,13 +62,14 @@ const clip = (poster: string, path: string, ratio: number): RingItem => ({
 
 type RingItem =
 	| { kind: 'image'; src: string; ratio: number }
-	| { kind: 'video'; poster: string; mp4: string; webm: string; ratio: number };
+	| { kind: 'video'; poster: string; mp4: string; webm: string; ratio: number }
+	| { kind: 'sequence'; frames: string[]; ratio: number };
 
 const ring: RingItem[] = [
 	{ kind: 'image', src: kotoImg.src, ratio: 1 },
 	clip(rolloutImg.src, 'so-rebrand/rollout-3-1', 16 / 9),
 	clip(raycatImg.src, 'off-the-clock/raycat', 4 / 3),
-	{ kind: 'image', src: aeImg.src, ratio: 4 / 3 },
+	{ kind: 'sequence', frames: typeFrames, ratio: 4 / 3 },
 	clip(oai1Img.src, 'also-shipped/overflow-ai/oai-1', 16 / 9),
 	clip(mascotImg.src, 'so-rebrand/systems-6-2-2', 1),
 	clip(trustLayerImg.src, 'so-rebrand/rollout-3-2', 16 / 9),
@@ -79,6 +88,14 @@ const ring: RingItem[] = [
 				<div class="hero__ring-item" style={`--ratio:${item.ratio};`}>
 					{item.kind === 'image' ? (
 						<img src={item.src} alt="" decoding="async" />
+					) : item.kind === 'sequence' ? (
+						// A trailing copy of the first frame, so sliding past the
+						// last one lands on something identical to the start.
+						<div class="hero__sequence">
+							{[...item.frames, item.frames[0]].map((src) => (
+								<img src={src} alt="" decoding="async" />
+							))}
+						</div>
 					) : (
 						<video muted loop playsinline preload="none" poster={item.poster}>
 							<source src={item.webm} type="video/webm" />
@@ -178,6 +195,15 @@ const ring: RingItem[] = [
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+	}
+
+	.hero__sequence {
+		display: flex;
+		height: 100%;
+	}
+
+	.hero__sequence img {
+		flex: 0 0 100%;
 	}
 
 	/* No z-index of its own — that would make it a stacking context and
@@ -438,6 +464,31 @@ const ring: RingItem[] = [
 				})
 				.to(state, { angle: start + distance * 0.25, duration: ACCEL, ease: 'power2.in', onUpdate: render })
 				.to(state, { angle: target, duration: DECEL, ease: 'power3.out', onUpdate: render });
+		}
+
+		// The type sequence: hold a frame, ease one frame left, repeat,
+		// snapping back to the start from the trailing copy. Same timing
+		// as Off the Clock. Waits while the hero is off-screen, and never
+		// moves under reduced motion.
+		const sequence = stage?.querySelector<HTMLElement>('.hero__sequence');
+		if (sequence && !reduceMotion) {
+			const HOLD_MS = 1800;
+			const SLIDE_MS = 1000;
+			const frameCount = sequence.children.length - 1;
+			let frame = 0;
+			const slide = () => {
+				if (!inView) return;
+				frame += 1;
+				sequence.style.transition = `transform ${SLIDE_MS}ms ease`;
+				sequence.style.transform = `translateX(-${frame * 100}%)`;
+				if (frame < frameCount) return;
+				window.setTimeout(() => {
+					frame = 0;
+					sequence.style.transition = 'none';
+					sequence.style.transform = 'translateX(0)';
+				}, SLIDE_MS);
+			};
+			window.setInterval(slide, HOLD_MS + SLIDE_MS);
 		}
 
 		if (stage && items.length) {
