@@ -93,7 +93,7 @@ const ring: RingItem[] = [
 			))}
 		</div>
 		<div class="container hero__text">
-			<h1 class="type-display hero__headline">Hi, I’m <img class="hero__headshot" src={headshotImg.src} alt="" width="240" height="240" />Jake. <span class="hero__headline-line">I make brands move.</span></h1>
+			<h1 class="type-display hero__headline">Hi, I’m <span class="hero__headshot"><img src={headshotImg.src} alt="" width="240" height="240" /></span>Jake. <span class="hero__headline-line">I make brands move.</span></h1>
 			<p class="type-h3 hero__subhead">
 				Motion, systems, and strategy, most recently Stack Overflow's rebrand with Koto, from
 				first workshops to full rollout.
@@ -222,13 +222,24 @@ const ring: RingItem[] = [
 	   already in the text. */
 	.hero__headshot {
 		display: inline-block;
-		width: 0.78em;
-		height: 0.78em;
-		vertical-align: -0.04em;
+		width: 0.86em;
+		height: 0.86em;
+		/* Tucked a hair closer to "Jake" than the natural edge. */
+		margin-inline-end: -0.04em;
+		vertical-align: -0.06em;
 		border-radius: 50%;
-		object-fit: cover;
-		object-position: 50% 38%;
+		overflow: hidden;
 		rotate: 5deg;
+	}
+
+	/* Zoomed in past the source's framing, centered on the face. */
+	.hero__headshot img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		scale: 1.28;
+		transform-origin: 50% 42%;
 	}
 
 	/* Always breaks after the greeting, never mid-phrase. */
