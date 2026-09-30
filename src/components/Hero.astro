@@ -48,9 +48,10 @@ const [kotoImg, nashvilleImg, trustLayerImg, mascotImg, rolloutImg, guidelinesIm
 	await Promise.all(
 		[koto, nashville, trustLayerPoster, mascotPoster, rolloutPoster, guidelinesPoster, freedPoster, raycatPoster, oai1Poster, oai5Poster, somu4Poster].map(webp),
 	);
-// The type specimens, sliding through their frames the same way the
-// Off the Clock card does.
-const typeFrames = (await Promise.all([ae1, ae2, ae3, qoph1, qoph2, qoph3].map(webp))).map((r) => r.src);
+// The two typefaces, each sliding through its own frames the same way
+// the Off the Clock card does.
+const frames = async (images: ImageMetadata[]) => (await Promise.all(images.map(webp))).map((r) => r.src);
+const [aeFrames, qophFrames] = await Promise.all([frames([ae1, ae2, ae3]), frames([qoph1, qoph2, qoph3])]);
 
 const clip = (poster: string, path: string, ratio: number): RingItem => ({
 	kind: 'video',
@@ -69,11 +70,12 @@ const ring: RingItem[] = [
 	{ kind: 'image', src: kotoImg.src, ratio: 1 },
 	clip(rolloutImg.src, 'so-rebrand/rollout-3-1', 16 / 9),
 	clip(raycatImg.src, 'off-the-clock/raycat', 4 / 3),
-	{ kind: 'sequence', frames: typeFrames, ratio: 4 / 3 },
+	{ kind: 'sequence', frames: aeFrames, ratio: 4 / 3 },
 	clip(oai1Img.src, 'also-shipped/overflow-ai/oai-1', 16 / 9),
 	clip(mascotImg.src, 'so-rebrand/systems-6-2-2', 1),
 	clip(trustLayerImg.src, 'so-rebrand/rollout-3-2', 16 / 9),
 	clip(freedImg.src, 'what-i-do/motion-freed', 16 / 9),
+	{ kind: 'sequence', frames: qophFrames, ratio: 4 / 3 },
 	clip(guidelinesImg.src, 'so-rebrand/guidelines-scroll', 16 / 9),
 	clip(oai5Img.src, 'also-shipped/overflow-ai/oai-5', 16 / 9),
 	{ kind: 'image', src: nashvilleImg.src, ratio: 1 },
@@ -466,14 +468,15 @@ const ring: RingItem[] = [
 				.to(state, { angle: target, duration: DECEL, ease: 'power3.out', onUpdate: render });
 		}
 
-		// The type sequence: hold a frame, ease one frame left, repeat,
+		// The type sequences: hold a frame, ease one frame left, repeat,
 		// snapping back to the start from the trailing copy. Same timing
-		// as Off the Clock. Waits while the hero is off-screen, and never
-		// moves under reduced motion.
-		const sequence = stage?.querySelector<HTMLElement>('.hero__sequence');
-		if (sequence && !reduceMotion) {
-			const HOLD_MS = 1800;
-			const SLIDE_MS = 1000;
+		// as Off the Clock, with the second one starting half a beat later
+		// so the two never slide in unison. They wait while the hero is
+		// off-screen, and never move under reduced motion.
+		const HOLD_MS = 1800;
+		const SLIDE_MS = 1000;
+		stage?.querySelectorAll<HTMLElement>('.hero__sequence').forEach((sequence, i) => {
+			if (reduceMotion) return;
 			const frameCount = sequence.children.length - 1;
 			let frame = 0;
 			const slide = () => {
@@ -488,8 +491,8 @@ const ring: RingItem[] = [
 					sequence.style.transform = 'translateX(0)';
 				}, SLIDE_MS);
 			};
-			window.setInterval(slide, HOLD_MS + SLIDE_MS);
-		}
+			window.setTimeout(() => window.setInterval(slide, HOLD_MS + SLIDE_MS), i * 1400);
+		});
 
 		if (stage && items.length) {
 			measure();
