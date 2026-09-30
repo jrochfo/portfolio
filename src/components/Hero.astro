@@ -306,11 +306,6 @@ const ring: RingItem[] = [
 		let radius = 0;
 		let tilt = 0;
 		let centerY = 0;
-		// [width, height] of each item at scale 1, for overlap tests.
-		let sizes: [number, number][] = [];
-		// How close in depth (as a fraction of the radius) two overlapping
-		// items get before the front one starts fading for the handoff.
-		const HANDOFF = 0.12;
 
 		const smoothstep = (a: number, b: number, v: number) => {
 			const t = Math.min(1, Math.max(0, (v - a) / (b - a)));
@@ -344,7 +339,6 @@ const ring: RingItem[] = [
 			const itemBottom = floor - Math.max(12, gap * 0.04);
 			const itemH = Math.max(140, (itemBottom - itemTop) / frontScale);
 			stage.style.setProperty('--item-h', `${itemH.toFixed(1)}px`);
-			sizes = items.map((el) => [itemH * Number(el.style.getPropertyValue('--ratio')), itemH]);
 			const backY = headline.top + headline.height / 2 - mid;
 			const frontY = (itemTop + itemBottom) / 2 - mid;
 			tilt = Math.max(0, (frontY - backY) / (frontScale + backScale));
@@ -355,7 +349,6 @@ const ring: RingItem[] = [
 		function render() {
 			const n = items.length;
 			const z = new Array<number>(n);
-			const box = new Array<[number, number, number, number]>(n);
 			const depth = new Array<number>(n);
 			for (let i = 0; i < n; i++) {
 				const theta = state.angle + i * STEP;
@@ -365,10 +358,8 @@ const ring: RingItem[] = [
 				const y = centerY / scale + tilt * Math.cos(theta);
 				// 0 at the very front, 1 at the very back.
 				depth[i] = (1 - z[i] / radius) / 2;
-				const [w, h] = sizes[i] ?? [0, 0];
 				const cx = x * scale;
 				const cy = y * scale;
-				box[i] = [cx - (w * scale) / 2, cy - (h * scale) / 2, cx + (w * scale) / 2, cy + (h * scale) / 2];
 				const el = items[i];
 				el.style.transform = `translate3d(${cx.toFixed(1)}px, ${cy.toFixed(1)}px, 0) scale(${scale.toFixed(3)})`;
 				const blur = depth[i] ** 1.4 * maxBlur;
@@ -378,20 +369,7 @@ const ring: RingItem[] = [
 			for (let i = 0; i < n; i++) {
 				// The back of the ring fades out entirely, leaving the space
 				// behind the hero text clear.
-				let opacity = 1 - smoothstep(0.3, 0.8, depth[i]);
-				// Stacking order flips in a single frame when two overlapping
-				// items trade places. As they close in on that point, the one
-				// in front goes semi-transparent — at the exact swap both
-				// orderings composite to the same 50/50 mix, so the flip
-				// itself is invisible and reads as a quick crossfade.
-				for (let j = 0; j < n; j++) {
-					if (j === i || z[i] < z[j]) continue;
-					const [a0, b0, a1, b1] = box[i];
-					const [c0, d0, c1, d1] = box[j];
-					if (a1 < c0 || c1 < a0 || b1 < d0 || d1 < b0) continue;
-					const dz = (z[i] - z[j]) / radius;
-					opacity *= 0.5 + 0.5 * smoothstep(0, HANDOFF, dz);
-				}
+				const opacity = 1 - smoothstep(0.3, 0.8, depth[i]);
 				const el = items[i];
 				el.style.opacity = opacity.toFixed(3);
 				el.style.visibility = opacity < 0.01 ? 'hidden' : 'visible';
