@@ -6,6 +6,7 @@ import iconStrategy from '../assets/icons/services/strategy.svg';
 import iconPlay from '../assets/icons/functions/play.svg';
 import iconPause from '../assets/icons/functions/pause.svg';
 import motionFreedPoster from '../assets/work/what-i-do/posters/motion-freed-poster.jpg';
+import strategyCollage from '../assets/work/what-i-do/whatido-strategy.png';
 
 interface VideoMedia {
 	type: 'video';
@@ -17,6 +18,18 @@ interface VideoMedia {
 // Mirrors Off The Clock's video() helper — same reasoning (a single
 // well-compressed poster format, not the full avif/webp/fallback triad
 // used for lightbox-worthy imagery).
+interface ImageMedia {
+	type: 'image';
+	src: string;
+	alt: string;
+}
+
+// ~2x the well's real desktop width (~930px), for retina.
+async function image(src: ImageMetadata, alt: string): Promise<ImageMedia> {
+	const resolved = await getImage({ src, format: 'webp', width: 2000, quality: 85 });
+	return { type: 'image', src: resolved.src, alt };
+}
+
 async function video(name: string, poster: ImageMetadata): Promise<VideoMedia> {
 	const resolvedPoster = await getImage({ src: poster, format: 'webp' });
 	return { type: 'video', mp4: `/video/what-i-do/${name}.mp4`, webm: `/video/what-i-do/${name}.webm`, poster: resolvedPoster.src };
@@ -42,7 +55,10 @@ const sections = [
 		claim: 'Strategy, from the first workshop on.',
 		caption: 'Stack Overflow — the rebrand, below ↓',
 		icon: iconStrategy,
-		media: null,
+		media: await image(
+			strategyCollage,
+			'A collage from the Stack Overflow rebrand: workshop photos from London and Nashville, a whiteboard of brand ideas, the RFP cover, sticky-note reactions, and early brand shapes and icons',
+		),
 	},
 ];
 ---
@@ -62,7 +78,10 @@ const sections = [
 				<p class="type-body card__claim">{section.claim}</p>
 				<p class="type-caption card__caption">{section.caption}</p>
 				<div class="card__well">
-					{section.media && (
+					{section.media?.type === 'image' && (
+						<img class="card__media" data-src={section.media.src} alt={section.media.alt} />
+					)}
+					{section.media?.type === 'video' && (
 						<>
 							<video
 								class="card__media"
