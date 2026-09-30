@@ -136,6 +136,9 @@ const ring: RingItem[] = [
 
 	.hero__stage {
 		position: relative;
+		/* Keeps the ring's and text's z-indexes (up to 1000) contained
+		   in here, so the sticky nav stays above the whole hero. */
+		isolation: isolate;
 		flex: 1;
 		display: grid;
 		/* Text sits high, not centered, leaving the lower part of the
