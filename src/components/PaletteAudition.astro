@@ -16,12 +16,22 @@
 // contrast and tone — one richer and higher-contrast, one softer and
 // more muted. The soft offshoots drop below the 7:1 text contrast held
 // elsewhere but stay above 4.5:1 (WCAG AA).
-type Side = { bg: string; ink: string; title: string; accent: string };
+// tint (optional): what the surfaces — panels, bands, wells, hairlines —
+// are mixed from. Defaults to the text color, which is why green text
+// gives mint cards and red-brown text gives pink ones; a separate tint
+// (e.g. a paper brown) keeps the surfaces neutral while the text and
+// titles carry the hue.
+type Side = { bg: string; ink: string; title: string; accent: string; tint?: string };
 const duos: { key: string; name: string; family: string; light: Side; dark: Side }[] = [
 	{
 		key: 'tomato', name: 'Tomato / Ember', family: 'Tomato',
 		light: { bg: '#FFF5EA', ink: '#2A1410', title: '#E3321B', accent: '#C42A15' },
 		dark: { bg: '#1A0F0B', ink: '#FBE9DD', title: '#FF6A3D', accent: '#FF8A5C' },
+	},
+	{
+		key: 'tomato-butter', name: 'Tomato (butter paper)', family: 'Tomato',
+		light: { bg: '#FFF7E2', ink: '#2A1410', title: '#E3321B', accent: '#C42A15', tint: '#5E4A1C' },
+		dark: { bg: '#1A1409', ink: '#FBEEDB', title: '#FF6A3D', accent: '#FF8A5C', tint: '#FBE6B8' },
 	},
 	{
 		key: 'tomato-paste', name: 'Tomato Paste', family: 'Tomato',
@@ -42,6 +52,16 @@ const duos: { key: string; name: string; family: string; light: Side; dark: Side
 		key: 'matcha-latte-bright', name: 'Matcha Latte (brighter paper)', family: 'Matcha Latte',
 		light: { bg: '#F9F5E8', ink: '#33501A', title: '#5E8A22', accent: '#4A6B1C' },
 		dark: { bg: '#141B0D', ink: '#F1ECD8', title: '#B6DB63', accent: '#E9C98B' },
+	},
+	{
+		key: 'matcha-latte-papery', name: 'Matcha Latte (bright, papery)', family: 'Matcha Latte',
+		light: { bg: '#F9F5E8', ink: '#33501A', title: '#5E8A22', accent: '#4A6B1C', tint: '#6B5638' },
+		dark: { bg: '#161812', ink: '#F1ECD8', title: '#B6DB63', accent: '#E9C98B', tint: '#EADFC6' },
+	},
+	{
+		key: 'ceremonial-papery', name: 'Ceremonial (papery)', family: 'Matcha Latte',
+		light: { bg: '#F6F1E3', ink: '#1E3A10', title: '#3F7A12', accent: '#2F5F0F', tint: '#6B5638' },
+		dark: { bg: '#12140E', ink: '#EEF3DD', title: '#A6E04A', accent: '#F0D08A', tint: '#EADFC6' },
 	},
 	{
 		key: 'ceremonial', name: 'Ceremonial', family: 'Matcha Latte',
@@ -244,7 +264,7 @@ const chip = (s: Side) =>
 </style>
 
 <script>
-	type Side = { bg: string; ink: string; title: string; accent: string };
+	type Side = { bg: string; ink: string; title: string; accent: string; tint?: string };
 	type Duo = { key: string; name: string; family: string; light: Side; dark: Side };
 
 	const panel = document.querySelector<HTMLElement>('.palette-audition');
@@ -293,11 +313,12 @@ const chip = (s: Side) =>
 				const set = (t: string, v: string) => root.style.setProperty(t, v);
 				set('--color-bg', p.bg);
 				set('--color-surface', p.bg);
-				set('--color-panel', mix(p.bg, p.ink, 5));
-				set('--color-panel-well', mix(p.bg, p.ink, 3));
-				set('--color-band', mix(p.bg, p.ink, 6));
-				set('--color-neutral', mix(p.bg, p.ink, 9));
-				set('--color-line', mix(p.bg, p.ink, 18));
+				const tint = p.tint ?? p.ink;
+				set('--color-panel', mix(p.bg, tint, 5));
+				set('--color-panel-well', mix(p.bg, tint, 3));
+				set('--color-band', mix(p.bg, tint, 6));
+				set('--color-neutral', mix(p.bg, tint, 9));
+				set('--color-line', mix(p.bg, tint, 18));
 				set('--color-ink', p.ink);
 				set('--color-ink-muted', mix(p.ink, p.bg, 38));
 				set('--color-accent', p.accent);
