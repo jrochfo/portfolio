@@ -6,6 +6,7 @@ import FontAudition from '../components/FontAudition.astro';
 import FontVariationTuner from '../components/FontVariationTuner.astro';
 import ColorExploration from '../components/_archive/ColorExploration.astro';
 import ColorFavorites from '../components/ColorFavorites.astro';
+import PaletteAudition from '../components/PaletteAudition.astro';
 
 interface Props {
 	title?: string;
@@ -38,9 +39,13 @@ const FONT_VARIATION_TUNER_ENABLED = false;
 const COLOR_EXPLORATION_ENABLED = false;
 
 // Neutral/ink/accent tokens are down to a shortlist of four favorites
-// (Rust/Teal/Moss/Cobalt) — panel on until Jake picks one and it's
-// committed as literal defaults in global.css.
-const COLOR_FAVORITES_ENABLED = true;
+// (Rust/Teal/Moss/Cobalt). Off while PaletteAudition below explores
+// bolder directions; flip back to compare.
+const COLOR_FAVORITES_ENABLED = false;
+
+// Bold whole-site palette directions (page, text, titles, accent),
+// applied live. Dev-only.
+const PALETTE_AUDITION_ENABLED = true;
 ---
 
 <html lang="en">
@@ -66,6 +71,7 @@ const COLOR_FAVORITES_ENABLED = true;
 		{FONT_VARIATION_TUNER_ENABLED && import.meta.env.DEV && <FontVariationTuner />}
 		{COLOR_EXPLORATION_ENABLED && import.meta.env.DEV && <ColorExploration />}
 		{COLOR_FAVORITES_ENABLED && import.meta.env.DEV && <ColorFavorites />}
+		{PALETTE_AUDITION_ENABLED && import.meta.env.DEV && <PaletteAudition />}
 	</body>
 </html>
 

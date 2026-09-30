@@ -1,0 +1,233 @@
+---
+// Dev-only: flips the whole site between bold palette directions live,
+// to explore past the muted Rust/Teal/Moss/Cobalt favorites (which are
+// still in ColorFavorites.astro, just switched off in Base.astro). Each
+// palette names four roles — page, text, titles, accent — and every
+// other surface (panels, bands, wells, hairlines, muted text) is mixed
+// from the page and text colors, so a palette is only ever four picks.
+// Contrast is checked by hand: text >= 7:1, titles >= 3:1 (display
+// sizes), accent >= 4.5:1 both as link text on the page and as a
+// button fill behind page-colored text.
+const palettes = [
+	{ key: 'current', name: 'Current', note: 'The site as committed', bg: '', ink: '', title: '', accent: '' },
+	{ key: 'shibuya', name: 'Shibuya Pop', note: 'Bubblegum, navy, tomato, cobalt', bg: '#FFE9F1', ink: '#1C1F5C', title: '#F2301F', accent: '#2E55FF' },
+	{ key: 'katamari', name: 'Katamari', note: 'Butter, plum, magenta, sky', bg: '#FFF4BF', ink: '#2B1740', title: '#D4006F', accent: '#0071C2' },
+	{ key: 'parappa', name: 'Parappa', note: 'Sky, ink, orange, raspberry', bg: '#DDF1FF', ink: '#171B2E', title: '#F2541B', accent: '#B81B4E' },
+	{ key: 'tomato', name: 'Tomato', note: 'Cream and one loud red', bg: '#FFF5EA', ink: '#2A1410', title: '#E3321B', accent: '#C42A15' },
+	{ key: 'riso', name: 'Riso', note: 'Paper, riso blue, fluoro pink', bg: '#F5F0E6', ink: '#152C6B', title: '#E0197F', accent: '#0067B8' },
+	{ key: 'lemon', name: 'Lemon Lime', note: 'Pale lime, forest, vermilion', bg: '#F3FBD3', ink: '#103228', title: '#1E7A3C', accent: '#BC351A' },
+	{ key: 'grape', name: 'Grape Soda', note: 'Lavender, grape, burnt orange', bg: '#EFE8FF', ink: '#22113F', title: '#6E2BDB', accent: '#A83700' },
+	{ key: 'peach', name: 'Peach Fizz', note: 'Peach, cocoa, pink, blue', bg: '#FFE8DA', ink: '#3A1B0E', title: '#E83562', accent: '#1F4FD1' },
+	{ dark: true, key: 'cobalt', name: 'Cobalt Flood', note: 'The whole page goes blue', bg: '#2344D8', ink: '#FFFFFF', title: '#FFE24A', accent: '#FFE24A' },
+	{ dark: true, key: 'night', name: 'Night Market', note: 'Dark indigo, pink, mint', bg: '#15122C', ink: '#F3EEFF', title: '#FF9EDB', accent: '#7EF2C6' },
+	{ dark: true, key: 'terminal', name: 'Terminal', note: 'Dark green, phosphor, pink', bg: '#0E1510', ink: '#DCF4D6', title: '#9CFF6E', accent: '#FF8AD8' },
+];
+---
+
+<div class="palette-audition" data-palettes={JSON.stringify(palettes)}>
+	<div class="palette-audition__head">
+		<span class="palette-audition__label">Palettes</span>
+		<span class="palette-audition__current" data-current>Current</span>
+		<button type="button" class="palette-audition__step" data-step="-1" aria-label="Previous palette">‹</button>
+		<button type="button" class="palette-audition__step" data-step="1" aria-label="Next palette">›</button>
+		<button type="button" class="palette-audition__toggle" data-toggle aria-label="Collapse palettes">–</button>
+	</div>
+	<div class="palette-audition__grid">
+		{palettes.map((p) => (
+			<button type="button" class="palette-audition__swatch" data-key={p.key} title={p.note}>
+				<span class="palette-audition__chip" style={p.bg ? `background:${p.bg}` : 'background:#fbf6ef'}>
+					<span style={`background:${p.title || '#1a1411'}`} />
+					<span style={`background:${p.ink || '#1a1411'}`} />
+					<span style={`background:${p.accent || '#1a1411'}`} />
+				</span>
+				<span class="palette-audition__name">{p.name}</span>
+			</button>
+		))}
+	</div>
+</div>
+
+<style is:global>
+	/* Titles only get their own color while this panel is on — there's
+	   no title token in global.css yet; this falls back to ink. */
+	.type-display,
+	.type-h1,
+	.type-h2 {
+		color: var(--color-title, inherit);
+	}
+
+	/* Client logos are forced to black site-wide; on a dark palette they
+	   vanish, so the preview flips them light. A real dark palette would
+	   need this handled properly, alongside any dark-on-light images. */
+	:root.palette-dark .hero__logo,
+	:root.palette-dark .testimonial-card__logo {
+		filter: brightness(0) invert(1) opacity(0.7);
+	}
+</style>
+
+<style>
+	/* Fixed colors, not site tokens, so the panel stays readable
+	   whichever palette is applied. */
+	.palette-audition {
+		position: fixed;
+		left: 16px;
+		bottom: 16px;
+		z-index: 9999;
+		width: 300px;
+		padding: 12px;
+		border-radius: 12px;
+		background: #fff;
+		color: #1a1a1a;
+		box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+		font: 500 12px/1.3 system-ui, sans-serif;
+	}
+
+	.palette-audition__head {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	.palette-audition__label {
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: #777;
+	}
+
+	.palette-audition__current {
+		flex: 1;
+		font-weight: 600;
+	}
+
+	.palette-audition__step,
+	.palette-audition__toggle {
+		width: 24px;
+		height: 24px;
+		border-radius: 6px;
+		border: 1px solid #ddd;
+		background: #fff;
+		color: #1a1a1a;
+		cursor: pointer;
+	}
+
+	.palette-audition__grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 6px;
+		margin-top: 10px;
+	}
+
+	.palette-audition.is-collapsed .palette-audition__grid {
+		display: none;
+	}
+
+	.palette-audition__swatch {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		padding: 4px;
+		border-radius: 8px;
+		border: 2px solid transparent;
+		background: none;
+		color: inherit;
+		font: inherit;
+		text-align: left;
+		cursor: pointer;
+	}
+
+	.palette-audition__swatch[aria-pressed='true'] {
+		border-color: #1a1a1a;
+	}
+
+	.palette-audition__chip {
+		display: flex;
+		gap: 3px;
+		padding: 8px 6px;
+		border-radius: 5px;
+		box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+	}
+
+	.palette-audition__chip span {
+		width: 12px;
+		height: 12px;
+		border-radius: 50%;
+	}
+
+	.palette-audition__name {
+		font-size: 11px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+</style>
+
+<script>
+	type Palette = { dark?: boolean; key: string; name: string; note: string; bg: string; ink: string; title: string; accent: string };
+
+	const panel = document.querySelector<HTMLElement>('.palette-audition');
+	const STORE = 'palette-audition';
+	const TOKENS = [
+		'--color-bg',
+		'--color-surface',
+		'--color-panel',
+		'--color-panel-well',
+		'--color-band',
+		'--color-neutral',
+		'--color-line',
+		'--color-ink',
+		'--color-ink-muted',
+		'--color-accent',
+		'--color-title',
+	];
+
+	if (panel) {
+		const palettes: Palette[] = JSON.parse(panel.dataset.palettes || '[]');
+		const root = document.documentElement;
+		const current = panel.querySelector<HTMLElement>('[data-current]')!;
+		const swatches = [...panel.querySelectorAll<HTMLButtonElement>('.palette-audition__swatch')];
+		let index = 0;
+
+		// Every surface besides the four named roles is a mix of page and
+		// text color, at roughly the steps the committed ramp uses.
+		const mix = (bg: string, ink: string, pct: number) => `color-mix(in oklch, ${bg}, ${ink} ${pct}%)`;
+
+		function apply(i: number) {
+			index = (i + palettes.length) % palettes.length;
+			const p = palettes[index];
+			if (!p.bg) {
+				TOKENS.forEach((t) => root.style.removeProperty(t));
+			} else {
+				const set = (t: string, v: string) => root.style.setProperty(t, v);
+				set('--color-bg', p.bg);
+				set('--color-surface', p.bg);
+				set('--color-panel', mix(p.bg, p.ink, 5));
+				set('--color-panel-well', mix(p.bg, p.ink, 3));
+				set('--color-band', mix(p.bg, p.ink, 6));
+				set('--color-neutral', mix(p.bg, p.ink, 9));
+				set('--color-line', mix(p.bg, p.ink, 18));
+				set('--color-ink', p.ink);
+				set('--color-ink-muted', mix(p.ink, p.bg, 38));
+				set('--color-accent', p.accent);
+				set('--color-title', p.title);
+			}
+			root.classList.toggle('palette-dark', !!p.dark);
+			current.textContent = p.name;
+			swatches.forEach((s, j) => s.setAttribute('aria-pressed', String(j === index)));
+			try {
+				localStorage.setItem(STORE, p.key);
+			} catch {}
+		}
+
+		swatches.forEach((s, j) => s.addEventListener('click', () => apply(j)));
+		panel.querySelectorAll<HTMLButtonElement>('[data-step]').forEach((b) =>
+			b.addEventListener('click', () => apply(index + Number(b.dataset.step))),
+		);
+		panel.querySelector('[data-toggle]')!.addEventListener('click', () => panel.classList.toggle('is-collapsed'));
+
+		let saved = 0;
+		try {
+			const key = localStorage.getItem(STORE);
+			saved = Math.max(0, palettes.findIndex((p) => p.key === key));
+		} catch {}
+		apply(saved);
+	}
+</script>
