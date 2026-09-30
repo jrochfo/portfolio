@@ -6,7 +6,7 @@ import ae from '../assets/work/off-the-clock/type/ae-1.png';
 import mascotPoster from '../assets/work/so-rebrand/posters/systems-6-2-poster.jpg';
 import rolloutPoster from '../assets/work/so-rebrand/posters/rollout-3-1-poster.jpg';
 import trustLayerPoster from '../assets/work/so-rebrand/posters/rollout-3-2-poster.jpg';
-import charcoalPoster from '../assets/work/off-the-clock/charcoal-Ink/posters/charcoal-ink-poster.jpg';
+import guidelinesPoster from '../assets/work/so-rebrand/posters/guidelines-scroll-poster.jpg';
 import freedPoster from '../assets/work/what-i-do/posters/motion-freed-poster.jpg';
 import raycatPoster from '../assets/work/off-the-clock/raycat/posters/raycat-poster.jpg';
 import oai1Poster from '../assets/work/also-shipped/overflow-ai/posters/oai-1-poster.jpg';
@@ -39,9 +39,9 @@ const logos = [
 // never look alike. Images are ~2x their largest on-screen size (the
 // focused, front-most slot).
 const webp = (src: ImageMetadata) => getImage({ src, format: 'webp', width: 900, quality: 80 });
-const [kotoImg, nashvilleImg, trustLayerImg, aeImg, mascotImg, rolloutImg, charcoalImg, freedImg, raycatImg, oai1Img, oai5Img, somu4Img] =
+const [kotoImg, nashvilleImg, trustLayerImg, aeImg, mascotImg, rolloutImg, guidelinesImg, freedImg, raycatImg, oai1Img, oai5Img, somu4Img] =
 	await Promise.all(
-		[koto, nashville, trustLayerPoster, ae, mascotPoster, rolloutPoster, charcoalPoster, freedPoster, raycatPoster, oai1Poster, oai5Poster, somu4Poster].map(webp),
+		[koto, nashville, trustLayerPoster, ae, mascotPoster, rolloutPoster, guidelinesPoster, freedPoster, raycatPoster, oai1Poster, oai5Poster, somu4Poster].map(webp),
 	);
 
 const clip = (poster: string, path: string, ratio: number): RingItem => ({
@@ -65,7 +65,7 @@ const ring: RingItem[] = [
 	clip(mascotImg.src, 'so-rebrand/systems-6-2-2', 1),
 	clip(trustLayerImg.src, 'so-rebrand/rollout-3-2', 16 / 9),
 	clip(freedImg.src, 'what-i-do/motion-freed', 16 / 9),
-	clip(charcoalImg.src, 'off-the-clock/charcoal-ink', 4 / 3),
+	clip(guidelinesImg.src, 'so-rebrand/guidelines-scroll', 16 / 9),
 	clip(oai5Img.src, 'also-shipped/overflow-ai/oai-5', 16 / 9),
 	{ kind: 'image', src: nashvilleImg.src, ratio: 1 },
 	clip(somu4Img.src, 'also-shipped/somu23/somu-4', 16 / 9),
