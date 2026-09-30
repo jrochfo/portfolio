@@ -58,6 +58,7 @@ const acts = [
 		title: 'Rollout',
 		description:
 			"Then it had to ship. Over the next year the brand reached everything we touched: the launch of Stack Internal, booths from ai4 to Microsoft Ignite, our podcasts, the Developer Survey, and every one of our Figma files, finally organized. Inside the company, the refreshed vision and mission gave Stack a clearer sense of itself, and put it in step with where the product is headed.",
+		credits: "With Dave Longworth (Senior Director, Design), Koto (brand agency), and Stack Overflow’s product and marketing teams.",
 	},
 ];
 
@@ -574,6 +575,7 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 							<div class="act__gallery-item" aria-hidden="true"></div>
 						</div>
 					)}
+					{act.credits && <p class="type-caption act__credits">{act.credits}</p>}
 				</article>
 			))}
 		</div>
@@ -666,6 +668,11 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 	   pixel size, which is what was blowing it out past the container. */
 	.act__pinboard {
 		margin-block-start: var(--space-m);
+	}
+
+	.act__credits {
+		margin-block: var(--space-s) 0;
+		color: var(--color-ink-muted);
 	}
 
 	.act__pinboard-row {
