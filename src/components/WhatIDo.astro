@@ -6,6 +6,7 @@ import iconStrategy from '../assets/icons/services/strategy.svg';
 import iconPlay from '../assets/icons/functions/play.svg';
 import iconPause from '../assets/icons/functions/pause.svg';
 import motionFreedPoster from '../assets/work/what-i-do/posters/motion-freed-poster.jpg';
+import systemsTulipPoster from '../assets/work/what-i-do/posters/systems-tulip-poster.jpg';
 import strategyCollage from '../assets/work/what-i-do/whatido-strategy.png';
 
 interface VideoMedia {
@@ -48,7 +49,7 @@ const sections = [
 		claim: 'One system, everywhere the brand lives.',
 		caption: 'Tulip — brand refresh, guidelines, and internal tooling',
 		icon: iconSystems,
-		media: null,
+		media: await video('systems-tulip', systemsTulipPoster),
 	},
 	{
 		title: 'Strategy',
