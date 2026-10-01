@@ -39,12 +39,13 @@ complete, tokens defined); build phase is transcribing that spec.
 - Homepage section gap: owned in ONE place — the `main > section`
   rules in global.css, not per-section padding. Sections carry zero
   vertical padding by default. Default gap is --space-3xl. Exceptions:
-  (1) full-bleed band sections (testimonials, footer) have their own
+  (1) full-bleed band sections (testimonials, close, footer) have their own
   padding-block: --space-xl, since their background-color edge is
   part of the boundary, and the gap adjacent to a bleed band drops to
-  --space-2xl; (2) Hero and Close are viewport-height compositions
-  with their own internal spacing, tuned by eye, exempt from the gap
-  system entirely.
+  --space-2xl; Close is one too (an accent-filled sign-off band, the
+  one surface the accent fills); (2) Hero is a viewport-height
+  composition with its own internal spacing, tuned by eye, exempt
+  from the gap system entirely.
 - Section container pattern (same as nav/footer): the section element
   is full viewport width; its contents sit in a `.container` div
   (max-width + margin-inline: auto + container padding). Bleed

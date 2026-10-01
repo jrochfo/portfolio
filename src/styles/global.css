@@ -368,11 +368,11 @@ a:not(.button):focus-visible {
    children. Sections themselves carry zero vertical padding by
    default — never add margin/padding for this in a section's own
    file. Default gap is --space-3xl; full-bleed bands (testimonials,
-   footer) tighten the gap on either side of them to --space-2xl,
-   since their background-color edge already does part of the
-   separation work. Hero and Close are viewport-height compositions
-   exempt from this system entirely — their internal spacing is
-   tuned by eye inside their own component.
+   the accent close band, footer) tighten the gap on either side of
+   them to --space-2xl, since their background-color edge already
+   does part of the separation work. Hero is a viewport-height
+   composition exempt from this system entirely — its internal
+   spacing is tuned by eye inside its own component.
 --------------------------------------------------------------- */
 
 main > section + section {
