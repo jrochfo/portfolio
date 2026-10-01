@@ -37,12 +37,21 @@ export interface CarouselOptions {
 	 * through this module at all, so a real swipe won't loop this way.
 	 */
 	loop?: boolean;
+	/**
+	 * Every mouse drag moves exactly one item (or none, if it's too
+	 * short), however hard the fling: the strip follows the pointer only
+	 * as far as the neighboring item, then eases the rest of the way on
+	 * release. Without it, a big drag lands on whichever item it ended
+	 * nearest, which can be several away.
+	 */
+	singleStep?: boolean;
 }
 
 export function createCarousel(options: CarouselOptions): CarouselHandle {
 	const { strip, items, onActiveChange } = options;
 	const inset = options.inset ?? (() => 0);
 	const loop = (options.loop ?? false) && items.length > 1;
+	const singleStep = options.singleStep ?? false;
 	const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 	// Phantom slides: a clone of the last item prepended, a clone of the
@@ -108,6 +117,13 @@ export function createCarousel(options: CarouselOptions): CarouselHandle {
 	let lastX = 0;
 	let startScrollLeft = 0;
 	let dragStartDomPos = 0;
+	// scrollLeft limits for the current drag (singleStep only).
+	let dragMin = -Infinity;
+	let dragMax = Infinity;
+	// Bumped to cancel an in-flight animateScrollTo — grabbing the strip
+	// mid-settle used to leave the old animation running against the
+	// drag, which is where the jitter on quick repeated drags came from.
+	let animation = 0;
 	let destroyed = false;
 	let scrollEndTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -177,10 +193,11 @@ export function createCarousel(options: CarouselOptions): CarouselHandle {
 
 		const duration = 450;
 		const startTime = performance.now();
+		const id = ++animation;
 		strip.style.scrollSnapType = 'none';
 
 		function step(now: number) {
-			if (destroyed) return;
+			if (destroyed || id !== animation) return;
 			const t = Math.min((now - startTime) / duration, 1);
 			const eased = 1 - Math.pow(1 - t, 4); // ease-out-quart
 			strip.scrollLeft = start + change * eased;
@@ -262,8 +279,16 @@ export function createCarousel(options: CarouselOptions): CarouselHandle {
 		strip.style.scrollSnapType = 'none';
 		startX = e.pageX;
 		lastX = e.pageX;
+		animation++;
+		suspendActiveTracking = false;
 		startScrollLeft = strip.scrollLeft;
-		dragStartDomPos = nearestDomPos(slideOffsets());
+		const offsets = slideOffsets();
+		dragStartDomPos = nearestDomPos(offsets);
+		if (singleStep) {
+			const at = (i: number) => startScrollLeft + offsets[Math.max(0, Math.min(allSlides.length - 1, i))];
+			dragMin = at(dragStartDomPos - 1);
+			dragMax = at(dragStartDomPos + 1);
+		}
 	};
 
 	const onMouseUp = () => {
@@ -285,7 +310,9 @@ export function createCarousel(options: CarouselOptions): CarouselHandle {
 			suppressNextClick();
 		}
 
-		if (Math.abs(dragDistance) > DRAG_ADVANCE_THRESHOLD) {
+		if (singleStep) {
+			if (Math.abs(dragDistance) > DRAG_ADVANCE_THRESHOLD) targetDomPos = dragStartDomPos + Math.sign(dragDistance);
+		} else if (Math.abs(dragDistance) > DRAG_ADVANCE_THRESHOLD) {
 			// Snap to whichever slide the drag actually ended nearest to,
 			// rather than always advancing by one — a big drag can skip
 			// straight to a far slide in one motion instead of overshooting
@@ -312,7 +339,8 @@ export function createCarousel(options: CarouselOptions): CarouselHandle {
 		// slide — this is unchanged from the non-looping case; the
 		// browser's own scrollLeft clamping now simply has real content
 		// to clamp against one slide further in each direction.
-		strip.scrollLeft = startScrollLeft - (e.pageX - startX);
+		const next = startScrollLeft - (e.pageX - startX);
+		strip.scrollLeft = singleStep ? Math.max(dragMin, Math.min(dragMax, next)) : next;
 	};
 
 	strip.addEventListener('scroll', onScroll);
