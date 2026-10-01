@@ -832,14 +832,15 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 
 	/* The pin itself never rotates — only the photo beneath it does,
 	   the way a real pushpin holds a photo steady while the photo
-	   itself hangs slightly askew. Colored off the live accent token
-	   (see the color panel) rather than a fixed hue, so it always
-	   matches whichever candidate is active. --pin-top defaults to
-	   sitting half on/half above the photo's own top edge, but a pin
-	   can override it (see pinTop on the Pin type) for an image with
-	   its own transparent margin, so the pin lands on the actual
-	   content inside rather than the file's outer bounds. */
+	   itself hangs slightly askew. Colored off the palette: the accent
+	   in light mode, the title green in dark (the accent there is a
+	   pale butter that reads as a highlight, not a pin). --pin-top
+	   defaults to sitting half on/half above the photo's own top edge,
+	   but a pin can override it (see pinTop on the Pin type) for an
+	   image with its own transparent margin, so the pin lands on the
+	   actual content inside rather than the file's outer bounds. */
 	.act__pinboard-pin {
+		--pin-color: var(--color-accent);
 		position: absolute;
 		top: var(--pin-top, -6px);
 		left: 50%;
@@ -850,11 +851,18 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 		z-index: 2;
 		background: radial-gradient(
 			circle at 35% 30%,
-			oklch(from var(--color-accent) calc(l + 0.2) c h),
-			var(--color-accent) 55%,
-			oklch(from var(--color-accent) calc(l - 0.15) c h) 100%
+			oklch(from var(--pin-color) calc(l + 0.2) c h),
+			var(--pin-color) 55%,
+			oklch(from var(--pin-color) calc(l - 0.15) c h) 100%
 		);
-		box-shadow: 0 3px 4px oklch(from var(--color-ink) l c h / 0.35);
+		/* A fixed dark shadow (light mode's ink), not the ink token: the
+		   shadow falls on the photo, which doesn't change with the mode,
+		   so it shouldn't turn light along with the dark-mode text. */
+		box-shadow: 0 3px 4px rgb(30 58 16 / 0.35);
+	}
+
+	:global(:root[data-theme='dark']) .act__pinboard-pin {
+		--pin-color: var(--color-title);
 	}
 
 	/* Manual play/pause for the featured Rollout videos — the same
