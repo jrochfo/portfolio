@@ -629,6 +629,16 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 		margin-block-start: var(--space-s);
 	}
 
+	/* Description copy runs at 75% of the container, not the full
+	   width, for a comfortable line length now that the container is
+	   wider. Phones keep the full width. */
+	@media (min-width: 769px) {
+		.rebrand__description,
+		.act__desc {
+			max-width: 75%;
+		}
+	}
+
 	.act__gallery {
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);
