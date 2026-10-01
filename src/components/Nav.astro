@@ -44,16 +44,16 @@ const isHome = Astro.url.pathname === '/';
 </nav>
 
 <style is:global>
-	/* A brief crossfade while switching modes, not a standing
-	   transition on everything — added and removed by the toggle's
-	   script. Skipped under reduced motion (the script never adds it). */
-	:root.theme-switching,
-	:root.theme-switching * {
-		transition:
-			background-color 0.3s ease,
-			color 0.3s ease,
-			border-color 0.3s ease,
-			fill 0.3s ease !important;
+	/* Switching modes crossfades the whole page as one picture (a view
+	   transition, started by the toggle's script) instead of fading each
+	   element's colors — those per-element fades fell out of step with
+	   each other, since children inheriting a color chase their parent's
+	   fade and lag behind it, and the text flickered. Browsers without
+	   view transitions, and reduced motion, just switch instantly. */
+	::view-transition-old(root),
+	::view-transition-new(root) {
+		animation-duration: 0.3s;
+		animation-timing-function: ease;
 	}
 </style>
 
@@ -158,14 +158,15 @@ const isHome = Astro.url.pathname === '/';
 	const themeToggle = document.querySelector<HTMLButtonElement>('#theme-toggle');
 	const THEME_STORE = 'theme';
 	const html = document.documentElement;
-	let switchTimer: number | undefined;
-
 	function setTheme(mode: 'light' | 'dark', animate: boolean) {
-		if (animate && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-			html.classList.add('theme-switching');
-			window.clearTimeout(switchTimer);
-			switchTimer = window.setTimeout(() => html.classList.remove('theme-switching'), 350);
+		if (animate && document.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+			document.startViewTransition(() => applyTheme(mode));
+		} else {
+			applyTheme(mode);
 		}
+	}
+
+	function applyTheme(mode: 'light' | 'dark') {
 		html.dataset.theme = mode;
 		themeToggle?.setAttribute('aria-pressed', String(mode === 'dark'));
 		try {
