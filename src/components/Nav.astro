@@ -1,5 +1,5 @@
 ---
-import iconJr from '../assets/icons/nav/jr.svg';
+import iconJr from '../assets/icons/nav/jr-full.svg';
 import iconDarkMode from '../assets/icons/functions/dark-mode.svg';
 
 interface Props {
@@ -125,12 +125,14 @@ const isHome = Astro.url.pathname === '/';
 	}
 
 	/* The JR mark, filled with whatever accent is active — a CSS mask
-	   over a solid fill, so it repaints with the token automatically. */
+	   over a solid fill, so it repaints with the token automatically.
+	   The full mark is wide (559 × 259), so its width follows from the
+	   24px height. (The favicon is its own file in public/.) */
 	.site-nav__icon {
 		display: block;
 		flex-shrink: 0;
-		width: 24px;
 		height: 24px;
+		aspect-ratio: 559 / 259;
 		background-color: var(--color-accent);
 		-webkit-mask: var(--icon-src) center / contain no-repeat;
 		mask: var(--icon-src) center / contain no-repeat;
