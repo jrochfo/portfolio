@@ -193,7 +193,14 @@ const items: Item[] = [
 			position: relative;
 			width: 100%;
 			aspect-ratio: 5 / 4;
-			margin-block-start: var(--space-l);
+			/* Nudged down a step as a whole: the tilted top card pokes
+			   above the stack box, crowding the subhead, while the bottom
+			   sat a long way off the close band. The negative bottom
+			   margin gives back what the top takes, so the section keeps
+			   its height. (Phones: --space-xl and --space-l are both 64px
+			   there, so no shift.) */
+			margin-block-start: var(--space-xl);
+			margin-block-end: calc(var(--space-l) - var(--space-xl));
 		}
 
 		.otc-caption-mobile {
