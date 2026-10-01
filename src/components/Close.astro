@@ -4,7 +4,7 @@
 <section class="close section--bleed">
 	<div class="container close__inner">
 		<div class="close__text">
-			<h2 class="type-h1 close__headline" data-reveal>That’s the tour.</h2>
+			<h2 class="type-display close__headline" data-reveal>That’s the tour.</h2>
 			<p class="type-h3 close__subhead" data-reveal>If it looks like a fit, I’d love to talk.</p>
 		</div>
 		<div class="close__actions" data-reveal>
@@ -22,8 +22,7 @@
 </section>
 
 <style>
-	/* A quiet sign-off rather than a second hero: a content-height
-	   full-bleed band (the same band system as Testimonials and the
+	/* A content-height full-bleed band (the same band system as Testimonials and the
 	   footer), and the one place the accent fills a whole surface. Text
 	   on it is the page color, which reads in both modes — cream on the
 	   deep green, near-black on the dark-mode butter. */
@@ -36,10 +35,13 @@
 		color: var(--on-accent);
 	}
 
+	/* Centered and display-size, echoing the hero, so the page ends
+	   the way it opened. */
 	.close__inner {
 		display: flex;
+		flex-direction: column;
 		align-items: center;
-		justify-content: space-between;
+		text-align: center;
 		gap: var(--space-m);
 	}
 
@@ -48,14 +50,14 @@
 	}
 
 	.close__subhead {
-		margin-block-start: var(--space-2xs);
+		margin-block-start: var(--space-s);
 	}
 
 	.close__actions {
 		display: flex;
 		flex-wrap: wrap;
+		justify-content: center;
 		gap: var(--space-xs);
-		flex-shrink: 0;
 	}
 
 	/* The buttons turn over to sit on the accent: primary is a page-color
@@ -88,10 +90,4 @@
 		outline-offset: 2px;
 	}
 
-	@media (max-width: 768px) {
-		.close__inner {
-			flex-direction: column;
-			align-items: flex-start;
-		}
-	}
 </style>
