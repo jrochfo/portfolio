@@ -40,30 +40,25 @@ import jrMark from '../assets/icons/nav/jr-full.svg';
 		isolation: isolate;
 	}
 
-	/* The JR mark cut out of the band like a stencil: page-colored, as
-	   tall as the band, flush to the viewport's right edge. Its solid
-	   block (the right 68.7% of the mark — the thin rays fanning off its
-	   bottom-left corner are the rest) must clear the text, so the box
-	   is only ever as wide as keeps that block at least --space-m past
-	   the headline's end; mask-size: contain then shrinks the mark,
-	   anchored bottom-right, whenever that's narrower than full height
-	   allows. The headline's width is estimated from the display size
-	   ("That’s the tour." runs ~6.6em) — revisit if the copy changes. */
+	/* The JR mark cut out of the band like a stencil: page-colored and
+	   exactly as tall as the band, so it runs into the page above and
+	   the footer edge below. Its width follows from that height. From a
+	   1500px window up it sits flush right; narrower than that it slides
+	   off the right edge pixel for pixel instead of shrinking (its left
+	   edge holds still, clear of the text), until it's dropped at 800px.
+	   Overshoots the band by a hair top and bottom, and the right edge
+	   by 2px: the SVG's shape stops just short of its own viewBox edges,
+	   which otherwise leaves green slivers. */
 	.close__mark {
-		--text-end: calc(
-			max(var(--container-margin), (100vw - var(--container-max)) / 2 + var(--container-margin))
-				+ 6.8 * var(--type-display-size)
-		);
 		position: absolute;
 		z-index: 0;
-		inset-block: 0;
-		/* The SVG's shape stops ~0.4 units short of its own right edge —
-		   a hairline of green at this scale; pushed past the edge. */
-		right: -2px;
-		width: calc((100vw - var(--text-end) - var(--space-m)) / 0.687);
+		top: -1px;
+		bottom: -2px;
+		right: calc(-2px - max(0px, 1500px - 100vw));
+		aspect-ratio: 559 / 259;
 		background-color: var(--on-accent);
-		-webkit-mask: var(--mark-src) right bottom / contain no-repeat;
-		mask: var(--mark-src) right bottom / contain no-repeat;
+		-webkit-mask: var(--mark-src) center / 100% 100% no-repeat;
+		mask: var(--mark-src) center / 100% 100% no-repeat;
 		pointer-events: none;
 	}
 
@@ -122,8 +117,8 @@ import jrMark from '../assets/icons/nav/jr-full.svg';
 		outline-offset: 2px;
 	}
 
-	/* No free side on a phone — the text takes the full width. */
-	@media (max-width: 768px) {
+	/* By here it's mostly off-screen and crowding the text. */
+	@media (max-width: 800px) {
 		.close__mark {
 			display: none;
 		}
