@@ -1,22 +1,20 @@
 ---
-// Temporary: auditions calmer dark-mode title greens against the
-// current lime. Each candidate keeps roughly the light-mode title's
-// hue and drops the saturation (the lime is more saturated than its
-// light sibling, which is what makes it read neon). Only dark mode is
-// affected; light mode keeps its title.
+// Temporary: auditions a calmer dark-mode title green in place of the
+// lime (#a6e04a), which read neon. Only dark mode is affected; light
+// mode keeps its title.
 //
 // Hidden unless asked for, so it can ride along on the live site: it
 // shows in dev, or with ?titles in the URL (remembered after that;
 // ?titles=off forgets it).
+// Deep fern (oklch 0.72 L, hue 138) stepping its saturation (chroma)
+// up 0.02 at a time, from 0.11 to 0.21 — all inside sRGB.
 const options = [
-	{ key: 'current', name: 'Current lime', hex: '#a6e04a' },
-	{ key: 'sage', name: 'Sage', hex: '#afc798' },
-	{ key: 'moss', name: 'Moss', hex: '#a0c582' },
-	{ key: 'olive', name: 'Olive-gold', hex: '#bbc679' },
-	{ key: 'fern', name: 'Deep fern', hex: '#82b570' },
-	// The two above with the saturation up a hair (chroma +0.02).
-	{ key: 'olive-plus', name: 'Olive-gold +', hex: '#bbc769' },
-	{ key: 'fern-plus', name: 'Deep fern +', hex: '#7bb865' },
+	{ key: 'fern-11', name: 'Deep fern · .11', hex: '#82b570' },
+	{ key: 'fern-13', name: 'Deep fern · .13', hex: '#7bb865' },
+	{ key: 'fern-15', name: 'Deep fern · .15', hex: '#73ba59' },
+	{ key: 'fern-17', name: 'Deep fern · .17', hex: '#6abd4b' },
+	{ key: 'fern-19', name: 'Deep fern · .19', hex: '#61bf3a' },
+	{ key: 'fern-21', name: 'Deep fern · .21', hex: '#57c122' },
 ];
 const dev = import.meta.env.DEV;
 ---
@@ -147,7 +145,7 @@ const dev = import.meta.env.DEV;
 
 			function apply(key: string) {
 				const o = options.find((x) => x.key === key) ?? options[0];
-				style.textContent = o.key === 'current' ? '' : `:root[data-theme='dark'] { --color-title: ${o.hex}; }`;
+				style.textContent = `:root[data-theme='dark'] { --color-title: ${o.hex}; }`;
 				rows.forEach((r) => r.setAttribute('aria-pressed', String(r.dataset.key === o.key)));
 				try {
 					localStorage.setItem(PICK, o.key);
@@ -167,9 +165,9 @@ const dev = import.meta.env.DEV;
 			});
 			window.addEventListener('theme-change', syncMode);
 
-			let saved = 'current';
+			let saved = options[0].key;
 			try {
-				saved = localStorage.getItem(PICK) ?? 'current';
+				saved = localStorage.getItem(PICK) ?? options[0].key;
 			} catch {}
 			apply(saved);
 			syncMode();
