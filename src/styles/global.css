@@ -389,6 +389,12 @@ main {
 	margin-block-end: var(--space-2xl);
 }
 
+/* …except when the page ends on the accent close band, which sits
+   right on the footer, the two reading as one ending. */
+main:has(> .close:last-child) {
+	margin-block-end: 0;
+}
+
 .section--bleed {
 	padding-block: var(--space-xl);
 }
