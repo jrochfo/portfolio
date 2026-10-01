@@ -1,10 +1,12 @@
 ---
 // A fast flip through twenty Google Slides pages from the template and
 // the decks built on it. Hovering (or tapping, on touch) pauses on the
-// current slide and shows which deck it came from; arrow keys step
-// through while paused. Under reduced motion it never autoplays — it
+// current slide and shows which deck it came from, plus previous/next
+// buttons in the corner; arrow keys step through too. Under reduced motion it never autoplays — it
 // rests on the first slide and steps only when asked.
 import { getImage } from 'astro:assets';
+import iconBack from '../assets/icons/functions/arrow-back.svg';
+import iconForward from '../assets/icons/functions/arrow-forward.svg';
 
 const slideModules = import.meta.glob<{ default: ImageMetadata }>(
 	'../assets/work/so-rebrand/systems/systems-7/*.svg',
@@ -74,6 +76,14 @@ const pad = (n: number) => String(n).padStart(2, '0');
 		<span class="deck-scrub__label-sep" aria-hidden="true">·</span>
 		<span data-deck-name>{DECKS[0]}</span>
 	</p>
+	<div class="deck-scrub__nav">
+		<button type="button" class="deck-scrub__step" data-step="-1" aria-label="Previous slide">
+			<span class="deck-scrub__icon" style={`--icon-src: url(${iconBack.src})`} aria-hidden="true" />
+		</button>
+		<button type="button" class="deck-scrub__step" data-step="1" aria-label="Next slide">
+			<span class="deck-scrub__icon" style={`--icon-src: url(${iconForward.src})`} aria-hidden="true" />
+		</button>
+	</div>
 </div>
 
 <style>
@@ -106,16 +116,27 @@ const pad = (n: number) => String(n).padStart(2, '0');
 		display: none;
 	}
 
+	/* The label and the step buttons share one height — a caption line
+	   plus the label's own vertical padding — so the buttons are circles
+	   exactly as tall as the label pill beside them. */
+	.deck-scrub {
+		--control-pad-y: var(--space-2xs);
+		--control-size: calc(var(--type-caption-size) * var(--type-caption-line-height) + 2 * var(--control-pad-y));
+		--control-gap: var(--space-2xs);
+		--control-inset: var(--space-xs);
+	}
+
 	.deck-scrub__label {
 		position: absolute;
-		left: var(--space-xs);
-		bottom: var(--space-xs);
+		left: var(--control-inset);
+		bottom: var(--control-inset);
 		margin: 0;
 		display: flex;
 		gap: var(--space-2xs);
-		max-width: calc(100% - 2 * var(--space-xs));
-		padding: var(--space-2xs) var(--space-xs);
-		border-radius: var(--radius-well);
+		/* Leaves room for the two buttons on the right. */
+		max-width: calc(100% - 2 * var(--control-inset) - 2 * var(--control-size) - 2 * var(--control-gap));
+		padding: var(--control-pad-y) var(--space-xs);
+		border-radius: var(--radius-pill);
 		background: var(--color-ink);
 		color: var(--color-bg);
 		font-size: var(--type-caption-size);
@@ -137,25 +158,84 @@ const pad = (n: number) => String(n).padStart(2, '0');
 		text-overflow: ellipsis;
 	}
 
-	.deck-scrub.is-paused .deck-scrub__label {
+	.deck-scrub__nav {
+		position: absolute;
+		right: var(--control-inset);
+		bottom: var(--control-inset);
+		display: flex;
+		gap: var(--control-gap);
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.2s ease;
+	}
+
+	/* Same dark fill as the label, so the corner reads as one set. */
+	.deck-scrub__step {
+		display: grid;
+		place-items: center;
+		width: var(--control-size);
+		height: var(--control-size);
+		padding: 0;
+		border-radius: 50%;
+		background: var(--color-ink);
+		color: var(--color-bg);
+		cursor: pointer;
+		transition: background-color 0.15s ease;
+	}
+
+	.deck-scrub__step:hover,
+	.deck-scrub__step:focus-visible {
+		background: color-mix(in oklch, var(--color-ink), var(--color-bg) 22%);
+	}
+
+	.deck-scrub__step:focus-visible {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 2px;
+	}
+
+	.deck-scrub__icon {
+		display: block;
+		width: 16px;
+		height: 16px;
+		background-color: currentColor;
+		-webkit-mask: var(--icon-src) center / contain no-repeat;
+		mask: var(--icon-src) center / contain no-repeat;
+	}
+
+	.deck-scrub.is-paused .deck-scrub__label,
+	.deck-scrub.is-paused .deck-scrub__nav,
+	.deck-scrub:has(.deck-scrub__step:focus-visible) .deck-scrub__nav {
 		opacity: 1;
+		pointer-events: auto;
 	}
 
 	@media (max-width: 768px) {
+		.deck-scrub {
+			--control-pad-y: 4px;
+			--control-size: calc(11px * var(--type-caption-line-height) + 2 * var(--control-pad-y));
+			--control-gap: 6px;
+			--control-inset: var(--space-2xs);
+		}
+
 		.deck-scrub__label {
-			left: var(--space-2xs);
-			bottom: var(--space-2xs);
-			max-width: calc(100% - 2 * var(--space-2xs));
-			padding: 4px var(--space-2xs);
-			border-radius: 8px;
+			padding: var(--control-pad-y) var(--space-2xs);
 			font-size: 11px;
 			gap: 6px;
 		}
+
+		.deck-scrub__icon {
+			width: 13px;
+			height: 13px;
+		}
 	}
 
+	/* No autoplay here, so the label and buttons just stay up — the
+	   buttons are how you move through it. */
 	@media (prefers-reduced-motion: reduce) {
-		.deck-scrub__label {
+		.deck-scrub__label,
+		.deck-scrub__nav {
 			opacity: 1;
+			pointer-events: auto;
 			transition: none;
 		}
 	}
@@ -243,7 +323,20 @@ const pad = (n: number) => String(n).padStart(2, '0');
 			}
 		});
 
+		// Previous/next. A mouse is already paused by hovering, so leaving
+		// still resumes the flip; a tap pauses it until tapped again.
+		root.querySelectorAll<HTMLButtonElement>('[data-step]').forEach((button) => {
+			button.addEventListener('click', (e) => {
+				e.stopPropagation();
+				if (!ready) return;
+				show(index + Number(button.dataset.step));
+				if ((e as PointerEvent).pointerType !== 'mouse') userPaused = true;
+				sync();
+			});
+		});
+
 		root.addEventListener('keydown', (e) => {
+			if (e.target !== root) return;
 			if (e.key === ' ' || e.key === 'Enter') {
 				e.preventDefault();
 				if (reduceMotion) {
