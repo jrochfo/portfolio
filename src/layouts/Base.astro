@@ -7,6 +7,7 @@ import FontVariationTuner from '../components/FontVariationTuner.astro';
 import ColorExploration from '../components/_archive/ColorExploration.astro';
 import ColorFavorites from '../components/ColorFavorites.astro';
 import PaletteAudition from '../components/PaletteAudition.astro';
+import TitleAudition from '../components/TitleAudition.astro';
 
 interface Props {
 	title?: string;
@@ -45,6 +46,11 @@ const COLOR_FAVORITES_ENABLED = false;
 // Light/dark palette duos, applied live — the exploration that picked
 // Butter Ceremonial (now the defaults in global.css). Dev-only; off.
 const PALETTE_AUDITION_ENABLED = false;
+
+// Calmer dark-mode title greens vs the current lime. Unlike the panels
+// above it ships to the live site, but stays hidden there unless the
+// URL has ?titles (see the component).
+const TITLE_AUDITION_ENABLED = true;
 ---
 
 <html lang="en">
@@ -98,6 +104,7 @@ const PALETTE_AUDITION_ENABLED = false;
 		{COLOR_EXPLORATION_ENABLED && import.meta.env.DEV && <ColorExploration />}
 		{COLOR_FAVORITES_ENABLED && import.meta.env.DEV && <ColorFavorites />}
 		{PALETTE_AUDITION_ENABLED && import.meta.env.DEV && <PaletteAudition />}
+		{TITLE_AUDITION_ENABLED && <TitleAudition />}
 
 		<script>
 			// Reveals each [data-reveal] element the first time it scrolls
