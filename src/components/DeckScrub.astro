@@ -2,7 +2,9 @@
 // A fast flip through twenty Google Slides pages from the template and
 // the decks built on it. Hovering (or tapping, on touch) pauses on the
 // current slide and shows which deck it came from, plus previous/next
-// buttons in the corner; arrow keys step through too. Under reduced motion it never autoplays — it
+// buttons in the corner; arrow keys step through too. The automatic
+// flip is a hard cut, like thumbing through a pile of decks; stepping
+// by hand gets a quick crossfade instead. Under reduced motion it never autoplays — it
 // rests on the first slide and steps only when asked.
 import { getImage } from 'astro:assets';
 import iconBack from '../assets/icons/functions/arrow-back.svg';
@@ -128,6 +130,8 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
 	.deck-scrub__label {
 		position: absolute;
+		/* Above a slide mid-crossfade (which sits at z-index 1). */
+		z-index: 2;
 		left: var(--control-inset);
 		bottom: var(--control-inset);
 		margin: 0;
@@ -160,6 +164,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
 	.deck-scrub__nav {
 		position: absolute;
+		z-index: 2;
 		right: var(--control-inset);
 		bottom: var(--control-inset);
 		display: flex;
@@ -258,10 +263,41 @@ const pad = (n: number) => String(n).padStart(2, '0');
 		let userPaused = false;
 		let timer: number | undefined;
 
-		function show(next: number) {
-			slides[index].hidden = true;
+		// A hand-stepped slide fades in over the one it replaces, which
+		// stays up underneath until the fade is done. Same length as the
+		// site's other small fades. A step during a fade cuts the old one
+		// short rather than queueing.
+		const FADE_MS = 150;
+		let leaving: HTMLImageElement | null = null;
+		let leaveTimer: number | undefined;
+
+		function show(next: number, fade = false) {
+			const prev = slides[index];
 			index = (next + slides.length) % slides.length;
-			slides[index].hidden = false;
+			const current = slides[index];
+			window.clearTimeout(leaveTimer);
+			if (leaving && leaving !== current) leaving.hidden = true;
+			leaving = null;
+			prev.style.zIndex = '';
+			current.hidden = false;
+			current.style.transition = 'none';
+			if (fade && !reduceMotion && prev !== current) {
+				current.style.opacity = '0';
+				current.style.zIndex = '1';
+				current.getBoundingClientRect(); // commit opacity 0 before fading
+				current.style.transition = `opacity ${FADE_MS}ms ease`;
+				current.style.opacity = '1';
+				leaving = prev;
+				leaveTimer = window.setTimeout(() => {
+					if (leaving) leaving.hidden = true;
+					leaving = null;
+					current.style.zIndex = '';
+				}, FADE_MS);
+			} else {
+				current.style.opacity = '';
+				current.style.zIndex = '';
+				if (prev !== current) prev.hidden = true;
+			}
 			count.textContent = `${pad(index + 1)} / ${pad(slides.length)}`;
 			deckName.textContent = slides[index].dataset.deck ?? '';
 		}
@@ -329,7 +365,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 			button.addEventListener('click', (e) => {
 				e.stopPropagation();
 				if (!ready) return;
-				show(index + Number(button.dataset.step));
+				show(index + Number(button.dataset.step), true);
 				if ((e as PointerEvent).pointerType !== 'mouse') userPaused = true;
 				sync();
 			});
@@ -349,7 +385,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 				if (!ready) return;
 				e.preventDefault();
 				userPaused = true;
-				show(index + (e.key === 'ArrowRight' ? 1 : -1));
+				show(index + (e.key === 'ArrowRight' ? 1 : -1), true);
 				sync();
 			}
 		});
