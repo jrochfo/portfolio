@@ -137,6 +137,13 @@ const isHome = Astro.url.pathname === '/';
 		-webkit-mask: var(--icon-src) center / contain no-repeat;
 		mask: var(--icon-src) center / contain no-repeat;
 	}
+
+	/* The name alone on the narrowest phones, so the bar doesn't crowd. */
+	@media (max-width: 429px) {
+		.site-nav__icon {
+			display: none;
+		}
+	}
 </style>
 
 <script>
