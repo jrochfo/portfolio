@@ -24,9 +24,9 @@ interface ImageMedia {
 	alt: string;
 }
 
-// ~2x the well's real desktop width (~930px), for retina.
+// ~2x the well's real desktop width (~1120px), for retina.
 async function image(src: ImageMetadata, alt: string): Promise<ImageMedia> {
-	const resolved = await getImage({ src, format: 'webp', width: 2000, quality: 85 });
+	const resolved = await getImage({ src, format: 'webp', width: 2240, quality: 85 });
 	return { type: 'image', src: resolved.src, alt };
 }
 
@@ -125,7 +125,7 @@ const sections = [
 			var(--container-margin),
 			calc((100vw - var(--container-max)) / 2 + var(--container-margin))
 		);
-		--card-width: calc(0.85 * (min(100vw, var(--container-max)) - 2 * var(--container-margin)));
+		--card-width: calc(0.9 * (min(100vw, var(--container-max)) - 2 * var(--container-margin)));
 
 		display: flex;
 		gap: var(--space-s);
