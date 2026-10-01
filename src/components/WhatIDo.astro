@@ -126,8 +126,24 @@ const sections = [
 			calc((100vw - var(--container-max)) / 2 + var(--container-margin))
 		);
 		--strip-bleed-top: 16px;
-		--strip-bleed-bottom: 48px;
-		--card-width: calc(0.9 * (min(100vw, var(--container-max)) - 2 * var(--container-margin)));
+		--strip-bleed-bottom: 72px;
+		/* How far the lowered side cards hang below the front card's
+		   bottom edge (the script's drop, less what their shrink takes
+		   back) — the section below moves down by this much to clear them. */
+		--strip-drop-room: 40px;
+		/* Full container width on wide screens, easing down to 90% as the
+		   window narrows — no breakpoint jump, the same idea as the
+		   workshop board's min() bleed in Rebrand. The middle term is a
+		   straight line through 100% of the container at a 1400px window
+		   and 90% at 1024px (878.4px, i.e. 0.9 × (1024 − 48)): slope
+		   (1272 − 878.4) / (1400 − 1024) ≈ 1.0468. clamp() holds it at
+		   90% below 1024 and at 100% above 1400. */
+		--container-inner: calc(min(100vw, var(--container-max)) - 2 * var(--container-margin));
+		--card-width: clamp(
+			0.9 * var(--container-inner),
+			1272px - 1.0468 * (1400px - 100vw),
+			var(--container-inner)
+		);
 
 		/* Positioned so it's the cards' offsetParent — the carousel then
 		   snaps from their layout positions, unaffected by the depth
@@ -152,7 +168,7 @@ const sections = [
 		   lowered side cards — and pulls its neighbors back in by the
 		   same amount so the section's spacing doesn't change. */
 		padding-block: var(--strip-bleed-top) var(--strip-bleed-bottom);
-		margin-block: calc(var(--space-m) - var(--strip-bleed-top)) calc(-1 * var(--strip-bleed-bottom));
+		margin-block: calc(var(--space-m) - var(--strip-bleed-top)) calc(var(--strip-drop-room) - var(--strip-bleed-bottom));
 
 		/* Hide the scrollbar; the strip is still scrollable/draggable. */
 		scrollbar-width: none;
@@ -445,17 +461,10 @@ const sections = [
 		}
 	}
 
-	/* Wide screens: the cards fill the container, since there's
-	   already plenty of the next card showing past it to say "scroll". */
-	@media (min-width: 1400px) {
-		.card-strip {
-			--card-width: calc(min(100vw, var(--container-max)) - 2 * var(--container-margin));
-		}
-	}
-
 	@media (max-width: 768px) {
 		.card-strip {
 			--card-width: 80vw;
+			--strip-drop-room: 16px;
 		}
 
 		.card__well {
@@ -638,7 +647,7 @@ const sections = [
 			const gap = parseFloat(getComputedStyle(strip).columnGap) || 0;
 			const pitch = w + gap;
 			const overlap = w < 600 ? 16 : 36;
-			const drop = w < 600 ? 14 : 28;
+			const drop = w < 600 ? 32 : 72;
 			// How far each step in the stack is pulled in: the gap, the
 			// width lost to shrinking, then the overlap. Next to the front
 			// card only the back one has shrunk (half its loss faces the
