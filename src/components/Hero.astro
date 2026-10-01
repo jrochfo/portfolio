@@ -326,12 +326,14 @@ const ring: RingItem[] = [
 		   the label and the first row —
 		   the hero runs the other two rows (and its bottom padding)
 		   longer than the screen, so they sit below the fold instead of
-		   taking height from the ring. */
+		   taking height from the ring. On a screen tall enough that the
+		   ring can't use the height, the script trims it (--hero-trim). */
 		.hero {
 			--logo-h: min(44px, calc((100vw - 2 * var(--container-margin) - var(--space-2xs)) / 2 * 0.9 / 3.75));
 			--logo-row-gap: var(--space-s);
 			min-height: calc(
-				100svh - var(--nav-height, 0px) + 2 * (var(--logo-h) + var(--logo-row-gap)) + var(--space-m) - 16px
+				100svh - var(--nav-height, 0px) + 2 * (var(--logo-h) + var(--logo-row-gap)) + var(--space-m) - 16px -
+					var(--hero-trim, 0px)
 			);
 		}
 
@@ -403,6 +405,9 @@ const ring: RingItem[] = [
 			return { top: r.top - dy, bottom: r.bottom - dy, height: r.height };
 		}
 
+		const hero = stage?.closest<HTMLElement>('.hero');
+		let trim = 0;
+
 		function measure() {
 			if (!stage || !items.length) return;
 			const w = stage.clientWidth;
@@ -443,6 +448,25 @@ const ring: RingItem[] = [
 			// runs off the sides of a phone screen.
 			if (small) itemH = Math.min(itemH, (w * 0.86 * 9) / 16 / frontScale);
 			stage.style.setProperty('--item-h', `${itemH.toFixed(1)}px`);
+			// Phones pin the first logo row to the bottom of the screen
+			// (see the CSS) — but once the front item hits that width cap,
+			// more screen height would just be empty space around the
+			// ring (a tall, narrow window). Trim the hero by the gap the
+			// capped item doesn't need, so the logos sit right under the
+			// ring instead. Accumulates on the current trim, so the
+			// re-measure the trim itself triggers settles on the same value.
+			if (small && hero) {
+				// From the capped size, not the current one: measured from
+				// the current item, the trim and the item would shrink
+				// each other all the way down.
+				const front = (w * 0.86 * 9) / 16;
+				let needed = front + 32;
+				for (let i = 0; i < 8; i++) needed = front + Math.max(20, needed * 0.08) + Math.max(12, needed * 0.05);
+				trim = Math.max(0, trim + gap - needed);
+			} else {
+				trim = 0;
+			}
+			hero?.style.setProperty('--hero-trim', `${trim.toFixed(1)}px`);
 			const backY = headline.top + headline.height / 2 - mid;
 			const frontY = (itemTop + itemBottom) / 2 - mid;
 			tilt = Math.max(0, (frontY - backY) / (frontScale + backScale));
