@@ -176,6 +176,8 @@ ol {
 	--color-logo: color-mix(in oklch, var(--color-ink), var(--color-bg) 50%); /* client
 	   logos (hero row, testimonial cards) — muted body text in light
 	   mode, so the hero isn't all green; muted accent in dark (below) */
+	--color-logo-label: var(--color-ink-muted); /* the hero logo row's
+	   label — same source as the logos, a step stronger, in both modes */
 
 	--color-scrim: rgba(0, 0, 0, 0.55); /* dark overlay for icon/text
 	   legibility over arbitrary video content — deliberately NOT tied
@@ -253,6 +255,7 @@ ol {
 	--color-accent: #f0d08a;
 	--color-tint: #fbe6b8;
 	--color-logo: color-mix(in oklch, var(--color-accent), var(--color-bg) 40%);
+	--color-logo-label: color-mix(in oklch, var(--color-accent), var(--color-bg) 28%);
 }
 
 /* Soft reveal: marked elements fade in with a small upward drift, the
