@@ -391,7 +391,14 @@ const ring: RingItem[] = [
 			small = w < 768;
 			// Phones: a ring about as wide as the screen, so the focused
 			// item's neighbors just peek in from the edges.
-			radius = small ? w * 0.95 : Math.max(w * 0.46, 340);
+			// Desktop: 46% of the width at full container width (1320px+),
+			// widening steadily to 80% at the phone breakpoint. The items
+			// don't shrink with the window (their size comes from the
+			// vertical space), so a fixed fraction crammed them together
+			// and pulled the sides in under the hero copy as it narrowed;
+			// this keeps their spacing close to the full-width look.
+			const widen = Math.min(1, Math.max(0, (1320 - w) / (1320 - 768)));
+			radius = small ? w * 0.95 : Math.max(w * (0.46 + 0.34 * widen), 340);
 			perspective = radius * 4;
 			const frontScale = perspective / (perspective - radius);
 			const backScale = perspective / (perspective + radius);
