@@ -629,14 +629,19 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 		margin-block-start: var(--space-s);
 	}
 
-	/* Description copy runs at 75% of the container, not the full
-	   width, for a comfortable line length now that the container is
-	   wider. Phones keep the full width. */
+	/* Comfortable line lengths now that the container is wider. The
+	   intro (larger type) runs at 75% of the container on desktop; the
+	   act descriptions are capped by line length instead — about 80
+	   characters a line at any window size (ch is the width of a "0",
+	   noticeably wider than this face's average letter, hence 62ch). */
 	@media (min-width: 769px) {
-		.rebrand__description,
-		.act__desc {
+		.rebrand__description {
 			max-width: 75%;
 		}
+	}
+
+	.act__desc {
+		max-width: 62ch;
 	}
 
 	.act__gallery {
