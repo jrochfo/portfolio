@@ -127,6 +127,12 @@ const sections = [
 		);
 		--card-width: calc(0.9 * (min(100vw, var(--container-max)) - 2 * var(--container-margin)));
 
+		/* Positioned so it's the cards' offsetParent — the carousel then
+		   snaps from their layout positions, unaffected by the depth
+		   transforms below. */
+		position: relative;
+		/* Keeps the cards' stacking z-indexes in here, under the nav. */
+		isolation: isolate;
 		display: flex;
 		gap: var(--space-s);
 		overflow-x: auto;
@@ -161,9 +167,12 @@ const sections = [
 		margin-block-start: var(--space-m);
 	}
 
+	/* Each card's depth transform (scale + tuck behind the active one)
+	   is set by the script from the scroll position. */
 	.card {
 		flex: 0 0 auto;
 		width: var(--card-width);
+		will-change: transform;
 		background: var(--color-panel);
 		border-radius: var(--radius-card);
 		padding: var(--space-xs);
@@ -584,6 +593,51 @@ const sections = [
 		tabs.forEach((tab, i) => {
 			tab.addEventListener('click', () => carousel.goTo(i));
 		});
+
+		wireDepth(strip, cards);
+	}
+
+	// Depth stack, echoing the hero ring: the card at the snap point is
+	// full size and in front; the others shrink a little and slide in
+	// to tuck OVERLAP px behind the edge of the card in front of them.
+	// Driven straight off the scroll position, so cards hand off as you
+	// drag — the visitor's own motion, so it runs under reduced motion
+	// too.
+	function wireDepth(strip: HTMLElement, cards: HTMLElement[]) {
+		const BACK_SCALE = 0.92;
+		let frame = 0;
+
+		function update() {
+			frame = 0;
+			const w = cards[0].offsetWidth;
+			const gap = parseFloat(getComputedStyle(strip).columnGap) || 0;
+			const pitch = w + gap;
+			const overlap = w < 600 ? 16 : 36;
+			// How far each step in the stack is pulled in: the gap, the
+			// width lost to shrinking, then the overlap. Next to the front
+			// card only the back one has shrunk (half its loss faces the
+			// front card); between two back cards, both have.
+			const shrink = w * (1 - BACK_SCALE);
+			const firstPull = gap + shrink / 2 + overlap;
+			const nextPull = gap + shrink + overlap;
+			const inset = currentInset();
+			cards.forEach((card) => {
+				// Signed distance from the snap point, in cards.
+				const d = (card.offsetLeft - strip.scrollLeft - inset) / pitch;
+				const t = Math.min(1, Math.abs(d));
+				const scale = 1 - (1 - BACK_SCALE) * t;
+				const shift = Math.sign(d) * (firstPull * t + nextPull * Math.max(0, Math.abs(d) - 1));
+				card.style.transform = `translateX(${(-shift).toFixed(1)}px) scale(${scale.toFixed(4)})`;
+				card.style.zIndex = String(100 - Math.round(Math.abs(d) * 10));
+			});
+		}
+
+		const schedule = () => {
+			if (!frame) frame = requestAnimationFrame(update);
+		};
+		strip.addEventListener('scroll', schedule, { passive: true });
+		new ResizeObserver(schedule).observe(strip);
+		update();
 	}
 </script>
 </section>

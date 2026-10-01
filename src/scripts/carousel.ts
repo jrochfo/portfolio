@@ -117,10 +117,19 @@ export function createCarousel(options: CarouselOptions): CarouselHandle {
 		onActiveChange?.(realIndex);
 	}
 
+	// Where each slide's layout box sits relative to the snap point.
+	// When the strip is the slides' offsetParent (it's positioned), this
+	// comes from offsetLeft, which ignores transforms — so a consumer can
+	// scale/shift slides for effect (What I Do's depth stack) without
+	// throwing off snapping. Otherwise, the on-screen box.
 	function slideOffsets() {
-		const stripLeft = strip.getBoundingClientRect().left;
 		const insetValue = inset();
-		return allSlides.map((slide) => slide.getBoundingClientRect().left - stripLeft - insetValue);
+		const stripLeft = strip.getBoundingClientRect().left;
+		return allSlides.map((slide) =>
+			slide.offsetParent === strip
+				? slide.offsetLeft - strip.scrollLeft + strip.clientLeft - insetValue
+				: slide.getBoundingClientRect().left - stripLeft - insetValue,
+		);
 	}
 
 	function nearestDomPos(offsets: number[]) {
