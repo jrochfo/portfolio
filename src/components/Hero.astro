@@ -134,7 +134,7 @@ const ring: RingItem[] = [
 					class="hero__logo"
 					role="img"
 					aria-label={logo.alt}
-					style={`--logo-src: url(${logo.src.src}); aspect-ratio: ${logo.src.width} / ${logo.src.height}; height: ${LOGO_HEIGHT}px;`}
+					style={`--logo-src: url(${logo.src.src}); aspect-ratio: ${logo.src.width} / ${logo.src.height}; --logo-max: ${LOGO_HEIGHT}px;`}
 				/>
 			))}
 		</div>
@@ -305,7 +305,14 @@ const ring: RingItem[] = [
 	   the palette's logo color in either mode regardless of the file's
 	   own colors (Pega's lighter wing is partial opacity in its SVG, so
 	   it stays lighter through the mask). */
+	/* Full height while the row fits on one line (~1054px windows and
+	   up); narrower than that, the logos scale down together instead of
+	   wrapping, since a second row would eat the space the ring's front
+	   item needs. The row is ~18.1px wide per px of logo height, plus
+	   five 20px gaps; the 175px is those gaps, the container margins,
+	   and a scrollbar's worth of slack. */
 	.hero__logo {
+		height: min(var(--logo-max), calc((100vw - 175px) / 18.1));
 		display: block;
 		background-color: var(--color-logo);
 		-webkit-mask: var(--logo-src) center / contain no-repeat;
@@ -313,7 +320,22 @@ const ring: RingItem[] = [
 	}
 
 	@media (max-width: 768px) {
-		/* The stage just takes whatever height the logo row leaves, and
+		/* Phone logos are two across, three rows, sized to the column:
+		   Stack Overflow, the widest (3.75:1), fills ~90% of its column
+		   (capped at 44px for tablets). The first screen ends 16px past
+		   the label and the first row —
+		   the hero runs the other two rows (and its bottom padding)
+		   longer than the screen, so they sit below the fold instead of
+		   taking height from the ring. */
+		.hero {
+			--logo-h: min(44px, calc((100vw - 2 * var(--container-margin) - var(--space-2xs)) / 2 * 0.9 / 3.75));
+			--logo-row-gap: var(--space-s);
+			min-height: calc(
+				100svh - var(--nav-height, 0px) + 2 * (var(--logo-h) + var(--logo-row-gap)) + var(--space-m) - 16px
+			);
+		}
+
+		/* The stage just takes whatever height the logo rows leave, and
 		   the ring's focused item is sized by the script to fill the gap
 		   between the buttons and the logos. */
 		.hero__stage {
@@ -324,17 +346,16 @@ const ring: RingItem[] = [
 
 		.hero__logos {
 			display: grid;
-			/* Three across, two rows — half the height of a two-column
-			   grid, which leaves the ring room to breathe. */
-			grid-template-columns: repeat(3, 1fr);
+			/* Two across, three rows. */
+			grid-template-columns: repeat(2, 1fr);
 			justify-items: center;
 			align-items: center;
-			row-gap: var(--space-xs);
+			row-gap: var(--logo-row-gap);
 			column-gap: var(--space-2xs);
 		}
 
 		.hero__logo {
-			height: 24px !important;
+			height: var(--logo-h);
 			max-width: 100%;
 		}
 	}
@@ -388,7 +409,9 @@ const ring: RingItem[] = [
 			const h = stage.clientHeight;
 			// Just under half the viewport: the sides graze the screen edges
 			// and the items crowd together into a dense ring.
-			small = w < 768;
+			// The same test as the CSS breakpoint (the stage's width leaves
+			// out the scrollbar, so w < 768 disagreed with it just above).
+			small = window.matchMedia('(max-width: 768px)').matches;
 			// Phones: a ring about as wide as the screen, so the focused
 			// item's neighbors just peek in from the edges.
 			// Desktop: 46% of the width at full container width (1320px+),
