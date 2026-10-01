@@ -13,6 +13,7 @@ import rolloutPoster from '../assets/work/so-rebrand/posters/rollout-3-1-poster.
 import trustLayerPoster from '../assets/work/so-rebrand/posters/rollout-3-2-poster.jpg';
 import guidelinesPoster from '../assets/work/so-rebrand/posters/guidelines-scroll-poster.jpg';
 import freedPoster from '../assets/work/what-i-do/posters/motion-freed-poster.jpg';
+import tulipPoster from '../assets/work/what-i-do/posters/systems-tulip-poster.jpg';
 import raycatPoster from '../assets/work/off-the-clock/raycat/posters/raycat-poster.jpg';
 import oai1Poster from '../assets/work/also-shipped/overflow-ai/posters/oai-1-poster.jpg';
 import oai5Poster from '../assets/work/also-shipped/overflow-ai/posters/oai-5-poster.jpg';
@@ -41,12 +42,13 @@ const logos = [
 
 // The ring of work orbiting the hero text, pulled from elsewhere on the
 // site. Order alternates shapes and photo/graphic/video so neighbors
-// never look alike. Images are ~2x their largest on-screen size (the
+// never look alike — and no two non-16:9 items ever sit side by side
+// (the ring wraps, so the last item neighbors the first). Images are ~2x their largest on-screen size (the
 // focused, front-most slot).
 const webp = (src: ImageMetadata) => getImage({ src, format: 'webp', width: 900, quality: 80 });
-const [kotoImg, nashvilleImg, trustLayerImg, mascotImg, rolloutImg, guidelinesImg, freedImg, raycatImg, oai1Img, oai5Img, somu4Img] =
+const [kotoImg, nashvilleImg, trustLayerImg, mascotImg, rolloutImg, guidelinesImg, freedImg, tulipImg, raycatImg, oai1Img, oai5Img, somu4Img] =
 	await Promise.all(
-		[koto, nashville, trustLayerPoster, mascotPoster, rolloutPoster, guidelinesPoster, freedPoster, raycatPoster, oai1Poster, oai5Poster, somu4Poster].map(webp),
+		[koto, nashville, trustLayerPoster, mascotPoster, rolloutPoster, guidelinesPoster, freedPoster, tulipPoster, raycatPoster, oai1Poster, oai5Poster, somu4Poster].map(webp),
 	);
 // The two typefaces, each sliding through its own frames the same way
 // the Off the Clock card does.
@@ -70,6 +72,7 @@ const ring: RingItem[] = [
 	{ kind: 'image', src: kotoImg.src, ratio: 1 },
 	clip(rolloutImg.src, 'so-rebrand/rollout-3-1', 16 / 9),
 	clip(raycatImg.src, 'off-the-clock/raycat', 4 / 3),
+	clip(tulipImg.src, 'what-i-do/systems-tulip', 16 / 9),
 	{ kind: 'sequence', frames: aeFrames, ratio: 4 / 3 },
 	clip(oai1Img.src, 'also-shipped/overflow-ai/oai-1', 16 / 9),
 	clip(mascotImg.src, 'so-rebrand/systems-6-2-2', 1),
