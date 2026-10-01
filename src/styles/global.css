@@ -251,7 +251,9 @@ ol {
 	color-scheme: dark;
 	--color-bg: #15140b;
 	--color-ink: #f4efd9;
-	--color-title: #a6e04a;
+	/* Deep fern — the light title's hue family at a calmer saturation
+	   (oklch 0.72 0.17 138); the earlier lime (#a6e04a) read neon. */
+	--color-title: #6abd4b;
 	--color-accent: #f0d08a;
 	--color-tint: #fbe6b8;
 	--color-logo: color-mix(in oklch, var(--color-accent), var(--color-bg) 40%);
