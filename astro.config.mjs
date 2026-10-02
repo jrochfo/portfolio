@@ -10,4 +10,9 @@ export default defineConfig({
 		// risk doesn't apply here.
 		dangerouslyProcessSVG: true,
 	},
+	// The dev toolbar's floating bar sat over the bottom of the page in
+	// local previews (and the phone-view frame).
+	devToolbar: {
+		enabled: false,
+	},
 });
