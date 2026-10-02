@@ -413,14 +413,14 @@ const ring: RingItem[] = [
 		}
 
 		const hero = stage?.closest<HTMLElement>('.hero');
-		// Phones: the least room between the ring's front item and the
-		// logo row's label below it — the --space-m token, read live.
-		let SMALL_FLOOR = 32;
 		let trim = 0;
+		// Spacing tokens from global.css, read live in measure() since
+		// their values change at the phone breakpoint.
+		const token = (name: string) =>
+			parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0;
 
 		function measure() {
 			if (!stage || !items.length) return;
-			SMALL_FLOOR = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--space-m')) || 32;
 			const w = stage.clientWidth;
 			const h = stage.clientHeight;
 			// Just under half the viewport: the sides graze the screen edges
@@ -428,6 +428,13 @@ const ring: RingItem[] = [
 			// The same test as the CSS breakpoint (the stage's width leaves
 			// out the scrollbar, so w < 768 disagreed with it just above).
 			small = window.matchMedia('(max-width: 768px)').matches;
+			// The least room above and below the ring's front item: more
+			// above (from the buttons) than below (to the logo label) on
+			// desktop; on phones, a little above and --space-m below.
+			const spaceS = token('--space-s');
+			const spaceM = token('--space-m');
+			const minAbove = small ? spaceS : spaceM;
+			const minBelow = small ? spaceM : spaceS;
 			// Phones: a ring about as wide as the screen, so the focused
 			// item's neighbors just peek in from the edges.
 			// Desktop: 46% of the width at full container width (1320px+),
@@ -452,8 +459,8 @@ const ring: RingItem[] = [
 			const floor = clients ? clients.top : mid + h / 2;
 			// A little more room above the focused item than below it.
 			const gap = floor - actions.bottom;
-			const itemTop = actions.bottom + (small ? Math.max(20, gap * 0.08) : Math.max(44, gap * 0.13));
-			const itemBottom = floor - (small ? Math.max(SMALL_FLOOR, gap * 0.05) : Math.max(28, gap * 0.08));
+			const itemTop = actions.bottom + Math.max(minAbove, gap * (small ? 0.08 : 0.13));
+			const itemBottom = floor - Math.max(minBelow, gap * (small ? 0.05 : 0.08));
 			let itemH = Math.max(small ? 80 : 140, (itemBottom - itemTop) / frontScale);
 			// …but never so tall that the widest (16:9) item, in front,
 			// runs off the sides of a phone screen.
@@ -472,7 +479,7 @@ const ring: RingItem[] = [
 				// each other all the way down.
 				const front = (w * 0.86 * 9) / 16;
 				let needed = front + 32;
-				for (let i = 0; i < 8; i++) needed = front + Math.max(20, needed * 0.08) + Math.max(SMALL_FLOOR, needed * 0.05);
+				for (let i = 0; i < 8; i++) needed = front + Math.max(minAbove, needed * 0.08) + Math.max(minBelow, needed * 0.05);
 				trim = Math.max(0, trim + gap - needed);
 			} else {
 				trim = 0;

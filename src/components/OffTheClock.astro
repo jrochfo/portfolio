@@ -526,8 +526,9 @@ const items: Item[] = [
 
 		// --- Per-well media: video hover-plays (desktop) or plays
 		// whenever it's the front card (mobile, no hover to trigger it);
-		// an image sequence "scrubs" the same way — a flat, instant swap
-		// between pre-loaded frames every 2s, no crossfade. Both reset to
+		// an image sequence advances the same way — holding each
+		// pre-loaded frame 1.8s, then easing one frame left over 1s
+		// (see wireImageSequenceWell). Both reset to
 		// their resting frame (poster / first image) when they stop, and
 		// neither ever autoplays under reduced motion.
 		interface MediaController {
