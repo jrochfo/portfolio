@@ -7,28 +7,23 @@
 // grabbed and turned; let go, it settles on the nearest photo and goes
 // back to stepping.
 import { getImage } from 'astro:assets';
-import headshot from '../assets/about/headshot.jpg';
-import dog from '../assets/about/dog.jpg';
-import skiing from '../assets/about/skiing.jpg';
-import mapleTaffy from '../assets/about/maple-taffy.jpg';
-import sailing from '../assets/about/sailing.jpg';
-import lighthouse from '../assets/about/lighthouse.jpg';
-
-// The two landscape photos split up the portraits as much as four
-// portraits and two landscapes allow.
-const photos = [
-	{ src: headshot, alt: 'Jake Rochford' },
-	{ src: sailing, alt: '' },
-	{ src: dog, alt: '' },
-	{ src: lighthouse, alt: '' },
-	{ src: mapleTaffy, alt: '' },
-	{ src: skiing, alt: '' },
+// All square. The headshot first (in front on load); after it, the
+// repeating themes — snow, dogs, food — spread out so no two of a kind
+// sit side by side (the ring wraps, so the last neighbors the first).
+const files = import.meta.glob<{ default: ImageMetadata }>('../assets/about/ring/*.jpg', { eager: true });
+const order = [
+	'headshot', 'ramen', 'ski-sun', 'dog-bed', 'osaka-billboards', 'sailing', 'snow-charcuterie',
+	'ice-cream', 'dog-sleep', 'lighthouse', 'ski-shadow', 'veggies', 'train-handles', 'dog-bed-2',
+	'night-snow', 'yakiniku', 'horseback', 'tree-skiing', 'maple-taffy',
 ];
-// ~2x the largest on-screen size (the front slot), for retina.
+const photos = order.map((name) => ({
+	src: files[`../assets/about/ring/${name}.jpg`].default,
+	alt: name === 'headshot' ? 'Jake Rochford' : '',
+}));
+// The sources are 500px — about 2x the front slot on desktop.
 const items = await Promise.all(
 	photos.map(async ({ src, alt }) => ({
-		src: (await getImage({ src, format: 'webp', width: 520, quality: 80 })).src,
-		ratio: src.width / src.height,
+		src: (await getImage({ src, format: 'webp', width: 500, quality: 82 })).src,
 		alt,
 	})),
 );
@@ -36,7 +31,7 @@ const items = await Promise.all(
 
 <div class="about-ring">
 	{items.map((item, i) => (
-		<div class="about-ring__item" style={`--ratio:${item.ratio};`} aria-hidden={i === 0 ? undefined : 'true'}>
+		<div class="about-ring__item" aria-hidden={i === 0 ? undefined : 'true'}>
 			<img src={item.src} alt={item.alt} decoding="async" draggable="false" />
 		</div>
 	))}
@@ -45,11 +40,11 @@ const items = await Promise.all(
 <style>
 	.about-ring {
 		/* Item height; the script lays the ring out from it. */
-		--item-h: clamp(84px, 20vw, 150px);
+		--item-h: clamp(96px, 22vw, 160px);
 		position: relative;
 		/* Contains the items' z-indexes so the nav stays on top. */
 		isolation: isolate;
-		width: min(720px, 100%);
+		width: 100%;
 		/* The script sets the real height; this is the pre-script guess. */
 		height: calc(var(--item-h) * 1.9);
 		cursor: grab;
@@ -68,7 +63,7 @@ const items = await Promise.all(
 		left: 50%;
 		top: var(--center-y, 35%);
 		height: var(--item-h);
-		aspect-ratio: var(--ratio);
+		aspect-ratio: 1;
 		translate: -50% -50%;
 		border-radius: var(--radius-well);
 		overflow: hidden;
@@ -98,9 +93,9 @@ const items = await Promise.all(
 		// Seconds: each step's glide, and the rest between steps.
 		const GLIDE = 1.2;
 		const HOLD = 2.4;
-		// Perspective depth as a multiple of the radius — shallower than
-		// the hero's (4), so it reads quieter.
-		const DEPTH = 5;
+		// Perspective depth as a multiple of the radius, as on the hero:
+		// the sides shrink away so the front photo stands out.
+		const DEPTH = 4;
 
 		// angle: item i sits at angle + i * STEP; whichever is at 0
 		// (mod TAU) is in front. Starts on item 0, the headshot.
@@ -120,21 +115,22 @@ const items = await Promise.all(
 
 		// From the real item size: the ring's sides sit at the top of the
 		// box and the front dips below them, and the box is exactly as
-		// tall as that, so the copy underneath clears it.
+		// tall as that, so the copy underneath clears it. Phones get a
+		// ring wider than the screen (the sides run off the edges, as on
+		// the hero) so the photos aren't piled on top of each other.
 		function measure() {
 			const w = root!.clientWidth;
 			const itemH = items[0].offsetHeight;
 			const front = DEPTH / (DEPTH - 1);
-			const side = DEPTH / (DEPTH - Math.cos(STEP));
-			radius = w * 0.36;
+			const small = window.matchMedia('(max-width: 768px)').matches;
+			radius = w * (small ? 0.95 : 0.44);
 			perspective = radius * DEPTH;
-			tilt = itemH * 0.55;
-			// The side spots sit at the ring's center line (see render), so
+			tilt = itemH * 0.75;
+			// The sides (a quarter turn round) sit on the center line, so
 			// their tops set the top of the box.
-			const centerY = (itemH * side) / 2;
-			const frontDip = tilt * (1 - Math.cos(STEP)) * front;
+			const centerY = itemH / 2;
 			root!.style.setProperty('--center-y', `${centerY.toFixed(1)}px`);
-			root!.style.height = `${(centerY + frontDip + (itemH * front) / 2).toFixed(1)}px`;
+			root!.style.height = `${(centerY + tilt * front + (itemH * front) / 2).toFixed(1)}px`;
 		}
 
 		function render() {
@@ -144,16 +140,16 @@ const items = await Promise.all(
 				const scale = perspective / (perspective - z);
 				const x = radius * Math.sin(theta) * scale;
 				// cos = 1 in front: the front is lowest, the back highest.
-				const y = tilt * (Math.cos(theta) - Math.cos(STEP)) * scale;
+				const y = tilt * Math.cos(theta) * scale;
 				// 0 at the very front, 1 at the very back.
 				const depth = (1 - z / radius) / 2;
 				const el = items[i];
 				el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) scale(${scale.toFixed(3)})`;
-				const blur = depth ** 1.4 * 6;
+				const blur = depth ** 1.2 * 8;
 				el.style.filter = blur < 0.25 ? 'none' : `blur(${blur.toFixed(1)}px)`;
 				el.style.zIndex = String(Math.round(500 + (z / radius) * 400));
 				// The back half fades out.
-				const opacity = 1 - smoothstep(0.3, 0.65, depth);
+				const opacity = 1 - smoothstep(0.2, 0.5, depth);
 				el.style.opacity = opacity.toFixed(3);
 				el.style.visibility = opacity < 0.01 ? 'hidden' : 'visible';
 			}

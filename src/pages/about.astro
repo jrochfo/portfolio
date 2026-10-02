@@ -59,6 +59,9 @@ import AboutRing from '../components/AboutRing.astro';
 	}
 
 	.about {
+		/* The photo ring runs past the screen edges on phones; clip (not
+		   hidden) so that can't add a sideways scroll. */
+		overflow-x: clip;
 		flex: 1;
 		display: flex;
 		align-items: flex-start;
@@ -70,8 +73,8 @@ import AboutRing from '../components/AboutRing.astro';
 		align-items: center;
 		text-align: center;
 		width: 100%;
-		/* The same room above the photo ring as below it. */
-		padding-block-start: var(--space-m);
+		/* Room above the photo ring. */
+		padding-block-start: var(--space-l);
 	}
 
 	.about__headline {
