@@ -535,12 +535,19 @@ main:has(> .close:last-child) {
 :root.mobile-view main > .what-i-do,
 :root.mobile-view main > .rebrand,
 :root.mobile-view main > .also-shipped,
-:root.mobile-view main > .testimonials {
+:root.mobile-view main > .testimonials,
+:root.mobile-view .hero__clients {
 	display: none !important;
 }
 
-/* The flipped photo ring sits closer to Off the Clock than a full
-   section gap. */
-:root.mobile-view main > .mobile-ring {
-	margin-block-start: var(--space-2xl);
+/* Phone mode: a narrower page margin, so the content (and the nav's
+   theme toggle) sits closer to the screen edges. */
+:root.mobile-view {
+	--container-margin: var(--space-xs);
+}
+
+/* No logo row in phone mode, so the hero no longer runs extra rows
+   past the fold — just the screen, less the ring's trim. */
+:root.mobile-view .hero {
+	min-height: calc(100svh - var(--nav-height, 0px) - var(--hero-trim, 0px));
 }

@@ -17,6 +17,7 @@ import logoTulip from '../assets/logos/Logo_Tulip.svg';
 import freedPoster from '../assets/work/what-i-do/posters/motion-freed-poster.jpg';
 import tulipPoster from '../assets/work/what-i-do/posters/systems-tulip-poster.jpg';
 
+const headshot = async (src: ImageMetadata) => (await getImage({ src, format: 'webp', width: 96, quality: 80 })).src;
 const poster = async (src: ImageMetadata) => (await getImage({ src, format: 'webp', width: 900, quality: 80 })).src;
 
 type Work = {
@@ -24,7 +25,8 @@ type Work = {
 	name: string;
 	dates: string;
 	role: string;
-	earlier?: string;
+	// Earlier titles at the same company, one per line.
+	earlier?: string[];
 	line: string;
 	media: { kind: 'animated-logo' } | { kind: 'video'; path: string; poster: string };
 };
@@ -35,7 +37,7 @@ const work: Work[] = [
 		name: 'Stack Overflow',
 		dates: '2022 – now',
 		role: 'Brand Manager',
-		earlier: 'Senior Brand Designer 2024–2026 · Brand Designer 2022–2024',
+		earlier: ['Senior Brand Designer, 2024–2026', 'Brand Designer, 2022–2024'],
 		line: 'Led the rebrand with Koto, from the first workshops to full rollout, and now run the brand across product and marketing.',
 		media: { kind: 'animated-logo' },
 	},
@@ -58,9 +60,12 @@ const work: Work[] = [
 ];
 
 // Three of the four, one from each kind of relationship.
-const quotes = ['David Longworth', 'Molly Sullivan', 'Madilynn Castillo']
-	.map((name) => testimonials.find((t) => t.name === name))
-	.filter((t): t is (typeof testimonials)[number] => Boolean(t));
+const quotes = await Promise.all(
+	['David Longworth', 'Molly Sullivan', 'Madilynn Castillo']
+		.map((name) => testimonials.find((t) => t.name === name))
+		.filter((t): t is (typeof testimonials)[number] => Boolean(t))
+		.map(async (t) => ({ ...t, face: await headshot(t.headshot) })),
+);
 ---
 
 <section class="mobile-home mobile-only">
@@ -90,7 +95,16 @@ const quotes = ['David Longworth', 'Molly Sullivan', 'Madilynn Castillo']
 							<span class="type-caption mobile-home__dates">{w.dates}</span>
 						</div>
 						<p class="type-h3 mobile-home__role">{w.role}</p>
-						{w.earlier && <p class="type-caption mobile-home__earlier">{w.earlier}</p>}
+						{w.earlier && (
+							<p class="type-caption mobile-home__earlier">
+								{w.earlier.map((title, i) => (
+									<>
+										{i > 0 && <br />}
+										{title}
+									</>
+								))}
+							</p>
+						)}
 						<p class="type-body mobile-home__line">{w.line}</p>
 						<div class="mobile-home__media">
 							{w.media.kind === 'animated-logo' ? (
@@ -119,11 +133,14 @@ const quotes = ['David Longworth', 'Molly Sullivan', 'Madilynn Castillo']
 				{quotes.map((q) => (
 					<li class="mobile-home__quote" data-reveal>
 						<p class="type-body">“{q.quote}”</p>
-						<p class="type-caption mobile-home__credit">
-							<span class="mobile-home__name">{q.name}</span>
-							<br />
-							{q.title} · {q.company}
-						</p>
+						<div class="mobile-home__credit-row">
+							<img class="mobile-home__face" src={q.face} alt="" width="48" height="48" loading="lazy" decoding="async" />
+							<p class="type-caption mobile-home__credit">
+								<span class="mobile-home__name">{q.name}</span>
+								<br />
+								{q.title} · {q.company}
+							</p>
+						</div>
 					</li>
 				))}
 			</ul>
@@ -164,7 +181,7 @@ const quotes = ['David Longworth', 'Molly Sullivan', 'Madilynn Castillo']
 	/* The client logos, as on the hero: a mask over the logo color. */
 	.mobile-home__logo {
 		display: block;
-		height: 26px;
+		height: 36px;
 		background-color: var(--color-logo);
 		-webkit-mask: var(--logo-src) left center / contain no-repeat;
 		mask: var(--logo-src) left center / contain no-repeat;
@@ -194,10 +211,17 @@ const quotes = ['David Longworth', 'Molly Sullivan', 'Madilynn Castillo']
 		margin-block-start: var(--space-xs);
 	}
 
+	/* The work visuals run the full width of the screen, square-cornered:
+	   pulled out past the container's margins on both sides. */
 	.mobile-home__media {
 		/* AnimatedLogo sizes itself from --ratio. */
 		--ratio: 16 / 9;
 		margin-block-start: var(--space-s);
+		margin-inline: calc(-1 * var(--container-margin));
+	}
+
+	.mobile-home__media :global(.animated-logo) {
+		border-radius: 0;
 	}
 
 	.mobile-home__video {
@@ -205,12 +229,22 @@ const quotes = ['David Longworth', 'Molly Sullivan', 'Madilynn Castillo']
 		width: 100%;
 		aspect-ratio: 16 / 9;
 		object-fit: cover;
-		border-radius: var(--radius-well);
 		background: var(--color-neutral);
 	}
 
-	.mobile-home__credit {
-		margin-block-start: var(--space-xs);
+	.mobile-home__credit-row {
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+		margin-block-start: var(--space-s);
+	}
+
+	.mobile-home__face {
+		flex-shrink: 0;
+		width: 48px;
+		height: 48px;
+		border-radius: var(--radius-well);
+		object-fit: cover;
 	}
 
 	.mobile-home__name {

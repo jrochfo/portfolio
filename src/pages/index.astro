@@ -7,7 +7,6 @@ import Rebrand from '../components/Rebrand.astro';
 import AlsoShipped from '../components/AlsoShipped.astro';
 import Testimonials from '../components/Testimonials.astro';
 import OffTheClock from '../components/OffTheClock.astro';
-import AboutRing from '../components/AboutRing.astro';
 import Close from '../components/Close.astro';
 ---
 
@@ -21,12 +20,5 @@ import Close from '../components/Close.astro';
 	<AlsoShipped />
 	<Testimonials />
 	<OffTheClock />
-	<!-- Phone mode only: the About page's photo ring, flipped to curve up,
-	     as a sign-off — phone mode has no About page. -->
-	<section class="mobile-ring mobile-only" aria-label="Photos">
-		<div class="container">
-			<AboutRing flip />
-		</div>
-	</section>
 	<Close />
 </Base>

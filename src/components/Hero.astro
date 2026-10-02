@@ -480,7 +480,10 @@ const ring: RingItem[] = [
 			const mid = stage.getBoundingClientRect().top + h / 2;
 			const headline = restingRect(stage.querySelector('.hero__headline'))!;
 			const actions = restingRect(stage.querySelector('.hero__actions'))!;
-			const clients = restingRect(document.querySelector('.hero__clients'));
+			// The logo row (hidden in phone mode — then the stage's own
+			// bottom is the floor).
+			const clientsEl = document.querySelector<HTMLElement>('.hero__clients');
+			const clients = clientsEl && clientsEl.offsetParent ? restingRect(clientsEl) : undefined;
 			const floor = clients ? clients.top : mid + h / 2;
 			// A little more room above the focused item than below it.
 			const gap = floor - actions.bottom;
