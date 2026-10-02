@@ -566,7 +566,8 @@ const items: Project[] = await Promise.all([
 		margin-block-start: var(--space-s);
 	}
 
-	@media (max-width: 768px) {
+	/* One column on phones only; tablets (600px up) keep two. */
+	@media (max-width: 599px) {
 		.also-shipped__grid {
 			grid-template-columns: 1fr;
 		}

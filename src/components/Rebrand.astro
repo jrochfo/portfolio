@@ -544,7 +544,7 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 												/>
 											) : pin.mobile ? (
 												<picture>
-													<source media="(max-width: 768px)" srcset={pin.mobile.src} />
+													<source media="(max-width: 599px)" srcset={pin.mobile.src} />
 													<img class="act__pinboard-img" src={pin.src} alt={pin.alt} loading="lazy" />
 												</picture>
 											) : (
@@ -957,7 +957,11 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 		display: block;
 	}
 
-	@media (max-width: 768px) {
+	/* Phones only (not the site-wide 768px breakpoint): from 600px up,
+	   tablets keep the two-up desktop pinboard, which reads fine there,
+	   instead of one 700px-wide photo after another. The phone-crop
+	   <source> above uses the same 599px line. */
+	@media (max-width: 599px) {
 		.act__pinboard-row {
 			/* A single-column scroll of content, not a shared-height row,
 			   at phone width — two photos side by side would be too small
