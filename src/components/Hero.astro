@@ -490,6 +490,8 @@ const ring: RingItem[] = [
 		let lift = 0;
 		// -1 when the ring curves up (phone mode), 1 otherwise.
 		let flip = 1;
+		// Phone mode's fade-out range, by depth (0 front, 1 back).
+		const PHONE_FADE = [0.08, 0.2];
 		const phoneMode = document.documentElement.classList.contains('mobile-view');
 		// Spacing tokens from global.css, read live in measure() since
 		// their values change at the phone breakpoint.
@@ -628,14 +630,23 @@ const ring: RingItem[] = [
 			stage!.style.setProperty('--item-h', `${itemH.toFixed(1)}px`);
 			const front = itemH * frontScale;
 			const top = token('--space-s');
-			tilt = front * 0.4;
+			tilt = front * 1.2;
 			flip = -1;
 			// Front item's top at `top`; centerY is relative to the stage's
 			// middle, offset by the flipped tilt the front sits up by.
 			centerY = top + front / 2 - h / 2 + tilt * frontScale;
-			// Deep enough for the front item and its neighbours, which hang
-			// lower on the curve, plus a gap before the headline.
-			const zone = top + front + tilt * 0.6 + token('--space-m');
+			// Deep enough for the lowest item that's still meaningfully
+			// visible on the curve — down to the middle of the fade (depth
+			// d is cos 1 - 2d), measured from the same projection render()
+			// uses — plus a gap before the headline.
+			const fadeMid = (PHONE_FADE[0] + PHONE_FADE[1]) / 2;
+			let lowest = top + front;
+			for (let c = 1; c >= 1 - 2 * fadeMid; c -= 0.02) {
+				const scale = 4 / (4 - c);
+				const bottom = centerY + h / 2 - tilt * c * scale + (itemH * scale) / 2;
+				lowest = Math.max(lowest, bottom);
+			}
+			const zone = lowest + token('--space-m');
 			stage!.style.setProperty('--ring-zone', `${zone.toFixed(1)}px`);
 			trim = 0;
 			lift = 0;
@@ -668,7 +679,15 @@ const ring: RingItem[] = [
 				// behind the hero text clear.
 				// Phones fade the sides out sooner — on a narrow screen they'd
 				// otherwise sit right behind the subhead.
-				const opacity = small ? 1 - smoothstep(0.1, 0.4, depth[i]) : 1 - smoothstep(0.3, 0.8, depth[i]);
+				// Phone mode's upward curve shows just the front item and its
+				// neighbours — the ones further round would only peek in as
+				// slivers at the screen edges, hanging low on the curve.
+				const opacity =
+					flip < 0
+						? 1 - smoothstep(PHONE_FADE[0], PHONE_FADE[1], depth[i])
+						: small
+							? 1 - smoothstep(0.1, 0.4, depth[i])
+							: 1 - smoothstep(0.3, 0.8, depth[i]);
 				const el = items[i];
 				el.style.opacity = opacity.toFixed(3);
 				el.style.visibility = opacity < 0.01 ? 'hidden' : 'visible';
