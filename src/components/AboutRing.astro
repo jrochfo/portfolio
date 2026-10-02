@@ -20,6 +20,12 @@ const photos = order.map((name) => ({
 	src: files[`../assets/about/ring/${name}.jpg`].default,
 	alt: name === 'headshot' ? 'Jake Rochford' : '',
 }));
+// flip: the ring curves up instead of down (its front at the top) — the
+// phone homepage's sign-off copy, below the content rather than above.
+interface Props {
+	flip?: boolean;
+}
+const { flip = false } = Astro.props;
 // The sources are 500px — about 2x the front slot on desktop.
 const items = await Promise.all(
 	photos.map(async ({ src, alt }) => ({
@@ -29,7 +35,7 @@ const items = await Promise.all(
 );
 ---
 
-<div class="about-ring">
+<div class="about-ring" data-flip={flip ? 'true' : undefined}>
 	{items.map((item, i) => (
 		<div class="about-ring__item" aria-hidden={i === 0 ? undefined : 'true'}>
 			<img src={item.src} alt={item.alt} decoding="async" draggable="false" />
@@ -83,11 +89,13 @@ const items = await Promise.all(
 <script>
 	import { gsap } from 'gsap';
 
-	const root = document.querySelector<HTMLElement>('.about-ring');
-	const items = root ? [...root.querySelectorAll<HTMLElement>('.about-ring__item')] : [];
+	// Every ring on the page runs on its own.
+	for (const root of document.querySelectorAll<HTMLElement>('.about-ring')) {
+	const items = [...root.querySelectorAll<HTMLElement>('.about-ring__item')];
+	const flip = root.dataset.flip === 'true';
 	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-	if (root && items.length) {
+	if (items.length) {
 		const TAU = Math.PI * 2;
 		const STEP = TAU / items.length;
 		// Seconds: each step's glide, and the rest between steps.
@@ -128,9 +136,12 @@ const items = await Promise.all(
 			tilt = itemH * 0.75;
 			// The sides (a quarter turn round) sit on the center line, so
 			// their tops set the top of the box.
-			const centerY = itemH / 2;
+			// Flipped, the sides sit on the bottom line and the front rises
+			// above them instead.
+			const height = itemH / 2 + tilt * front + (itemH * front) / 2;
+			const centerY = flip ? height - itemH / 2 : itemH / 2;
 			root!.style.setProperty('--center-y', `${centerY.toFixed(1)}px`);
-			root!.style.height = `${(centerY + tilt * front + (itemH * front) / 2).toFixed(1)}px`;
+			root!.style.height = `${height.toFixed(1)}px`;
 		}
 
 		function render() {
@@ -140,7 +151,7 @@ const items = await Promise.all(
 				const scale = perspective / (perspective - z);
 				const x = radius * Math.sin(theta) * scale;
 				// cos = 1 in front: the front is lowest, the back highest.
-				const y = tilt * Math.cos(theta) * scale;
+				const y = (flip ? -1 : 1) * tilt * Math.cos(theta) * scale;
 				// 0 at the very front, 1 at the very back.
 				const depth = (1 - z / radius) / 2;
 				const el = items[i];
@@ -276,5 +287,6 @@ const items = await Promise.all(
 			{ threshold: 0.05 },
 		).observe(root);
 		queue();
+	}
 	}
 </script>

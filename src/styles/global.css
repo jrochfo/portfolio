@@ -522,3 +522,25 @@ main:has(> .close:last-child) {
 	letter-spacing: var(--type-caption-letter-spacing);
 	font-weight: var(--type-caption-weight);
 }
+
+/* ---------------------------------------------------------------
+   Phone mode
+   <html class="mobile-view"> is set by Base.astro's head script on
+   phones (by device, not window width). Phone-only pieces carry
+   .mobile-only, desktop-only ones .desktop-only; whole homepage
+   sections are listed here by class.
+--------------------------------------------------------------- */
+:root:not(.mobile-view) .mobile-only,
+:root.mobile-view .desktop-only,
+:root.mobile-view main > .what-i-do,
+:root.mobile-view main > .rebrand,
+:root.mobile-view main > .also-shipped,
+:root.mobile-view main > .testimonials {
+	display: none !important;
+}
+
+/* The flipped photo ring sits closer to Off the Clock than a full
+   section gap. */
+:root.mobile-view main > .mobile-ring {
+	margin-block-start: var(--space-2xl);
+}

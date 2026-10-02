@@ -118,7 +118,9 @@ const ring: RingItem[] = [
 				first workshops to full rollout.
 			</p>
 			<div class="hero__actions" data-reveal style="--reveal-delay: 240ms">
-				<a href="/about" class="button type-caption">Get in touch</a>
+				<a href="/about" class="button type-caption desktop-only">Get in touch</a>
+				{/* Phone mode has no About page — straight to email. */}
+				<a href="mailto:jake.rochford@gmail.com" class="button type-caption mobile-only">Get in touch</a>
 				<a
 					href="/jake-rochford-resume.pdf"
 					target="_blank"

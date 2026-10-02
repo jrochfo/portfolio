@@ -273,8 +273,9 @@ const scrubVisualsData = SCRUB_VISUALS.map((v) => ({ color: v.color, overlay: v.
 		return { frame: Math.min(23 + Math.floor(t / SLOW_FRAME_MS), 56), bgIndex: -1, color: INK, overlay: 'split' };
 	}
 
-	const root = document.querySelector<HTMLElement>('[data-animated-logo]');
-	if (root) {
+	// Every copy on the page runs on its own (the phone homepage shows
+	// one outside the Rebrand section).
+	for (const root of document.querySelectorAll<HTMLElement>('[data-animated-logo]')) {
 		const framesEl = root.querySelector<HTMLScriptElement>('[data-glyph-frames]');
 		const visualsEl = root.querySelector<HTMLScriptElement>('[data-scrub-visuals]');
 		const glyphFrames: string[] = framesEl ? JSON.parse(framesEl.textContent || '[]') : [];

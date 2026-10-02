@@ -38,7 +38,8 @@ const isHome = Astro.url.pathname === '/';
 			>
 				<span class="site-nav__theme-icon" style={`--icon-src: url(${iconDarkMode.src})`} aria-hidden="true" />
 			</button>
-			<a href={href} class="button type-caption">{label}</a>
+			{/* No About page in phone mode (see MobileHome), so no link to it. */}
+			<a href={href} class:list={['button type-caption', { 'desktop-only': href === '/about' }]}>{label}</a>
 		</div>
 	</div>
 </nav>

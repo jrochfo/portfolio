@@ -1,20 +1,32 @@
 ---
 import Base from '../layouts/Base.astro';
 import Hero from '../components/Hero.astro';
+import MobileHome from '../components/MobileHome.astro';
 import WhatIDo from '../components/WhatIDo.astro';
 import Rebrand from '../components/Rebrand.astro';
 import AlsoShipped from '../components/AlsoShipped.astro';
 import Testimonials from '../components/Testimonials.astro';
 import OffTheClock from '../components/OffTheClock.astro';
+import AboutRing from '../components/AboutRing.astro';
 import Close from '../components/Close.astro';
 ---
 
 <Base title="Jake Rochford">
 	<Hero />
+	<!-- Phone mode only (see Base.astro): the short summary stands in for
+	     What I Do through Testimonials, which phone mode hides. -->
+	<MobileHome />
 	<WhatIDo />
 	<Rebrand />
 	<AlsoShipped />
 	<Testimonials />
 	<OffTheClock />
+	<!-- Phone mode only: the About page's photo ring, flipped to curve up,
+	     as a sign-off — phone mode has no About page. -->
+	<section class="mobile-ring mobile-only" aria-label="Photos">
+		<div class="container">
+			<AboutRing flip />
+		</div>
+	</section>
 	<Close />
 </Base>

@@ -1,0 +1,103 @@
+---
+// Dev only: a button that opens the page as phone mode sees it, in a
+// phone-sized frame (390x844). A frame rather than a narrow column so
+// the page's width-based rules (the hero ring, Off the Clock) behave as
+// they do on a real phone. ?mobile=1 inside the frame turns phone mode
+// on; on a real phone (or Chrome's device emulation) it's automatic.
+---
+
+<div class="dev-phone" hidden>
+	<button type="button" class="dev-phone__toggle" data-open>Phone view</button>
+	<div class="dev-phone__overlay" data-overlay hidden>
+		<div class="dev-phone__bar">
+			<span>Phone mode · 390 × 844</span>
+			<button type="button" data-reload>Reload</button>
+			<button type="button" data-close>Close</button>
+		</div>
+		<iframe class="dev-phone__frame" title="Phone mode preview" data-frame></iframe>
+	</div>
+</div>
+
+<style>
+	/* Fixed colors, not site tokens, so it reads the same in any mode. */
+	.dev-phone__toggle {
+		position: fixed;
+		right: 16px;
+		bottom: 16px;
+		z-index: 9999;
+		padding: 8px 12px;
+		border-radius: 999px;
+		background: #1a1a1a;
+		color: #fff;
+		font: 600 12px/1 system-ui, sans-serif;
+		cursor: pointer;
+	}
+
+	.dev-phone__overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 10000;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 10px;
+		background: rgba(0, 0, 0, 0.6);
+	}
+
+	.dev-phone__overlay[hidden] {
+		display: none;
+	}
+
+	.dev-phone__bar {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		color: #fff;
+		font: 500 12px/1 system-ui, sans-serif;
+	}
+
+	.dev-phone__bar button {
+		padding: 5px 10px;
+		border-radius: 6px;
+		background: #fff;
+		color: #1a1a1a;
+		font: inherit;
+		cursor: pointer;
+	}
+
+	.dev-phone__frame {
+		width: 390px;
+		height: min(844px, calc(100vh - 80px));
+		border: 0;
+		border-radius: 28px;
+		background: #fff;
+		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+	}
+</style>
+
+<script>
+	const root = document.querySelector<HTMLElement>('.dev-phone');
+	// Not inside its own frame.
+	if (root && window.self === window.top) {
+		root.hidden = false;
+		const overlay = root.querySelector<HTMLElement>('[data-overlay]')!;
+		const frame = root.querySelector<HTMLIFrameElement>('[data-frame]')!;
+		const src = () => {
+			const url = new URL(location.href);
+			url.searchParams.set('mobile', '1');
+			return url.toString();
+		};
+		root.querySelector('[data-open]')!.addEventListener('click', () => {
+			frame.src = src();
+			overlay.hidden = false;
+		});
+		root.querySelector('[data-reload]')!.addEventListener('click', () => {
+			frame.src = src();
+		});
+		root.querySelector('[data-close]')!.addEventListener('click', () => {
+			overlay.hidden = true;
+			frame.removeAttribute('src');
+		});
+	}
+</script>

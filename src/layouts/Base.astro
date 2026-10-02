@@ -7,6 +7,7 @@ import FontVariationTuner from '../components/FontVariationTuner.astro';
 import ColorExploration from '../components/_archive/ColorExploration.astro';
 import ColorFavorites from '../components/ColorFavorites.astro';
 import PaletteAudition from '../components/PaletteAudition.astro';
+import DevPhonePreview from '../components/DevPhonePreview.astro';
 
 interface Props {
 	title?: string;
@@ -67,6 +68,20 @@ const PALETTE_AUDITION_ENABLED = false;
 					mode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 				}
 				document.documentElement.dataset.theme = mode;
+				// Phones get their own, shorter homepage (MobileHome.astro)
+				// rather than the desktop one squeezed down — decided by the
+				// device, not the window width, so a narrow desktop window
+				// still gets the responsive desktop site, and tablets count
+				// as desktop. Chrome/Android report it directly; iPhones are
+				// identified by user agent (iPads report as Macs, so they
+				// stay desktop). ?mobile=1 / ?mobile=0 force it for that page
+				// load — what the dev preview frame uses.
+				var force = new URLSearchParams(location.search).get('mobile');
+				var uaData = navigator.userAgentData;
+				var phone =
+					(uaData && uaData.mobile === true) ||
+					/iPhone|iPod|Android.+Mobile|Windows Phone/i.test(navigator.userAgent);
+				if (force === '1' || (force !== '0' && phone)) document.documentElement.classList.add('mobile-view');
 				// Soft reveals — skipped under reduced motion, and on
 				// back/forward navigation, where the page should just be
 				// there. If the reveal script never runs, drop the class so
@@ -98,6 +113,7 @@ const PALETTE_AUDITION_ENABLED = false;
 		{COLOR_EXPLORATION_ENABLED && import.meta.env.DEV && <ColorExploration />}
 		{COLOR_FAVORITES_ENABLED && import.meta.env.DEV && <ColorFavorites />}
 		{PALETTE_AUDITION_ENABLED && import.meta.env.DEV && <PaletteAudition />}
+		{import.meta.env.DEV && <DevPhonePreview />}
 
 		<script>
 			// Reveals each [data-reveal] element the first time it scrolls

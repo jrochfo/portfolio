@@ -1,0 +1,269 @@
+---
+// The phone homepage's middle: a short bio, a reverse-chronological
+// work list with one visual each, and a few kind words. Shown only in
+// phone mode (see Base.astro); it stands in for What I Do, the Rebrand
+// case study, Also Shipped and the testimonial cards, which phone mode
+// hides. A phone visitor mostly wants who / is it good / how to reach
+// — so this is a summary, not the desktop site squeezed down.
+//
+// Copy is drafted from the resume (with the September 2026 Brand
+// Manager promotion) — to be revisited in the copywriting sweep.
+import { getImage } from 'astro:assets';
+import AnimatedLogo from './AnimatedLogo.astro';
+import { testimonials } from '../data/testimonials';
+import logoStack from '../assets/logos/Logo_Stack.svg';
+import logoFreed from '../assets/logos/Logo_Freed.svg';
+import logoTulip from '../assets/logos/Logo_Tulip.svg';
+import freedPoster from '../assets/work/what-i-do/posters/motion-freed-poster.jpg';
+import tulipPoster from '../assets/work/what-i-do/posters/systems-tulip-poster.jpg';
+
+const poster = async (src: ImageMetadata) => (await getImage({ src, format: 'webp', width: 900, quality: 80 })).src;
+
+type Work = {
+	logo: ImageMetadata;
+	name: string;
+	dates: string;
+	role: string;
+	earlier?: string;
+	line: string;
+	media: { kind: 'animated-logo' } | { kind: 'video'; path: string; poster: string };
+};
+
+const work: Work[] = [
+	{
+		logo: logoStack,
+		name: 'Stack Overflow',
+		dates: '2022 – now',
+		role: 'Brand Manager',
+		earlier: 'Senior Brand Designer 2024–2026 · Brand Designer 2022–2024',
+		line: 'Led the rebrand with Koto, from the first workshops to full rollout, and now run the brand across product and marketing.',
+		media: { kind: 'animated-logo' },
+	},
+	{
+		logo: logoFreed,
+		name: 'Freed',
+		dates: '2025 – 2026',
+		role: 'Freelance Designer',
+		line: 'Animated ads, product visuals, and spot illustration for an AI scribe built for clinicians.',
+		media: { kind: 'video', path: 'what-i-do/motion-freed', poster: await poster(freedPoster) },
+	},
+	{
+		logo: logoTulip,
+		name: 'Tulip Interfaces',
+		dates: '2020 – 2021',
+		role: 'Graphic Designer',
+		line: 'Grew a Series A brand into a system that held up through Series C, as a team of one.',
+		media: { kind: 'video', path: 'what-i-do/systems-tulip', poster: await poster(tulipPoster) },
+	},
+];
+
+// Three of the four, one from each kind of relationship.
+const quotes = ['David Longworth', 'Molly Sullivan', 'Madilynn Castillo']
+	.map((name) => testimonials.find((t) => t.name === name))
+	.filter((t): t is (typeof testimonials)[number] => Boolean(t));
+---
+
+<section class="mobile-home mobile-only">
+	<div class="container mobile-home__inner">
+		<div class="mobile-home__bio" data-reveal>
+			<p class="type-h3">
+				I'm a brand and motion designer, currently Brand Manager at Stack Overflow, where I helped rebuild
+				the brand with Koto and now run it across everything the company ships.
+			</p>
+			<p class="type-caption mobile-home__place">
+				Chicago <span aria-hidden="true">·</span> <time data-local-time>—</time>
+			</p>
+		</div>
+
+		<div class="mobile-home__group">
+			<h2 class="type-h1" data-reveal>Selected work.</h2>
+			<ol class="mobile-home__work">
+				{work.map((w) => (
+					<li class="mobile-home__entry" data-reveal>
+						<div class="mobile-home__entry-head">
+							<span
+								class="mobile-home__logo"
+								role="img"
+								aria-label={w.name}
+								style={`--logo-src: url(${w.logo.src}); aspect-ratio: ${w.logo.width} / ${w.logo.height};`}
+							/>
+							<span class="type-caption mobile-home__dates">{w.dates}</span>
+						</div>
+						<p class="type-h3 mobile-home__role">{w.role}</p>
+						{w.earlier && <p class="type-caption mobile-home__earlier">{w.earlier}</p>}
+						<p class="type-body mobile-home__line">{w.line}</p>
+						<div class="mobile-home__media">
+							{w.media.kind === 'animated-logo' ? (
+								<AnimatedLogo />
+							) : (
+								<video
+									class="mobile-home__video"
+									muted
+									loop
+									playsinline
+									preload="none"
+									poster={w.media.poster}
+									data-mp4={`/video/${w.media.path}.mp4`}
+									data-webm={`/video/${w.media.path}.webm`}
+								/>
+							)}
+						</div>
+					</li>
+				))}
+			</ol>
+		</div>
+
+		<div class="mobile-home__group">
+			<h2 class="type-h1" data-reveal>Kind words.</h2>
+			<ul class="mobile-home__quotes">
+				{quotes.map((q) => (
+					<li class="mobile-home__quote" data-reveal>
+						<p class="type-body">“{q.quote}”</p>
+						<p class="type-caption mobile-home__credit">
+							<span class="mobile-home__name">{q.name}</span>
+							<br />
+							{q.title} · {q.company}
+						</p>
+					</li>
+				))}
+			</ul>
+		</div>
+	</div>
+</section>
+
+<style>
+	.mobile-home__inner {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2xl);
+	}
+
+	.mobile-home__place {
+		margin-block-start: var(--space-s);
+		color: var(--color-ink-muted);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.mobile-home__work,
+	.mobile-home__quotes {
+		list-style: none;
+		margin: var(--space-m) 0 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xl);
+	}
+
+	.mobile-home__entry-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-s);
+	}
+
+	/* The client logos, as on the hero: a mask over the logo color. */
+	.mobile-home__logo {
+		display: block;
+		height: 26px;
+		background-color: var(--color-logo);
+		-webkit-mask: var(--logo-src) left center / contain no-repeat;
+		mask: var(--logo-src) left center / contain no-repeat;
+	}
+
+	.mobile-home__dates,
+	.mobile-home__earlier,
+	.mobile-home__credit {
+		color: var(--color-ink-muted);
+	}
+
+	/* Tabular figures only where digits are — this face's tabular set
+	   widens commas too. */
+	.mobile-home__dates {
+		font-variant-numeric: tabular-nums;
+	}
+
+	.mobile-home__role {
+		margin-block-start: var(--space-s);
+	}
+
+	.mobile-home__earlier {
+		margin-block-start: var(--space-2xs);
+	}
+
+	.mobile-home__line {
+		margin-block-start: var(--space-xs);
+	}
+
+	.mobile-home__media {
+		/* AnimatedLogo sizes itself from --ratio. */
+		--ratio: 16 / 9;
+		margin-block-start: var(--space-s);
+	}
+
+	.mobile-home__video {
+		display: block;
+		width: 100%;
+		aspect-ratio: 16 / 9;
+		object-fit: cover;
+		border-radius: var(--radius-well);
+		background: var(--color-neutral);
+	}
+
+	.mobile-home__credit {
+		margin-block-start: var(--space-xs);
+	}
+
+	.mobile-home__name {
+		color: var(--color-ink);
+	}
+</style>
+
+<script>
+	// Chicago's local time, kept current.
+	const timeEl = document.querySelector<HTMLTimeElement>('[data-local-time]');
+	if (timeEl) {
+		const format = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', hour: 'numeric', minute: '2-digit' });
+		const tick = () => {
+			timeEl.textContent = format.format(new Date()).toLowerCase();
+		};
+		tick();
+		setInterval(tick, 20_000);
+	}
+
+	// The work videos load when they near the screen and play only while
+	// they're on it; never on their own under reduced motion.
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	const videos = [...document.querySelectorAll<HTMLVideoElement>('.mobile-home__video')];
+	const load = (v: HTMLVideoElement) => {
+		if (v.dataset.loaded) return;
+		v.dataset.loaded = 'true';
+		for (const [src, type] of [
+			[v.dataset.webm, 'video/webm'],
+			[v.dataset.mp4, 'video/mp4'],
+		]) {
+			if (!src) continue;
+			const s = document.createElement('source');
+			s.src = src;
+			s.type = type!;
+			v.appendChild(s);
+		}
+		v.load();
+	};
+	if (document.documentElement.classList.contains('mobile-view')) {
+		const io = new IntersectionObserver(
+			(entries) => {
+				for (const e of entries) {
+					const v = e.target as HTMLVideoElement;
+					if (e.isIntersecting) {
+						load(v);
+						if (!reduceMotion && e.intersectionRatio > 0.3) v.play().catch(() => {});
+					} else {
+						v.pause();
+					}
+				}
+			},
+			{ threshold: [0, 0.3] },
+		);
+		videos.forEach((v) => io.observe(v));
+	}
+</script>
