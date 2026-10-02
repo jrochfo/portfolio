@@ -43,7 +43,8 @@ const logos = [
 // The ring of work orbiting the hero text, pulled from elsewhere on the
 // site. Order alternates shapes and photo/graphic/video so neighbors
 // never look alike — and no two non-16:9 items ever sit side by side
-// (the ring wraps, so the last item neighbors the first). Images are ~2x their largest on-screen size (the
+// (the ring wraps, so the last item neighbors the first). The first
+// item is the one in front when the page loads. Images are ~2x their largest on-screen size (the
 // focused, front-most slot).
 const webp = (src: ImageMetadata) => getImage({ src, format: 'webp', width: 900, quality: 80 });
 const [kotoImg, nashvilleImg, trustLayerImg, mascotImg, rolloutImg, guidelinesImg, freedImg, tulipImg, raycatImg, oai1Img, oai5Img, somu4Img] =
@@ -69,9 +70,6 @@ type RingItem =
 	| { kind: 'sequence'; frames: string[]; ratio: number };
 
 const ring: RingItem[] = [
-	{ kind: 'image', src: kotoImg.src, ratio: 1 },
-	clip(rolloutImg.src, 'so-rebrand/rollout-3-1', 16 / 9),
-	clip(raycatImg.src, 'off-the-clock/raycat', 4 / 3),
 	clip(tulipImg.src, 'what-i-do/systems-tulip', 16 / 9),
 	{ kind: 'sequence', frames: aeFrames, ratio: 4 / 3 },
 	clip(oai1Img.src, 'also-shipped/overflow-ai/oai-1', 16 / 9),
@@ -83,6 +81,9 @@ const ring: RingItem[] = [
 	clip(oai5Img.src, 'also-shipped/overflow-ai/oai-5', 16 / 9),
 	{ kind: 'image', src: nashvilleImg.src, ratio: 1 },
 	clip(somu4Img.src, 'also-shipped/somu23/somu-4', 16 / 9),
+	{ kind: 'image', src: kotoImg.src, ratio: 1 },
+	clip(rolloutImg.src, 'so-rebrand/rollout-3-1', 16 / 9),
+	clip(raycatImg.src, 'off-the-clock/raycat', 4 / 3),
 ];
 ---
 
