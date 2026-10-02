@@ -299,11 +299,16 @@ const ring: RingItem[] = [
 		cursor: auto;
 	}
 
+	/* The strip also fades out toward its top and bottom edges, so the
+	   neighbours peeking in soften into the page instead of ending at a
+	   hard clip. */
 	:global(:root.mobile-view) .hero__ring {
 		inset: auto 0;
 		top: var(--ring-top, 0px);
 		height: var(--ring-h, 50%);
 		overflow: clip;
+		-webkit-mask-image: linear-gradient(to bottom, transparent, black 22%, black 78%, transparent);
+		mask-image: linear-gradient(to bottom, transparent, black 22%, black 78%, transparent);
 	}
 
 	/* "See more", to the right of the buttons: on to the work. */
@@ -492,7 +497,13 @@ const ring: RingItem[] = [
 
 		const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 		const stage = document.querySelector<HTMLElement>('.hero__stage');
-		const items = stage ? [...stage.querySelectorAll<HTMLElement>('.hero__ring-item')] : [];
+		const allItems = stage ? [...stage.querySelectorAll<HTMLElement>('.hero__ring-item')] : [];
+		// Phone mode's vertical drum carries only the 16:9 items — the
+		// square and 4:3 ones are hidden and left out of the ring.
+		const isPhoneMode = document.documentElement.classList.contains('mobile-view');
+		const is16x9 = (el: HTMLElement) => Math.abs((parseFloat(el.style.getPropertyValue('--ratio')) || 0) - 16 / 9) < 0.01;
+		const items = isPhoneMode ? allItems.filter(is16x9) : allItems;
+		if (isPhoneMode) allItems.filter((el) => !is16x9(el)).forEach((el) => (el.style.display = 'none'));
 
 		const TAU = Math.PI * 2;
 		const STEP = TAU / items.length;
@@ -536,10 +547,13 @@ const ring: RingItem[] = [
 		let vertical = false;
 		// Phone mode's fade-out range, by depth (0 front, 1 back): the
 		// front item and its neighbours, not much further round.
-		// Neighbours sit at depth ~0.05; the next ones round (~0.19) would
-		// otherwise linger as a faint blurred block behind the drum.
-		const PHONE_FADE = [0.06, 0.14];
-		const phoneMode = document.documentElement.classList.contains('mobile-view');
+		// Worked out from the ring's step, since the drum carries fewer
+		// items than the desktop ring: the neighbours (one step round)
+		// stay, the next ones round fade out — they'd otherwise linger as
+		// a faint blurred block behind the drum.
+		const depthAt = (steps: number) => (1 - Math.cos(steps * STEP)) / 2;
+		const PHONE_FADE = [depthAt(1) * 1.15, (depthAt(1) + depthAt(2)) / 2];
+		const phoneMode = isPhoneMode;
 		// Spacing tokens from global.css, read live in measure() since
 		// their values change at the phone breakpoint.
 		const token = (name: string) =>
@@ -724,9 +738,10 @@ const ring: RingItem[] = [
 				// otherwise sit right behind the subhead.
 				// Phone mode's vertical ring shows just the front item and its
 				// neighbours.
+				// In the drum, the neighbours also dim back from the front item.
 				const opacity =
 					vertical
-						? 1 - smoothstep(PHONE_FADE[0], PHONE_FADE[1], depth[i])
+						? (1 - smoothstep(PHONE_FADE[0], PHONE_FADE[1], depth[i])) * (1 - 0.45 * smoothstep(0, depthAt(1), depth[i]))
 						: small
 							? 1 - smoothstep(0.1, 0.4, depth[i])
 							: 1 - smoothstep(0.3, 0.8, depth[i]);

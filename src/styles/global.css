@@ -541,9 +541,11 @@ main:has(> .close:last-child) {
 }
 
 /* Phone mode: a narrower page margin, so the content (and the nav's
-   theme toggle) sits closer to the screen edges. */
+   theme toggle) sits closer to the screen edges, and slightly tighter
+   well corners. */
 :root.mobile-view {
 	--container-margin: var(--space-xs);
+	--radius-well: 8px;
 }
 
 /* Phone mode: the hero is one screen tall — the vertical ring above,
