@@ -170,7 +170,9 @@ const ring: RingItem[] = [
 		   stage for the front of the ring to come to rest in. */
 		place-items: start center;
 		min-height: 560px;
-		padding-block-start: clamp(var(--space-l), 7vh, 84px);
+		/* Plus --hero-lift: spare height the ring can't use, which the
+		   script gives to the room under the nav (see measure()). */
+		padding-block-start: calc(clamp(var(--space-l), 7vh, 84px) + var(--hero-lift, 0px));
 		/* Base item height — the script overrides it so the focused item
 		   fills the space between the buttons and the logos. */
 		--item-h: clamp(120px, 21vh, 230px);
@@ -357,7 +359,7 @@ const ring: RingItem[] = [
 		   between the buttons and the logos. */
 		.hero__stage {
 			min-height: 0;
-			padding-block-start: var(--space-s);
+			padding-block-start: calc(var(--space-s) + var(--hero-lift, 0px));
 			--item-h: 120px;
 		}
 
@@ -435,6 +437,7 @@ const ring: RingItem[] = [
 
 		const hero = stage?.closest<HTMLElement>('.hero');
 		let trim = 0;
+		let lift = 0;
 		// Spacing tokens from global.css, read live in measure() since
 		// their values change at the phone breakpoint.
 		const token = (name: string) =>
@@ -526,10 +529,18 @@ const ring: RingItem[] = [
 				// own content is already overriding (min-height below the
 				// real height).
 				const slack = Math.max(0, hero.offsetHeight - (parseFloat(getComputedStyle(hero).minHeight) || 0));
-				const untrimmed = gap + trim - slack;
-				trim = untrimmed - Math.min(hi, Math.max(lo, untrimmed));
+				// …and less the extra room above (lift), which also comes
+				// out of the gap.
+				const untrimmed = gap + trim - slack + lift;
+				const excess = untrimmed - Math.min(hi, Math.max(lo, untrimmed));
+				// Spare height goes above the headline first — up to
+				// --space-xl more room under the nav — and only what's left
+				// past that is trimmed off the bottom.
+				lift = Math.max(0, Math.min(excess, token('--space-xl')));
+				trim = excess - lift;
 			}
 			hero?.style.setProperty('--hero-trim', `${trim.toFixed(1)}px`);
+			stage.style.setProperty('--hero-lift', `${lift.toFixed(1)}px`);
 			const backY = headline.top + headline.height / 2 - mid;
 			const frontY = (itemTop + itemBottom) / 2 - mid;
 			tilt = Math.max(0, (frontY - backY) / (frontScale + backScale));
