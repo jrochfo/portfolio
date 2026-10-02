@@ -170,9 +170,7 @@ const ring: RingItem[] = [
 		   stage for the front of the ring to come to rest in. */
 		place-items: start center;
 		min-height: 560px;
-		/* Plus --hero-lift: spare height the ring can't use, which the
-		   script gives to the room under the nav (see measure()). */
-		padding-block-start: calc(clamp(var(--space-l), 7vh, 84px) + var(--hero-lift, 0px));
+		padding-block-start: clamp(var(--space-l), 7vh, 84px);
 		/* Base item height — the script overrides it so the focused item
 		   fills the space between the buttons and the logos. */
 		--item-h: clamp(120px, 21vh, 230px);
@@ -359,6 +357,8 @@ const ring: RingItem[] = [
 		   between the buttons and the logos. */
 		.hero__stage {
 			min-height: 0;
+			/* Plus --hero-lift: spare height the ring can't use, which the
+			   script gives to the room under the nav (see measure()). */
 			padding-block-start: calc(var(--space-s) + var(--hero-lift, 0px));
 			--item-h: 120px;
 		}
@@ -484,28 +484,16 @@ const ring: RingItem[] = [
 			const gap = floor - actions.bottom;
 			const above = small ? 0.08 : 0.13;
 			const below = small ? 0.05 : 0.08;
-			const itemTop = actions.bottom + Math.max(minAbove, gap * above);
-			const itemBottom = floor - Math.max(minBelow, gap * below);
 			// The front item's size range: a floor, and a cap so the widest
 			// (16:9) item never gets too wide for the window — most of a
 			// phone screen (but no more than 460px, so a tablet on the
-			// phone layout still shows its neighbors); on desktop 48% at full container width (so the
-			// oval still shows past it on a big monitor), up to 60%
-			// approaching the phone breakpoint. Within that it grows with
-			// the window's height, filling the space it's given.
+			// phone layout still shows its neighbors); on desktop 48% at
+			// full container width (so the oval still shows past it on a
+			// big monitor), up to 60% approaching the phone breakpoint.
+			// Within that it grows with the window's height, filling the
+			// space it's given.
 			const minItemH = small ? 80 : 140;
 			const capItemH = ((small ? Math.min(w * 0.86, 460) : w * (0.48 + 0.12 * widen)) * 9) / 16 / frontScale;
-			const itemH = Math.min(capItemH, Math.max(minItemH, (itemBottom - itemTop) / frontScale));
-			stage.style.setProperty('--item-h', `${itemH.toFixed(1)}px`);
-			// The ring's radius follows the window's width, but also the
-			// front item's size — a tall window grows the items, and the
-			// oval has to grow with them or they'd pile into each other.
-			// 1.2x the widest front item — tight enough that the curve of
-			// the oval stays in view at the sides; past the screen edges
-			// is fine (the hero clips it).
-			const frontW = ((itemH * 16) / 9) * frontScale;
-			radius = small ? w * 0.95 : Math.max(w * (0.42 + 0.38 * widen), frontW * 1.2, 340);
-			perspective = radius * 4;
 			// The hero's height is set by the screen (see the CSS), not by
 			// the ring, so on some windows the ring doesn't fit (a short
 			// laptop, a tiny phone: the front item would overlap the
@@ -517,6 +505,13 @@ const ring: RingItem[] = [
 			// all when it's already in range. Worked out from what the gap
 			// would be untrimmed, so a given window always lands on the
 			// same layout however it was resized to get there.
+			//
+			// On phones, spare height (past what the largest item needs)
+			// is spent first: a little more room between the buttons and
+			// the ring (up to --space-m), then more under the nav (up to
+			// --space-l in all, --hero-lift), and only the rest is
+			// trimmed. Desktop trims it all.
+			let extraAbove = 0;
 			if (hero) {
 				const gapFor = (front: number) => {
 					let g = front + minAbove + minBelow;
@@ -527,20 +522,35 @@ const ring: RingItem[] = [
 				const hi = gapFor(capItemH * frontScale);
 				// The trim actually in effect: less any part of it the hero's
 				// own content is already overriding (min-height below the
-				// real height).
+				// real height)…
 				const slack = Math.max(0, hero.offsetHeight - (parseFloat(getComputedStyle(hero).minHeight) || 0));
-				// …and less the extra room above (lift), which also comes
-				// out of the gap.
+				// …and less the lift, which also comes out of the gap.
 				const untrimmed = gap + trim - slack + lift;
 				const excess = untrimmed - Math.min(hi, Math.max(lo, untrimmed));
-				// Spare height goes above the headline first — up to
-				// --space-xl more room under the nav — and only what's left
-				// past that is trimmed off the bottom.
-				lift = Math.max(0, Math.min(excess, token('--space-xl')));
-				trim = excess - lift;
+				if (small && excess > 0) {
+					extraAbove = Math.min(excess, token('--space-m') - spaceS);
+					lift = Math.min(excess - extraAbove, token('--space-l') - spaceS);
+					trim = excess - extraAbove - lift;
+				} else {
+					lift = 0;
+					trim = excess;
+				}
 			}
 			hero?.style.setProperty('--hero-trim', `${trim.toFixed(1)}px`);
 			stage.style.setProperty('--hero-lift', `${lift.toFixed(1)}px`);
+			const itemTop = actions.bottom + Math.max(minAbove + extraAbove, gap * above);
+			const itemBottom = floor - Math.max(minBelow, gap * below);
+			const itemH = Math.min(capItemH, Math.max(minItemH, (itemBottom - itemTop) / frontScale));
+			stage.style.setProperty('--item-h', `${itemH.toFixed(1)}px`);
+			// The ring's radius follows the window's width, but also the
+			// front item's size — a tall window grows the items, and the
+			// oval has to grow with them or they'd pile into each other.
+			// 1.2x the widest front item — tight enough that the curve of
+			// the oval stays in view at the sides; past the screen edges
+			// is fine (the hero clips it).
+			const frontW = ((itemH * 16) / 9) * frontScale;
+			radius = small ? w * 0.95 : Math.max(w * (0.42 + 0.38 * widen), frontW * 1.2, 340);
+			perspective = radius * 4;
 			const backY = headline.top + headline.height / 2 - mid;
 			const frontY = (itemTop + itemBottom) / 2 - mid;
 			tilt = Math.max(0, (frontY - backY) / (frontScale + backScale));
