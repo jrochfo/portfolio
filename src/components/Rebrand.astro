@@ -610,10 +610,16 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 		border-bottom-color: var(--color-line);
 	}
 
+	/* Reserves the title's height, measured by the script below
+	   (--title-h) since it wraps to two lines on phones; the calc is
+	   the one-line fallback for before/without the script. */
 	.rebrand__body {
 		padding-block-start: calc(
-			var(--type-h1-size) * var(--type-h1-line-height) + var(--title-padding-top) +
-				var(--title-padding-bottom) + var(--space-s)
+			var(
+					--title-h,
+					var(--type-h1-size) * var(--type-h1-line-height) + var(--title-padding-top) +
+						var(--title-padding-bottom)
+				) + var(--space-s)
 		);
 	}
 
@@ -996,6 +1002,16 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 	import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 	const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+	// The pinned title is out of flow, so the body reserves its real
+	// height — it wraps to two lines on narrow screens.
+	const titleBar = document.querySelector<HTMLElement>('.rebrand__pinned-title');
+	const rebrandBody = document.querySelector<HTMLElement>('.rebrand__body');
+	if (titleBar && rebrandBody) {
+		new ResizeObserver(() => {
+			rebrandBody.style.setProperty('--title-h', `${titleBar.offsetHeight}px`);
+		}).observe(titleBar);
+	}
 
 	// Reduced motion: skip creating the ScrollTrigger entirely. The
 	// title is already position: absolute at the section's top, so
