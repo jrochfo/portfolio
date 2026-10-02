@@ -447,10 +447,9 @@ const ring: RingItem[] = [
 			// and pulled the sides in under the hero copy as it narrowed;
 			// this keeps their spacing close to the full-width look.
 			const widen = Math.min(1, Math.max(0, (1320 - w) / (1320 - 768)));
-			radius = small ? w * 0.95 : Math.max(w * (0.46 + 0.34 * widen), 340);
-			perspective = radius * 4;
-			const frontScale = perspective / (perspective - radius);
-			const backScale = perspective / (perspective + radius);
+			// Perspective is always 4x the radius, so these are constants.
+			const frontScale = 4 / 3;
+			const backScale = 4 / 5;
 			// Sized and placed from the real layout: the focused (front)
 			// item fills the space between the buttons and the logo row,
 			// centered in it, and the back of the ring lines up with the
@@ -468,12 +467,20 @@ const ring: RingItem[] = [
 			const itemBottom = floor - Math.max(minBelow, gap * below);
 			// The front item's size range: a floor, and a cap so the widest
 			// (16:9) item never gets too wide for the window — most of a
-			// phone screen; on desktop 40% at full container width, up to
-			// 60% approaching the phone breakpoint (same ramp as the radius).
+			// phone screen, 60% of a desktop one. Within that it grows with
+			// the window's height, filling the space it's given.
 			const minItemH = small ? 80 : 140;
-			const capItemH = (w * (small ? 0.86 : 0.4 + 0.2 * widen) * 9) / 16 / frontScale;
+			const capItemH = (w * (small ? 0.86 : 0.6) * 9) / 16 / frontScale;
 			const itemH = Math.min(capItemH, Math.max(minItemH, (itemBottom - itemTop) / frontScale));
 			stage.style.setProperty('--item-h', `${itemH.toFixed(1)}px`);
+			// The ring's radius follows the window's width, but also the
+			// front item's size — a tall window grows the items, and the
+			// oval has to grow with them or they'd pile into each other.
+			// 1.35x the widest front item keeps the spacing of a 1440x900
+			// window; past the screen edges is fine (the hero clips it).
+			const frontW = ((itemH * 16) / 9) * frontScale;
+			radius = small ? w * 0.95 : Math.max(w * (0.46 + 0.34 * widen), frontW * 1.35, 340);
+			perspective = radius * 4;
 			// The hero's height is set by the screen (see the CSS), not by
 			// the ring, so on some windows the ring doesn't fit (a short
 			// laptop, a tiny phone: the front item would overlap the
