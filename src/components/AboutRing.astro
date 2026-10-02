@@ -1,0 +1,284 @@
+---
+// The About page's version of the hero ring: the same motif, smaller
+// and calmer. The headshot is the first item, so it's in front on
+// load, with personality photos around the rest of the ring. It curves
+// down in front like the hero's, the back half fading out. Instead of
+// the hero's whip-around spin it steps one photo at a time. It can be
+// grabbed and turned; let go, it settles on the nearest photo and goes
+// back to stepping.
+import { getImage } from 'astro:assets';
+import headshot from '../assets/about/headshot.jpg';
+import dog from '../assets/about/dog.jpg';
+import skiing from '../assets/about/skiing.jpg';
+import mapleTaffy from '../assets/about/maple-taffy.jpg';
+import sailing from '../assets/about/sailing.jpg';
+import lighthouse from '../assets/about/lighthouse.jpg';
+
+// The two landscape photos split up the portraits as much as four
+// portraits and two landscapes allow.
+const photos = [
+	{ src: headshot, alt: 'Jake Rochford' },
+	{ src: sailing, alt: '' },
+	{ src: dog, alt: '' },
+	{ src: lighthouse, alt: '' },
+	{ src: mapleTaffy, alt: '' },
+	{ src: skiing, alt: '' },
+];
+// ~2x the largest on-screen size (the front slot), for retina.
+const items = await Promise.all(
+	photos.map(async ({ src, alt }) => ({
+		src: (await getImage({ src, format: 'webp', width: 520, quality: 80 })).src,
+		ratio: src.width / src.height,
+		alt,
+	})),
+);
+---
+
+<div class="about-ring">
+	{items.map((item, i) => (
+		<div class="about-ring__item" style={`--ratio:${item.ratio};`} aria-hidden={i === 0 ? undefined : 'true'}>
+			<img src={item.src} alt={item.alt} decoding="async" draggable="false" />
+		</div>
+	))}
+</div>
+
+<style>
+	.about-ring {
+		/* Item height; the script lays the ring out from it. */
+		--item-h: clamp(84px, 20vw, 150px);
+		position: relative;
+		/* Contains the items' z-indexes so the nav stays on top. */
+		isolation: isolate;
+		width: min(720px, 100%);
+		/* The script sets the real height; this is the pre-script guess. */
+		height: calc(var(--item-h) * 1.9);
+		cursor: grab;
+		touch-action: pan-y;
+		-webkit-user-select: none;
+		user-select: none;
+	}
+
+	.about-ring.is-dragging {
+		cursor: grabbing;
+	}
+
+	/* Placed by the script, same projection as the hero ring. */
+	.about-ring__item {
+		position: absolute;
+		left: 50%;
+		top: var(--center-y, 35%);
+		height: var(--item-h);
+		aspect-ratio: var(--ratio);
+		translate: -50% -50%;
+		border-radius: var(--radius-well);
+		overflow: hidden;
+		background: var(--color-neutral);
+		pointer-events: none;
+		will-change: transform, filter, opacity;
+	}
+
+	.about-ring__item img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+</style>
+
+<script>
+	import { gsap } from 'gsap';
+
+	const root = document.querySelector<HTMLElement>('.about-ring');
+	const items = root ? [...root.querySelectorAll<HTMLElement>('.about-ring__item')] : [];
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	if (root && items.length) {
+		const TAU = Math.PI * 2;
+		const STEP = TAU / items.length;
+		// Seconds: each step's glide, and the rest between steps.
+		const GLIDE = 1.2;
+		const HOLD = 2.4;
+		// Perspective depth as a multiple of the radius — shallower than
+		// the hero's (4), so it reads quieter.
+		const DEPTH = 5;
+
+		// angle: item i sits at angle + i * STEP; whichever is at 0
+		// (mod TAU) is in front. Starts on item 0, the headshot.
+		const state = { angle: 0 };
+		let radius = 0;
+		let perspective = 0;
+		let tilt = 0;
+		let focus = 0;
+		let inView = false;
+		let timeline: gsap.core.Animation | null = null;
+		let pending: gsap.core.Tween | null = null;
+
+		const smoothstep = (a: number, b: number, v: number) => {
+			const t = Math.min(1, Math.max(0, (v - a) / (b - a)));
+			return t * t * (3 - 2 * t);
+		};
+
+		// From the real item size: the ring's sides sit at the top of the
+		// box and the front dips below them, and the box is exactly as
+		// tall as that, so the copy underneath clears it.
+		function measure() {
+			const w = root!.clientWidth;
+			const itemH = items[0].offsetHeight;
+			const front = DEPTH / (DEPTH - 1);
+			const side = DEPTH / (DEPTH - Math.cos(STEP));
+			radius = w * 0.36;
+			perspective = radius * DEPTH;
+			tilt = itemH * 0.55;
+			// The side spots sit at the ring's center line (see render), so
+			// their tops set the top of the box.
+			const centerY = (itemH * side) / 2;
+			const frontDip = tilt * (1 - Math.cos(STEP)) * front;
+			root!.style.setProperty('--center-y', `${centerY.toFixed(1)}px`);
+			root!.style.height = `${(centerY + frontDip + (itemH * front) / 2).toFixed(1)}px`;
+		}
+
+		function render() {
+			for (let i = 0; i < items.length; i++) {
+				const theta = state.angle + i * STEP;
+				const z = radius * Math.cos(theta);
+				const scale = perspective / (perspective - z);
+				const x = radius * Math.sin(theta) * scale;
+				// cos = 1 in front: the front is lowest, the back highest.
+				const y = tilt * (Math.cos(theta) - Math.cos(STEP)) * scale;
+				// 0 at the very front, 1 at the very back.
+				const depth = (1 - z / radius) / 2;
+				const el = items[i];
+				el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) scale(${scale.toFixed(3)})`;
+				const blur = depth ** 1.4 * 6;
+				el.style.filter = blur < 0.25 ? 'none' : `blur(${blur.toFixed(1)}px)`;
+				el.style.zIndex = String(Math.round(500 + (z / radius) * 400));
+				// The back half fades out.
+				const opacity = 1 - smoothstep(0.3, 0.65, depth);
+				el.style.opacity = opacity.toFixed(3);
+				el.style.visibility = opacity < 0.01 ? 'hidden' : 'visible';
+			}
+		}
+
+		// One calm step to the next photo, then a rest.
+		function step() {
+			const next = (focus + 1) % items.length;
+			let target = -next * STEP;
+			// The next stop forward (the angle only winds down), from
+			// wherever dragging left it.
+			while (target > state.angle - 0.001) target -= TAU;
+			while (target <= state.angle - TAU) target += TAU;
+			timeline = gsap.to(state, {
+				angle: target,
+				duration: GLIDE,
+				ease: 'power2.inOut',
+				onUpdate: render,
+				onComplete: () => {
+					focus = next;
+					timeline = null;
+					queue();
+				},
+			});
+			timeline.paused(!inView);
+		}
+
+		function queue() {
+			if (reduceMotion) return;
+			pending = gsap.delayedCall(HOLD, step).paused(!inView);
+		}
+
+		// --- Dragging, as on the hero ring: a sideways drag turns it 1:1
+		// at the front; letting go carries the flick into a settle on the
+		// nearest photo, then it goes back to stepping.
+		const DRAG_SLOP = 6;
+		let press: { id: number; x: number; y: number; angle: number } | null = null;
+		let dragging = false;
+		let samples: { t: number; angle: number }[] = [];
+		const perPixel = () => 1 / (radius * (perspective / (perspective - radius)));
+
+		function settle() {
+			const now = performance.now();
+			const recent = samples.filter((s) => now - s.t < 80);
+			const first = recent[0];
+			const last = recent[recent.length - 1];
+			const dt = first && last && last.t > first.t ? (last.t - first.t) / 1000 : 0;
+			const v = dt ? (last.angle - first.angle) / dt : 0;
+			const k = Math.round(-(state.angle + v * 0.3) / STEP);
+			const target = -k * STEP;
+			focus = ((k % items.length) + items.length) % items.length;
+			if (reduceMotion) {
+				state.angle = target;
+				render();
+				return;
+			}
+			const d = Math.abs(target - state.angle);
+			const t = Math.abs(v) > 0.05 ? Math.min(1.4, Math.max(0.45, (3 * d) / Math.abs(v))) : 0.6;
+			timeline = gsap.to(state, {
+				angle: target,
+				duration: t,
+				ease: 'power3.out',
+				onUpdate: render,
+				onComplete: () => {
+					timeline = null;
+					queue();
+				},
+			});
+		}
+
+		root.addEventListener('pointerdown', (e) => {
+			if (press || e.button !== 0) return;
+			press = { id: e.pointerId, x: e.clientX, y: e.clientY, angle: state.angle };
+		});
+
+		root.addEventListener('pointermove', (e) => {
+			if (!press || e.pointerId !== press.id) return;
+			if (!dragging) {
+				const dx = e.clientX - press.x;
+				const dy = e.clientY - press.y;
+				if (Math.abs(dx) < DRAG_SLOP || Math.abs(dx) < Math.abs(dy)) return;
+				dragging = true;
+				root.classList.add('is-dragging');
+				root.setPointerCapture(e.pointerId);
+				window.getSelection()?.removeAllRanges();
+				timeline?.kill();
+				pending?.kill();
+				timeline = pending = null;
+				samples = [];
+				press.x = e.clientX;
+				press.angle = state.angle;
+			}
+			state.angle = press.angle + (e.clientX - press.x) * perPixel();
+			samples.push({ t: performance.now(), angle: state.angle });
+			if (samples.length > 12) samples.shift();
+			render();
+		});
+
+		const endPress = (e: PointerEvent) => {
+			if (!press || e.pointerId !== press.id) return;
+			press = null;
+			if (!dragging) return;
+			dragging = false;
+			root.classList.remove('is-dragging');
+			settle();
+		};
+		root.addEventListener('pointerup', endPress);
+		root.addEventListener('pointercancel', endPress);
+
+		measure();
+		render();
+		new ResizeObserver(() => {
+			measure();
+			render();
+		}).observe(root);
+
+		// Rests while off-screen.
+		new IntersectionObserver(
+			([entry]) => {
+				inView = entry.isIntersecting;
+				timeline?.paused(!inView);
+				pending?.paused(!inView);
+			},
+			{ threshold: 0.05 },
+		).observe(root);
+		queue();
+	}
+</script>
