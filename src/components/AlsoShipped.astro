@@ -601,8 +601,8 @@ const items: Project[] = await Promise.all([
 		// initial `true` here left a real window (from page load until
 		// that first callback) where an active slide's video would start
 		// loading/playing even while its carousel was still off-screen.
-		// Same false-until-observed pattern already used by the Hero and
-		// About model viewers' own IntersectionObservers.
+		// Same false-until-observed pattern the Hero and About rings use
+		// for their own IntersectionObservers.
 		let isVisible = false;
 
 		const visibilityObserver = new IntersectionObserver(
