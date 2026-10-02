@@ -1,0 +1,72 @@
+---
+// "Copy email": puts the address on the clipboard and confirms with a
+// tooltip — the same treatment as the About page's Email button, as a
+// reusable piece (phone mode uses it in place of "Get in touch"). If
+// the clipboard is unavailable, the tooltip shows the address instead.
+// Extra classes (e.g. button--secondary, mobile-only) pass through.
+interface Props {
+	class?: string;
+	label?: string;
+}
+const { class: extra, label = 'Copy email' } = Astro.props;
+const EMAIL = 'jake.rochford@gmail.com';
+---
+
+<button type="button" class:list={['button type-caption copy-email', extra]} data-email={EMAIL}>
+	{label}
+	<span class="copy-email__tooltip" role="status" aria-live="polite">Email copied</span>
+</button>
+
+<style>
+	.copy-email {
+		position: relative;
+	}
+
+	/* Tooltip convention (see AGENTS.md): caption type, --radius-well,
+	   solid dark fill, fade in/out only — instant under reduced motion. */
+	.copy-email__tooltip {
+		position: absolute;
+		bottom: calc(100% + var(--space-2xs));
+		left: 50%;
+		transform: translateX(-50%);
+		white-space: nowrap;
+		background: var(--color-ink);
+		color: var(--color-bg);
+		padding: var(--space-2xs) var(--space-xs);
+		border-radius: var(--radius-well);
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.2s ease;
+	}
+
+	.copy-email__tooltip.is-visible {
+		opacity: 1;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.copy-email__tooltip {
+			transition: none;
+		}
+	}
+</style>
+
+<script>
+	for (const button of document.querySelectorAll<HTMLButtonElement>('.copy-email')) {
+		const tooltip = button.querySelector<HTMLElement>('.copy-email__tooltip');
+		const email = button.dataset.email ?? '';
+		let hide: ReturnType<typeof setTimeout>;
+		button.addEventListener('click', async () => {
+			let message = 'Email copied';
+			try {
+				await navigator.clipboard.writeText(email);
+			} catch {
+				message = email;
+			}
+			if (!tooltip) return;
+			tooltip.textContent = message;
+			tooltip.classList.add('is-visible');
+			clearTimeout(hide);
+			hide = setTimeout(() => tooltip.classList.remove('is-visible'), 1750);
+		});
+	}
+</script>

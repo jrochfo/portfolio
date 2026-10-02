@@ -1,5 +1,5 @@
 ---
-// The phone homepage's middle: a short bio, a reverse-chronological
+// The phone homepage's middle (the bio is in the hero): a reverse-chronological
 // work list with one visual each, and a few kind words. Shown only in
 // phone mode (see Base.astro); it stands in for What I Do, the Rebrand
 // case study, Also Shipped and the testimonial cards, which phone mode
@@ -70,15 +70,6 @@ const quotes = await Promise.all(
 
 <section class="mobile-home mobile-only">
 	<div class="container mobile-home__inner">
-		<div class="mobile-home__bio" data-reveal>
-			<p class="type-h3">
-				I'm a brand and motion designer, currently Brand Manager at Stack Overflow, where I helped rebuild
-				the brand with Koto and now run it across everything the company ships.
-			</p>
-			<p class="type-caption mobile-home__place">
-				Chicago <span aria-hidden="true">·</span> <time data-local-time>—</time>
-			</p>
-		</div>
 
 		<div class="mobile-home__group">
 			<h2 class="type-h1" data-reveal>Selected work.</h2>
@@ -153,12 +144,6 @@ const quotes = await Promise.all(
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-2xl);
-	}
-
-	.mobile-home__place {
-		margin-block-start: var(--space-s);
-		color: var(--color-ink-muted);
-		font-variant-numeric: tabular-nums;
 	}
 
 	.mobile-home__work,
@@ -253,17 +238,6 @@ const quotes = await Promise.all(
 </style>
 
 <script>
-	// Chicago's local time, kept current.
-	const timeEl = document.querySelector<HTMLTimeElement>('[data-local-time]');
-	if (timeEl) {
-		const format = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', hour: 'numeric', minute: '2-digit' });
-		const tick = () => {
-			timeEl.textContent = format.format(new Date()).toLowerCase();
-		};
-		tick();
-		setInterval(tick, 20_000);
-	}
-
 	// The work videos load when they near the screen and play only while
 	// they're on it; never on their own under reduced motion.
 	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

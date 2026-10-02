@@ -1,5 +1,6 @@
 ---
 import { getImage } from 'astro:assets';
+import CopyEmailButton from './CopyEmailButton.astro';
 import koto from '../assets/work/so-rebrand/direction/london-1.jpg';
 import nashville from '../assets/work/so-rebrand/systems/systems-8-1.jpg';
 import ae1 from '../assets/work/off-the-clock/type/ae-1.png';
@@ -112,15 +113,24 @@ const ring: RingItem[] = [
 			))}
 		</div>
 		<div class="container hero__text">
-			<h1 class="type-display hero__headline" data-reveal style="--reveal-delay: 80ms">Hi, I’m Jake. <span class="hero__headline-line">I make brands move.</span></h1>
-			<p class="type-h3 hero__subhead" data-reveal style="--reveal-delay: 160ms">
+			<h1 class="type-display hero__headline" data-reveal style="--reveal-delay: 80ms">Hi, I’m Jake. <span class="hero__headline-line desktop-only">I make brands move.</span></h1>
+			<p class="type-h3 hero__subhead desktop-only" data-reveal style="--reveal-delay: 160ms">
 				Motion, systems, and strategy, most recently Stack Overflow's rebrand with Koto, from
 				first workshops to full rollout.
 			</p>
+			{/* Phone mode: the short bio in place of the desktop subhead
+			    (draft copy — see MobileHome), and where Jake is. */}
+			<p class="type-h3 hero__subhead mobile-only" data-reveal style="--reveal-delay: 160ms">
+				I'm a brand and motion designer, currently Brand Manager at Stack Overflow, where I helped rebuild
+				the brand with Koto and now run it across everything the company ships.
+			</p>
+			<p class="type-caption hero__place mobile-only" data-reveal style="--reveal-delay: 200ms">
+				Chicago <span aria-hidden="true">·</span> <time data-local-time>—</time>
+			</p>
 			<div class="hero__actions" data-reveal style="--reveal-delay: 240ms">
 				<a href="/about" class="button type-caption desktop-only">Get in touch</a>
-				{/* Phone mode has no About page — straight to email. */}
-				<a href="mailto:jake.rochford@gmail.com" class="button type-caption mobile-only">Get in touch</a>
+				{/* Phone mode has no About page — the email, copied. */}
+				<CopyEmailButton class="mobile-only" />
 				<a
 					href="/jake-rochford-resume.pdf"
 					target="_blank"
@@ -282,6 +292,12 @@ const ring: RingItem[] = [
 		margin-block-start: var(--space-s);
 	}
 
+	.hero__place {
+		margin-block-start: var(--space-s);
+		color: var(--color-ink-muted);
+		font-variant-numeric: tabular-nums;
+	}
+
 	.hero__actions {
 		display: flex;
 		flex-wrap: wrap;
@@ -397,6 +413,17 @@ const ring: RingItem[] = [
 
 	<script>
 		import { gsap } from 'gsap';
+
+		// Chicago's local time beside the phone-mode bio, kept current.
+		const timeEl = document.querySelector<HTMLTimeElement>('.hero [data-local-time]');
+		if (timeEl) {
+			const format = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', hour: 'numeric', minute: '2-digit' });
+			const tick = () => {
+				timeEl.textContent = format.format(new Date()).toLowerCase();
+			};
+			tick();
+			setInterval(tick, 20_000);
+		}
 
 		const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 		const stage = document.querySelector<HTMLElement>('.hero__stage');
