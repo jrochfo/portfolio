@@ -148,7 +148,9 @@ const ring: RingItem[] = [
 	.hero {
 		/* Exempt from the standard section gap — it's a viewport-height
 		   composition with its own internal rhythm. */
-		min-height: calc(100svh - var(--nav-height, 0px));
+		/* Less --hero-trim, which the ring script sets so the ring always
+		   fits between the buttons and the logos (see measure()). */
+		min-height: calc(100svh - var(--nav-height, 0px) - var(--hero-trim, 0px));
 		display: flex;
 		flex-direction: column;
 		/* The ring runs past both viewport edges on purpose; clip (not
@@ -460,30 +462,43 @@ const ring: RingItem[] = [
 			const floor = clients ? clients.top : mid + h / 2;
 			// A little more room above the focused item than below it.
 			const gap = floor - actions.bottom;
-			const itemTop = actions.bottom + Math.max(minAbove, gap * (small ? 0.08 : 0.13));
-			const itemBottom = floor - Math.max(minBelow, gap * (small ? 0.05 : 0.08));
-			let itemH = Math.max(small ? 80 : 140, (itemBottom - itemTop) / frontScale);
-			// …but never so tall that the widest (16:9) item, in front,
-			// runs off the sides of a phone screen.
-			if (small) itemH = Math.min(itemH, (w * 0.86 * 9) / 16 / frontScale);
+			const above = small ? 0.08 : 0.13;
+			const below = small ? 0.05 : 0.08;
+			const itemTop = actions.bottom + Math.max(minAbove, gap * above);
+			const itemBottom = floor - Math.max(minBelow, gap * below);
+			// The front item's size range: a floor, and a cap so the widest
+			// (16:9) item never gets too wide for the window — most of a
+			// phone screen; on desktop 40% at full container width, up to
+			// 60% approaching the phone breakpoint (same ramp as the radius).
+			const minItemH = small ? 80 : 140;
+			const capItemH = (w * (small ? 0.86 : 0.4 + 0.2 * widen) * 9) / 16 / frontScale;
+			const itemH = Math.min(capItemH, Math.max(minItemH, (itemBottom - itemTop) / frontScale));
 			stage.style.setProperty('--item-h', `${itemH.toFixed(1)}px`);
-			// Phones pin the first logo row to the bottom of the screen
-			// (see the CSS) — but once the front item hits that width cap,
-			// more screen height would just be empty space around the
-			// ring (a tall, narrow window). Trim the hero by the gap the
-			// capped item doesn't need, so the logos sit right under the
-			// ring instead. Accumulates on the current trim, so the
-			// re-measure the trim itself triggers settles on the same value.
-			if (small && hero) {
-				// From the capped size, not the current one: measured from
-				// the current item, the trim and the item would shrink
-				// each other all the way down.
-				const front = (w * 0.86 * 9) / 16;
-				let needed = front + 32;
-				for (let i = 0; i < 8; i++) needed = front + Math.max(minAbove, needed * 0.08) + Math.max(minBelow, needed * 0.05);
-				trim = Math.max(0, trim + gap - needed);
-			} else {
-				trim = 0;
+			// The hero's height is set by the screen (see the CSS), not by
+			// the ring, so on some windows the ring doesn't fit (a short
+			// laptop, a tiny phone: the front item would overlap the
+			// buttons or the logos) and on others it can't use the room (a
+			// tall, narrow window: big empty gaps around a capped item).
+			// So the hero is trimmed (--hero-trim; negative grows it) just
+			// enough to bring the gap between buttons and logos into the
+			// range the smallest-to-largest front item needs, and not at
+			// all when it's already in range. Worked out from what the gap
+			// would be untrimmed, so a given window always lands on the
+			// same layout however it was resized to get there.
+			if (hero) {
+				const gapFor = (front: number) => {
+					let g = front + minAbove + minBelow;
+					for (let i = 0; i < 8; i++) g = front + Math.max(minAbove, g * above) + Math.max(minBelow, g * below);
+					return g;
+				};
+				const lo = gapFor(Math.min(minItemH, capItemH) * frontScale);
+				const hi = gapFor(capItemH * frontScale);
+				// The trim actually in effect: less any part of it the hero's
+				// own content is already overriding (min-height below the
+				// real height).
+				const slack = Math.max(0, hero.offsetHeight - (parseFloat(getComputedStyle(hero).minHeight) || 0));
+				const untrimmed = gap + trim - slack;
+				trim = untrimmed - Math.min(hi, Math.max(lo, untrimmed));
 			}
 			hero?.style.setProperty('--hero-trim', `${trim.toFixed(1)}px`);
 			const backY = headline.top + headline.height / 2 - mid;
