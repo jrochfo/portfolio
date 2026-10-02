@@ -467,10 +467,12 @@ const ring: RingItem[] = [
 			const itemBottom = floor - Math.max(minBelow, gap * below);
 			// The front item's size range: a floor, and a cap so the widest
 			// (16:9) item never gets too wide for the window — most of a
-			// phone screen, 60% of a desktop one. Within that it grows with
+			// phone screen; on desktop 48% at full container width (so the
+			// oval still shows past it on a big monitor), up to 60%
+			// approaching the phone breakpoint. Within that it grows with
 			// the window's height, filling the space it's given.
 			const minItemH = small ? 80 : 140;
-			const capItemH = (w * (small ? 0.86 : 0.6) * 9) / 16 / frontScale;
+			const capItemH = (w * (small ? 0.86 : 0.48 + 0.12 * widen) * 9) / 16 / frontScale;
 			const itemH = Math.min(capItemH, Math.max(minItemH, (itemBottom - itemTop) / frontScale));
 			stage.style.setProperty('--item-h', `${itemH.toFixed(1)}px`);
 			// The ring's radius follows the window's width, but also the
