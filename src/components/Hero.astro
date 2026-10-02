@@ -307,8 +307,13 @@ const ring: RingItem[] = [
 		top: var(--ring-top, 0px);
 		height: var(--ring-h, 50%);
 		overflow: clip;
-		-webkit-mask-image: linear-gradient(to bottom, transparent, black 22%, black 78%, transparent);
-		mask-image: linear-gradient(to bottom, transparent, black 22%, black 78%, transparent);
+		-webkit-mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
+		mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
+	}
+
+	/* Square-cornered in the drum, like the full-width work visuals. */
+	:global(:root.mobile-view) .hero__ring-item {
+		border-radius: 0;
 	}
 
 	/* "See more", to the right of the buttons: on to the work. */
@@ -691,9 +696,10 @@ const ring: RingItem[] = [
 			const zoneTop = token('--space-s');
 			const zoneBottom = headlineTop - stageTop - token('--space-m');
 			const zoneH = Math.max(0, zoneBottom - zoneTop);
-			// The front item: half the strip, but never wider than most of
-			// the screen.
-			const front = Math.min((w * 0.9 * 9) / 16, zoneH * 0.5);
+			// The front item spans the full screen width (16:9), like the
+			// work visuals below; the neighbours, further back, come out a
+			// little narrower.
+			const front = (w * 9) / 16;
 			const itemH = front / frontScale;
 			stage!.style.setProperty('--item-h', `${itemH.toFixed(1)}px`);
 			// The neighbours (one step round) sit so their outer edges just
