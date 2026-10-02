@@ -440,7 +440,7 @@ const ring: RingItem[] = [
 			const minBelow = small ? spaceM : spaceS;
 			// Phones: a ring about as wide as the screen, so the focused
 			// item's neighbors just peek in from the edges.
-			// Desktop: 46% of the width at full container width (1320px+),
+			// Desktop: 42% of the width at full container width (1320px+),
 			// widening steadily to 80% at the phone breakpoint. The items
 			// don't shrink with the window (their size comes from the
 			// vertical space), so a fixed fraction crammed them together
@@ -476,10 +476,11 @@ const ring: RingItem[] = [
 			// The ring's radius follows the window's width, but also the
 			// front item's size — a tall window grows the items, and the
 			// oval has to grow with them or they'd pile into each other.
-			// 1.35x the widest front item keeps the spacing of a 1440x900
-			// window; past the screen edges is fine (the hero clips it).
+			// 1.2x the widest front item — tight enough that the curve of
+			// the oval stays in view at the sides; past the screen edges
+			// is fine (the hero clips it).
 			const frontW = ((itemH * 16) / 9) * frontScale;
-			radius = small ? w * 0.95 : Math.max(w * (0.46 + 0.34 * widen), frontW * 1.35, 340);
+			radius = small ? w * 0.95 : Math.max(w * (0.42 + 0.38 * widen), frontW * 1.2, 340);
 			perspective = radius * 4;
 			// The hero's height is set by the screen (see the CSS), not by
 			// the ring, so on some windows the ring doesn't fit (a short
