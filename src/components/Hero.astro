@@ -335,11 +335,20 @@ const ring: RingItem[] = [
 		   taking height from the ring. On a screen tall enough that the
 		   ring can't use the height, the script trims it (--hero-trim). */
 		.hero {
-			--logo-h: min(44px, calc((100vw - 2 * var(--container-margin) - var(--space-2xs)) / 2 * 0.9 / 3.75));
+			--logo-cols: 2;
+			/* Rows past the first, which run below the fold. */
+			--logo-rows-below: 2;
+			--logo-h: min(
+				44px,
+				calc(
+					(100vw - 2 * var(--container-margin) - (var(--logo-cols) - 1) * var(--space-2xs)) / var(--logo-cols) * 0.9 /
+						3.75
+				)
+			);
 			--logo-row-gap: var(--space-m);
 			min-height: calc(
-				100svh - var(--nav-height, 0px) + 2 * (var(--logo-h) + var(--logo-row-gap)) + var(--space-m) - var(--space-s) -
-					var(--hero-trim, 0px)
+				100svh - var(--nav-height, 0px) + var(--logo-rows-below) * (var(--logo-h) + var(--logo-row-gap)) +
+					var(--space-m) - var(--space-s) - var(--hero-trim, 0px)
 			);
 		}
 
@@ -354,8 +363,8 @@ const ring: RingItem[] = [
 
 		.hero__logos {
 			display: grid;
-			/* Two across, three rows. */
-			grid-template-columns: repeat(2, 1fr);
+			/* Two across, three rows (three across on tablets, below). */
+			grid-template-columns: repeat(var(--logo-cols), 1fr);
 			justify-items: center;
 			align-items: center;
 			row-gap: var(--logo-row-gap);
@@ -369,6 +378,15 @@ const ring: RingItem[] = [
 		.hero__logo {
 			height: var(--logo-h);
 			max-width: 100%;
+		}
+	}
+
+	/* Tablets on the phone layout: three across, two rows — two across
+	   spreads the logos very wide at this size. */
+	@media (min-width: 600px) and (max-width: 768px) {
+		.hero {
+			--logo-cols: 3;
+			--logo-rows-below: 1;
 		}
 	}
 	</style>

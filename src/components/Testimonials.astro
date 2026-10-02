@@ -216,6 +216,8 @@ const testimonials = [
 				   mostly empty card. */
 				--card-w: min(80vw, 420px);
 				width: var(--card-w);
+				/* Phones only — on a tablet (below) the content sets the
+				   height outright. */
 				min-height: calc(var(--card-w) * 4 / 3);
 				aspect-ratio: auto;
 				display: grid;
@@ -258,6 +260,20 @@ const testimonials = [
 			.testimonial-card__credit-connector {
 				display: none;
 			}
+		}
+
+		/* Tablets on the phone layout: no tall 3:4 minimum, so there's
+		   no stretch of empty card between the quote and the credit;
+		   cards in the strip still match the tallest. */
+		@media (min-width: 600px) and (max-width: 768px) {
+			.testimonial-card {
+				min-height: 0;
+			}
+
+			.testimonial-card__quote {
+				margin-block-start: var(--space-s);
+			}
+
 		}
 	</style>
 
