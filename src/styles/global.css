@@ -546,8 +546,8 @@ main:has(> .close:last-child) {
 	--container-margin: var(--space-xs);
 }
 
-/* Phone mode: the hero is just as tall as its content (ring above,
-   copy below — see Hero.astro's layoutPhone). */
+/* Phone mode: the hero is one screen tall — the vertical ring above,
+   the copy at the bottom (see Hero.astro's layoutPhone). */
 :root.mobile-view .hero {
-	min-height: 0;
+	min-height: calc(100svh - var(--nav-height, 0px));
 }

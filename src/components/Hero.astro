@@ -1,6 +1,7 @@
 ---
 import { getImage } from 'astro:assets';
 import CopyEmailButton from './CopyEmailButton.astro';
+import iconArrow from '../assets/icons/functions/arrow-forward.svg';
 import koto from '../assets/work/so-rebrand/direction/london-1.jpg';
 import nashville from '../assets/work/so-rebrand/systems/systems-8-1.jpg';
 import ae1 from '../assets/work/off-the-clock/type/ae-1.png';
@@ -138,6 +139,9 @@ const ring: RingItem[] = [
 					class="button button--secondary type-caption"
 				>
 					Resume
+				</a>
+				<a href="#selected-work" class="type-caption hero__more mobile-only" data-see-more>
+					See more <span class="hero__more-icon" style={`--icon-src: url(${iconArrow.src})`} aria-hidden="true" />
 				</a>
 			</div>
 		</div>
@@ -284,11 +288,42 @@ const ring: RingItem[] = [
 		justify-content: flex-start;
 	}
 
-	/* Phone mode: the ring is above the copy (see layoutPhone), in the
-	   zone the stage reserves at its top; the hero is as tall as its
-	   content. */
+	/* Phone mode: the copy sits at the bottom of the screen and the
+	   ring turns vertically in the strip above it (see layoutPhone),
+	   clipped to that strip. No grab cursor — it isn't draggable here. */
 	:global(:root.mobile-view) .hero__stage {
-		padding-block-start: var(--ring-zone, 280px);
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-end;
+		padding-block: 0 var(--space-m);
+		cursor: auto;
+	}
+
+	:global(:root.mobile-view) .hero__ring {
+		inset: auto 0;
+		top: var(--ring-top, 0px);
+		height: var(--ring-h, 50%);
+		overflow: clip;
+	}
+
+	/* "See more", to the right of the buttons: on to the work. */
+	.hero__more {
+		margin-inline-start: auto;
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2xs);
+		color: var(--color-ink-muted);
+		text-decoration: none;
+	}
+
+	.hero__more-icon {
+		display: block;
+		width: 16px;
+		height: 16px;
+		rotate: 90deg;
+		background-color: currentColor;
+		-webkit-mask: var(--icon-src) center / contain no-repeat;
+		mask: var(--icon-src) center / contain no-repeat;
 	}
 
 	/* Above back-of-ring items, below the focused front ones. */
@@ -435,6 +470,15 @@ const ring: RingItem[] = [
 	<script>
 		import { gsap } from 'gsap';
 
+		// "See more" glides down to the work (jumps under reduced motion).
+		document.querySelector('[data-see-more]')?.addEventListener('click', (e) => {
+			const target = document.querySelector('#selected-work');
+			if (!target) return;
+			e.preventDefault();
+			const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+			target.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+		});
+
 		// Chicago's local time beside the phone-mode bio, kept current.
 		const timeEl = document.querySelector<HTMLTimeElement>('.hero [data-local-time]');
 		if (timeEl) {
@@ -488,10 +532,13 @@ const ring: RingItem[] = [
 		const hero = stage?.closest<HTMLElement>('.hero');
 		let trim = 0;
 		let lift = 0;
-		// -1 when the ring curves up (phone mode), 1 otherwise.
-		let flip = 1;
-		// Phone mode's fade-out range, by depth (0 front, 1 back).
-		const PHONE_FADE = [0.08, 0.2];
+		// Phone mode turns the ring vertically (see layoutPhone).
+		let vertical = false;
+		// Phone mode's fade-out range, by depth (0 front, 1 back): the
+		// front item and its neighbours, not much further round.
+		// Neighbours sit at depth ~0.05; the next ones round (~0.19) would
+		// otherwise linger as a faint blurred block behind the drum.
+		const PHONE_FADE = [0.06, 0.14];
 		const phoneMode = document.documentElement.classList.contains('mobile-view');
 		// Spacing tokens from global.css, read live in measure() since
 		// their values change at the phone breakpoint.
@@ -613,41 +660,38 @@ const ring: RingItem[] = [
 			const frontY = (itemTop + itemBottom) / 2 - mid;
 			tilt = Math.max(0, (frontY - backY) / (frontScale + backScale));
 			centerY = backY + tilt * backScale;
-			flip = 1;
+			vertical = false;
 			maxBlur = 10;
-			if (phoneMode) layoutPhone(w, h, frontScale);
+			if (phoneMode) layoutPhone(w, frontScale, headline.top);
 		}
 
-		// Phone mode: the ring sits above the copy instead of behind and
-		// below it, flipped to curve up (front item on top, its
-		// neighbours dropping away to either side — the About ring's
-		// flip). The front item is simply as wide as the cap allows; the
-		// stage reserves the ring's zone as top padding (--ring-zone) for
-		// the copy to sit under, and the hero is just as tall as its
-		// content, so none of the fold/trim logic above applies.
-		function layoutPhone(w: number, h: number, frontScale: number) {
-			const itemH = (Math.min(w * 0.86, 460) * 9) / 16 / frontScale;
+		// Phone mode: the ring turns vertically, like a rolodex, in the
+		// strip between the nav and the copy (which sits at the bottom of
+		// the screen — see the CSS). A tall screen suits a vertical ring
+		// better than a wide one. The front item is centred in that strip,
+		// its neighbours peeking out above and below; the strip clips
+		// anything past its edges. The hero is a screen tall, so the
+		// fold / trim / lift logic above doesn't apply here.
+		function layoutPhone(w: number, frontScale: number, headlineTop: number) {
+			const stageTop = stage!.getBoundingClientRect().top;
+			const zoneTop = token('--space-s');
+			const zoneBottom = headlineTop - stageTop - token('--space-m');
+			const zoneH = Math.max(0, zoneBottom - zoneTop);
+			// The front item: half the strip, but never wider than most of
+			// the screen.
+			const front = Math.min((w * 0.9 * 9) / 16, zoneH * 0.5);
+			const itemH = front / frontScale;
 			stage!.style.setProperty('--item-h', `${itemH.toFixed(1)}px`);
-			const front = itemH * frontScale;
-			const top = token('--space-s');
-			tilt = front * 1.2;
-			flip = -1;
-			// Front item's top at `top`; centerY is relative to the stage's
-			// middle, offset by the flipped tilt the front sits up by.
-			centerY = top + front / 2 - h / 2 + tilt * frontScale;
-			// Deep enough for the lowest item that's still meaningfully
-			// visible on the curve — down to the middle of the fade (depth
-			// d is cos 1 - 2d), measured from the same projection render()
-			// uses — plus a gap before the headline.
-			const fadeMid = (PHONE_FADE[0] + PHONE_FADE[1]) / 2;
-			let lowest = top + front;
-			for (let c = 1; c >= 1 - 2 * fadeMid; c -= 0.02) {
-				const scale = 4 / (4 - c);
-				const bottom = centerY + h / 2 - tilt * c * scale + (itemH * scale) / 2;
-				lowest = Math.max(lowest, bottom);
-			}
-			const zone = lowest + token('--space-m');
-			stage!.style.setProperty('--ring-zone', `${zone.toFixed(1)}px`);
+			// The neighbours (one step round) sit so their outer edges just
+			// meet the strip's edges.
+			const side = 4 / (4 - Math.cos(STEP));
+			const offset = Math.max(front * 0.5, zoneH / 2 - (itemH * side) / 2);
+			radius = offset / (Math.sin(STEP) * side);
+			perspective = radius * 4;
+			vertical = true;
+			centerY = 0;
+			stage!.style.setProperty('--ring-top', `${zoneTop.toFixed(1)}px`);
+			stage!.style.setProperty('--ring-h', `${zoneH.toFixed(1)}px`);
 			trim = 0;
 			lift = 0;
 			hero?.style.setProperty('--hero-trim', '0px');
@@ -660,14 +704,13 @@ const ring: RingItem[] = [
 			const depth = new Array<number>(n);
 			for (let i = 0; i < n; i++) {
 				const theta = state.angle + i * STEP;
-				const x = radius * Math.sin(theta);
 				z[i] = radius * Math.cos(theta);
 				const scale = perspective / (perspective - z[i]);
-				const y = centerY / scale + flip * tilt * Math.cos(theta);
 				// 0 at the very front, 1 at the very back.
 				depth[i] = (1 - z[i] / radius) / 2;
-				const cx = x * scale;
-				const cy = y * scale;
+				// Vertical (phone mode): the next item comes up from below.
+				const cx = vertical ? 0 : radius * Math.sin(theta) * scale;
+				const cy = vertical ? radius * Math.sin(theta) * scale : (centerY / scale + tilt * Math.cos(theta)) * scale;
 				const el = items[i];
 				el.style.transform = `translate3d(${cx.toFixed(1)}px, ${cy.toFixed(1)}px, 0) scale(${scale.toFixed(3)})`;
 				const blur = depth[i] ** 1.4 * maxBlur;
@@ -679,11 +722,10 @@ const ring: RingItem[] = [
 				// behind the hero text clear.
 				// Phones fade the sides out sooner — on a narrow screen they'd
 				// otherwise sit right behind the subhead.
-				// Phone mode's upward curve shows just the front item and its
-				// neighbours — the ones further round would only peek in as
-				// slivers at the screen edges, hanging low on the curve.
+				// Phone mode's vertical ring shows just the front item and its
+				// neighbours.
 				const opacity =
-					flip < 0
+					vertical
 						? 1 - smoothstep(PHONE_FADE[0], PHONE_FADE[1], depth[i])
 						: small
 							? 1 - smoothstep(0.1, 0.4, depth[i])
@@ -817,7 +859,9 @@ const ring: RingItem[] = [
 		}
 
 		stage?.addEventListener('pointerdown', (e) => {
-			if (press || e.button !== 0 || (e.target as Element).closest('a, button')) return;
+			// No dragging in phone mode: there a vertical swipe scrolls the
+			// page, and the ring turns vertically.
+			if (phoneMode || press || e.button !== 0 || (e.target as Element).closest('a, button')) return;
 			press = { id: e.pointerId, x: e.clientX, y: e.clientY, angle: state.angle };
 		});
 

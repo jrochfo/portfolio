@@ -71,7 +71,7 @@ const quotes = await Promise.all(
 <section class="mobile-home mobile-only">
 	<div class="container mobile-home__inner">
 
-		<div class="mobile-home__group">
+		<div class="mobile-home__group" id="selected-work">
 			<h2 class="type-h1" data-reveal>Selected work.</h2>
 			<ol class="mobile-home__work">
 				{work.map((w) => (
@@ -140,6 +140,11 @@ const quotes = await Promise.all(
 </section>
 
 <style>
+	/* Lands under the sticky nav when "See more" scrolls here. */
+	#selected-work {
+		scroll-margin-top: calc(var(--nav-height, 0px) + var(--space-s));
+	}
+
 	.mobile-home__inner {
 		display: flex;
 		flex-direction: column;
