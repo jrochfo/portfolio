@@ -284,6 +284,13 @@ const ring: RingItem[] = [
 		justify-content: flex-start;
 	}
 
+	/* Phone mode: the ring is above the copy (see layoutPhone), in the
+	   zone the stage reserves at its top; the hero is as tall as its
+	   content. */
+	:global(:root.mobile-view) .hero__stage {
+		padding-block-start: var(--ring-zone, 280px);
+	}
+
 	/* Above back-of-ring items, below the focused front ones. */
 	.hero__headline,
 	.hero__subhead {
@@ -481,6 +488,9 @@ const ring: RingItem[] = [
 		const hero = stage?.closest<HTMLElement>('.hero');
 		let trim = 0;
 		let lift = 0;
+		// -1 when the ring curves up (phone mode), 1 otherwise.
+		let flip = 1;
+		const phoneMode = document.documentElement.classList.contains('mobile-view');
 		// Spacing tokens from global.css, read live in measure() since
 		// their values change at the phone breakpoint.
 		const token = (name: string) =>
@@ -601,7 +611,36 @@ const ring: RingItem[] = [
 			const frontY = (itemTop + itemBottom) / 2 - mid;
 			tilt = Math.max(0, (frontY - backY) / (frontScale + backScale));
 			centerY = backY + tilt * backScale;
+			flip = 1;
 			maxBlur = 10;
+			if (phoneMode) layoutPhone(w, h, frontScale);
+		}
+
+		// Phone mode: the ring sits above the copy instead of behind and
+		// below it, flipped to curve up (front item on top, its
+		// neighbours dropping away to either side — the About ring's
+		// flip). The front item is simply as wide as the cap allows; the
+		// stage reserves the ring's zone as top padding (--ring-zone) for
+		// the copy to sit under, and the hero is just as tall as its
+		// content, so none of the fold/trim logic above applies.
+		function layoutPhone(w: number, h: number, frontScale: number) {
+			const itemH = (Math.min(w * 0.86, 460) * 9) / 16 / frontScale;
+			stage!.style.setProperty('--item-h', `${itemH.toFixed(1)}px`);
+			const front = itemH * frontScale;
+			const top = token('--space-s');
+			tilt = front * 0.4;
+			flip = -1;
+			// Front item's top at `top`; centerY is relative to the stage's
+			// middle, offset by the flipped tilt the front sits up by.
+			centerY = top + front / 2 - h / 2 + tilt * frontScale;
+			// Deep enough for the front item and its neighbours, which hang
+			// lower on the curve, plus a gap before the headline.
+			const zone = top + front + tilt * 0.6 + token('--space-m');
+			stage!.style.setProperty('--ring-zone', `${zone.toFixed(1)}px`);
+			trim = 0;
+			lift = 0;
+			hero?.style.setProperty('--hero-trim', '0px');
+			stage!.style.setProperty('--hero-lift', '0px');
 		}
 
 		function render() {
@@ -613,7 +652,7 @@ const ring: RingItem[] = [
 				const x = radius * Math.sin(theta);
 				z[i] = radius * Math.cos(theta);
 				const scale = perspective / (perspective - z[i]);
-				const y = centerY / scale + tilt * Math.cos(theta);
+				const y = centerY / scale + flip * tilt * Math.cos(theta);
 				// 0 at the very front, 1 at the very back.
 				depth[i] = (1 - z[i] / radius) / 2;
 				const cx = x * scale;

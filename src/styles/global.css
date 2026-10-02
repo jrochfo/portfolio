@@ -546,8 +546,8 @@ main:has(> .close:last-child) {
 	--container-margin: var(--space-xs);
 }
 
-/* No logo row in phone mode, so the hero no longer runs extra rows
-   past the fold — just the screen, less the ring's trim. */
+/* Phone mode: the hero is just as tall as its content (ring above,
+   copy below — see Hero.astro's layoutPhone). */
 :root.mobile-view .hero {
-	min-height: calc(100svh - var(--nav-height, 0px) - var(--hero-trim, 0px));
+	min-height: 0;
 }
