@@ -270,6 +270,20 @@ const ring: RingItem[] = [
 		pointer-events: auto;
 	}
 
+	/* Phone mode: the copy sets left, like the rest of the phone page —
+	   centered, the four-line bio got ragged on both sides. The ring
+	   stays centered under it; it spans the screen, so it reads as a
+	   full-width visual rather than a second centered object. */
+	:global(:root.mobile-view) .hero__text {
+		justify-self: stretch;
+		align-items: flex-start;
+		text-align: left;
+	}
+
+	:global(:root.mobile-view) .hero__actions {
+		justify-content: flex-start;
+	}
+
 	/* Above back-of-ring items, below the focused front ones. */
 	.hero__headline,
 	.hero__subhead {
