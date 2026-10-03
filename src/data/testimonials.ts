@@ -17,7 +17,7 @@ export const testimonials = [
 		logo: logoStack,
 		company: 'Stack Overflow',
 		quote:
-			'Jake is a valued expert in the Stack brand. He provides valuable insight beyond design, particularly during the rebrand process — I appreciate his points of view and candor.',
+			'Jake is a valued expert in the Stack brand. He provides valuable insight beyond design, particularly during the rebrand process — I so appreciate his points of view and candor.',
 		name: 'David Longworth',
 		title: 'Senior Director, Design',
 		connector: ', ',
