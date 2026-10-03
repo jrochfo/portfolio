@@ -191,6 +191,9 @@ const items: Item[] = [
 
 		.otc-stack {
 			position: relative;
+			/* Keeps the cards' z-indexes (a hovered card climbs a running
+			   counter, see the script) in here, under the sticky nav. */
+			isolation: isolate;
 			width: 100%;
 			aspect-ratio: 5 / 4;
 			/* Nudged down a step as a whole: the tilted top card pokes
