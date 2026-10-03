@@ -30,6 +30,7 @@ const dev = import.meta.env.DEV;
 	<div class="texture-audition__row">
 		<label><input type="checkbox" data-target="testimonials" /> Testimonials band</label>
 		<label><input type="checkbox" data-target="close" /> Green band</label>
+		<label><input type="checkbox" data-target="whatido" /> What I Do</label>
 	</div>
 	<button type="button" class="texture-audition__mode" data-mode>Switch to dark</button>
 </div>
@@ -108,7 +109,11 @@ const dev = import.meta.env.DEV;
 	const panel = document.querySelector<HTMLElement>('.texture-audition');
 	const FLAG = 'texture-audition';
 	const STORE = 'texture-audition-state';
-	const SELECTORS: Record<string, string> = { testimonials: '.testimonials', close: '.close' };
+	const SELECTORS: Record<string, string> = { testimonials: '.testimonials', close: '.close', whatido: '.what-i-do' };
+	// What I Do's layer runs past the section into the gaps around it —
+	// from the hero's logo row down to the Rebrand section — and fades
+	// out at both ends rather than stopping at a hard edge.
+	const FADE = 'linear-gradient(to bottom, transparent, black 30%, black 70%, transparent)';
 
 	// Grain: a tile of SVG fractal noise, turned into an alpha stencil
 	// (bright speckles opaque, the rest clear) and used as a mask over
@@ -121,24 +126,32 @@ const dev = import.meta.env.DEV;
 		)}")`;
 	const grain = (url: string, size: number) =>
 		`background-color: currentColor; -webkit-mask-image: ${url}; mask-image: ${url}; -webkit-mask-size: ${size}px ${size}px; mask-size: ${size}px ${size}px;`;
+	// The same, with the edge fade layered in as a second mask (both have
+	// to be opaque for the texture to show).
+	const grainFaded = (url: string, size: number) =>
+		`background-color: currentColor; -webkit-mask-image: ${url}, ${FADE}; mask-image: ${url}, ${FADE}; -webkit-mask-size: ${size}px ${size}px, 100% 100%; mask-size: ${size}px ${size}px, 100% 100%; -webkit-mask-composite: source-in; mask-composite: intersect;`;
+
+	function paintFor(s: State, faded: boolean) {
+		const size = Math.round(240 * s.scale);
+		if (s.kind === 'paper') return (faded ? grainFaded : grain)(noise(0.9, 3, 2.4, -0.75), size);
+		if (s.kind === 'riso') return (faded ? grainFaded : grain)(noise(0.45, 2, 4, -1.6), size);
+		// Halftone: a dot screen in the section's own text colour.
+		const gap = (5 * s.scale).toFixed(1);
+		const dots = `background-image: radial-gradient(circle, currentColor 0.9px, transparent 1.3px); background-size: ${gap}px ${gap}px;`;
+		return faded ? `${dots} -webkit-mask-image: ${FADE}; mask-image: ${FADE};` : dots;
+	}
 
 	function css(s: State) {
 		if (s.kind === 'none' || !s.targets.length) return '';
-		const sel = s.targets.map((t) => SELECTORS[t]).filter(Boolean);
-		const host = sel.join(', ');
-		const layer = sel.map((x) => `${x}::before`).join(', ');
-		let paint = '';
-		if (s.kind === 'paper') {
-			paint = grain(noise(0.9, 3, 2.4, -0.75), Math.round(240 * s.scale));
-		} else if (s.kind === 'riso') {
-			paint = grain(noise(0.45, 2, 4, -1.6), Math.round(240 * s.scale));
-		} else {
-			// Halftone: a dot screen in the section's own text colour.
-			const gap = (5 * s.scale).toFixed(1);
-			paint = `background-image: radial-gradient(circle, currentColor 0.9px, transparent 1.3px); background-size: ${gap}px ${gap}px;`;
-		}
-		return `${host} { position: relative; isolation: isolate; }
-${layer} { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: ${s.strength}; ${paint} }`;
+		return s.targets
+			.filter((t) => SELECTORS[t])
+			.map((t) => {
+				const x = SELECTORS[t];
+				const reach = t === 'whatido' ? 'inset: calc(-1 * var(--space-3xl)) 0;' : 'inset: 0;';
+				return `${x} { position: relative; isolation: isolate; }
+${x}::before { content: ''; position: absolute; ${reach} z-index: -1; pointer-events: none; opacity: ${s.strength}; ${paintFor(s, t === 'whatido')} }`;
+			})
+			.join('\n');
 	}
 
 	if (panel) {
