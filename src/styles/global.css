@@ -524,6 +524,48 @@ main:has(> .close:last-child) {
 }
 
 /* ---------------------------------------------------------------
+   Texture
+   A faint halftone dot screen, in each section's own text colour (so
+   it flips with the mode, and reads cream-on-green on the close band),
+   on three surfaces: the testimonial band, the close band, and What I
+   Do — where it runs the full width from the hero's logo row down to
+   the Rebrand section (the gaps either side included), fading in and
+   out at the ends instead of stopping at a hard edge. It sits on a
+   layer behind each section's content, so text and cards stay clean.
+--------------------------------------------------------------- */
+:root {
+	--texture-opacity: 0.12;
+	--texture-gap: 12.5px;
+	--texture: radial-gradient(circle, currentColor 0.9px, transparent 1.3px) 0 0 / var(--texture-gap)
+		var(--texture-gap);
+}
+
+.testimonials,
+.close,
+.what-i-do {
+	position: relative;
+	isolation: isolate;
+}
+
+.testimonials::before,
+.close::before,
+.what-i-do::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+	opacity: var(--texture-opacity);
+	background: var(--texture);
+}
+
+.what-i-do::before {
+	inset: calc(-1 * var(--space-3xl)) 0;
+	-webkit-mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
+	mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
+}
+
+/* ---------------------------------------------------------------
    Phone mode
    <html class="mobile-view"> is set by Base.astro's head script on
    phones (by device, not window width). Phone-only pieces carry

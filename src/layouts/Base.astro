@@ -8,7 +8,6 @@ import ColorExploration from '../components/_archive/ColorExploration.astro';
 import ColorFavorites from '../components/ColorFavorites.astro';
 import PaletteAudition from '../components/PaletteAudition.astro';
 import DevPhonePreview from '../components/DevPhonePreview.astro';
-import TextureAudition from '../components/TextureAudition.astro';
 
 interface Props {
 	title?: string;
@@ -52,11 +51,6 @@ const PALETTE_AUDITION_ENABLED = false;
 // automatically. Off while it's being reviewed — ?mobile=1 (or the dev
 // "Phone view" button) shows it in the meantime.
 const PHONE_MODE_AUTO = false;
-
-// Temporary texture trial (paper / riso / halftone on the testimonial
-// and close bands). Ships to the live site but stays hidden there
-// unless the URL has ?texture (see the component).
-const TEXTURE_AUDITION_ENABLED = true;
 ---
 
 <html lang="en">
@@ -129,7 +123,6 @@ const TEXTURE_AUDITION_ENABLED = true;
 		{COLOR_FAVORITES_ENABLED && import.meta.env.DEV && <ColorFavorites />}
 		{PALETTE_AUDITION_ENABLED && import.meta.env.DEV && <PaletteAudition />}
 		{import.meta.env.DEV && <DevPhonePreview />}
-		{TEXTURE_AUDITION_ENABLED && <TextureAudition />}
 
 		<script>
 			// Reveals each [data-reveal] element the first time it scrolls
