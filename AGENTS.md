@@ -108,7 +108,11 @@ covers the structure, hosting, domain and dev tools.
 ## Media and performance
 - Videos: public/video/<section>/, a WebM (VP9) + MP4 (H.264) pair,
   `preload="none"`, loaded only when they're about to play (in view /
-  in front). Never start a below-the-fold video on page load.
+  in front). Never start a below-the-fold video on page load. Always
+  add sources with setVideoSources() from src/scripts/lazyMedia.ts —
+  it puts the MP4 first on Apple devices (iPhone Safari otherwise
+  picked the WebM and showed only the poster). Encode WebMs as 8-bit
+  4:2:0 VP9 (profile 0); 10-bit/4:2:2 won't decode on many devices.
 - Images: import from src/assets and size with getImage/<Image> at the
   width they're displayed (about 2x for retina).
 
