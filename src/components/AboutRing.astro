@@ -131,7 +131,11 @@ const items = await Promise.all(
 			const itemH = items[0].offsetHeight;
 			const front = DEPTH / (DEPTH - 1);
 			const small = window.matchMedia('(max-width: 768px)').matches;
-			radius = w * (small ? 0.95 : 0.44);
+			// Phone mode keeps the wide ring; a narrow desktop window gets a
+			// tighter one, so it stays a dense fan like the full-width ring
+			// rather than three big photos spread across the screen.
+			const phone = document.documentElement.classList.contains('mobile-view');
+			radius = w * (!small ? 0.44 : phone ? 0.95 : 0.6);
 			perspective = radius * DEPTH;
 			tilt = itemH * 0.75;
 			// The sides (a quarter turn round) sit on the center line, so
