@@ -114,8 +114,10 @@ import { testimonials } from '../data/testimonials';
 			align-self: flex-start;
 		}
 
+		/* The quote column and the headshot share the card's width — sized
+		   so the longest quote (Dave's) still sets in five lines. */
 		.testimonial-card__quote {
-			max-width: 70%;
+			max-width: 74%;
 			margin-block-start: var(--space-s);
 		}
 
@@ -142,8 +144,8 @@ import { testimonials } from '../data/testimonials';
 			position: absolute;
 			right: var(--space-s);
 			bottom: var(--space-s);
-			width: 120px;
-			height: 120px;
+			width: 104px;
+			height: 104px;
 			border-radius: var(--radius-well);
 			object-fit: cover;
 		}
