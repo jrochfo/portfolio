@@ -88,7 +88,9 @@ and some are switched on by a flag in `Base.astro`:
 - **Videos** live in `public/video/` as a WebM + MP4 pair. Each one
   loads only when it's about to play. ffmpeg is at
   `/opt/homebrew/bin/ffmpeg`, which isn't on the shell PATH. Source
-  exports (4K HEVC) get re-encoded to 1080p H.264 + VP9.
+  exports (4K HEVC) get re-encoded to 1080p H.264 + VP9. The
+  exception is the 4:3 Off the Clock videos, which are encoded at
+  1280×960, the largest they're ever shown (H.264 CRF 22, VP9 CRF 33).
 - **Link preview** (`public/og.png`): if it needs updating, rebuild it
   as a 1200×630 page in the site's fonts and screenshot it.
 
