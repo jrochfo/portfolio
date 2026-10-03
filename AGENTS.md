@@ -1,7 +1,8 @@
 # Project: Personal portfolio — jakerochford.com
 
-Brand/motion designer's portfolio. Fully specified in Figma (wireframe
-complete, tokens defined); build phase is transcribing that spec.
+Brand/motion designer's portfolio, live at https://jakerochford.com.
+Originally specified in Figma; now built and maintained here. README.md
+covers the structure, hosting, domain and dev tools.
 
 ## Architecture
 - Astro (minimal template), plain CSS, vanilla JS. GSAP + ScrollTrigger
@@ -12,17 +13,31 @@ complete, tokens defined); build phase is transcribing that spec.
 - NO React, NO Tailwind — deliberate decisions, don't suggest them.
 - Design tokens as CSS custom properties in src/styles/global.css,
   defined on :root, mobile values via one media query (max-width: 768px).
-- Pages: index (one-page scroll), about. More later.
+- Pages: index (one-page scroll), about, documentation (+ write-ups),
+  resume (an HTML hand-off to the PDF so opens count in analytics),
+  sitemap.xml (generated from src/pages/).
 - Deploys automatically to Cloudflare Pages on push to main.
+- Base.astro takes `title` and `description` per page; they feed the
+  <title>, meta description and the Open Graph / Twitter link-preview
+  tags (shared image: public/og.png). `site` in astro.config.mjs builds
+  the canonical URLs (trailing slash, as Pages serves folder pages).
 
 ## Homepage architecture
 - One component per section, in src/components/: Hero.astro,
-  WhatIDo.astro, Rebrand.astro, AlsoShipped.astro,
-  Testimonials.astro, OffTheClock.astro, Close.astro. index.astro
-  composes them in that order, inside the base layout, as `<main>`
+  MobileHome.astro (phone mode only), WhatIDo.astro, Rebrand.astro,
+  AlsoShipped.astro, Testimonials.astro, OffTheClock.astro,
+  Close.astro. index.astro composes them in that order, inside the base layout, as `<main>`
   containing one `<section>` per component (each with a proper
   heading) — nav/footer are already handled by the layout.
 - Built one section at a time across sessions; one commit per section.
+- Phone mode: phones (detected by device in Base.astro's head script,
+  not by width) get `<html class="mobile-view">` — a shorter homepage.
+  Hero becomes a vertical ring, MobileHome replaces What I Do /
+  Rebrand / Also Shipped, Off the Clock is a swipe deck. Use
+  `.mobile-only` / `.desktop-only` and `:root.mobile-view` for phone
+  branches. `?mobile=1` / `?mobile=0` force it; PHONE_MODE_AUTO turns
+  detection off. Tablets and narrow desktop windows get the responsive
+  desktop site (the max-width: 768px media query), which is separate.
 - A component's own `<script>` must be nested inside its `<section>`
   (before the closing tag), not placed after it. Astro renders
   `<script>` at its literal template position (unlike `<style>`, which
@@ -62,11 +77,11 @@ complete, tokens defined); build phase is transcribing that spec.
   wght) for h2, h3, body, and caption — split as --font-display and
   --font-text in global.css. 6 levels, sizes vary by breakpoint,
   weights/line-heights constant. A dev-only audition panel
-  (src/components/FontAudition.astro) is still in the codebase,
+  (src/components/dev/FontAudition.astro) is still in the codebase,
   disabled via FONT_AUDITION_ENABLED in Base.astro, for testing future
   type changes the same way.
 - Color: Butter Ceremonial (chosen via a light/dark palette-duo
-  exploration; on the hero-ring branch). Each mode picks four values —
+  exploration). Each mode picks four values —
   --color-bg (buttery paper), --color-ink (deep forest green),
   --color-title (display/h1/h2), --color-accent — plus --color-tint,
   what the surfaces (--color-panel/panel-well/band/neutral/line) are
@@ -79,16 +94,23 @@ complete, tokens defined); build phase is transcribing that spec.
   and an inline script in Base.astro applies it before first paint.
   Client logos flip light in dark mode (global.css). Roles that are
   only coincidentally the same value today (e.g. a card panel and a
-  full-bleed band) still get separate tokens. Retired dev panels:
-  src/components/PaletteAudition.astro (the duos exploration,
-  PALETTE_AUDITION_ENABLED), ColorFavorites.astro, and
-  _archive/ColorExploration.astro — all off in Base.astro, and the
-  latter two still write the old formula variables, which no longer
-  exist in global.css.
+  full-bleed band) still get separate tokens. The duos exploration
+  that picked it is kept as a dev tool (src/components/dev/
+  PaletteAudition.astro, PALETTE_AUDITION_ENABLED, off).
 - Tooltips / transient overlays (e.g. the About page's "Email copied"):
   caption type, --radius-well, solid dark fill (no translucency),
   fade in/out only. No animation under `prefers-reduced-motion: reduce`
   — appear/disappear instantly instead.
+- Copy: curly quotes and apostrophes (’ “ ”) in all visible text and
+  alt text. Tone is plain and friendly — not salesy, cutesy or
+  arrogant.
+
+## Media and performance
+- Videos: public/video/<section>/, a WebM (VP9) + MP4 (H.264) pair,
+  `preload="none"`, loaded only when they're about to play (in view /
+  in front). Never start a below-the-fold video on page load.
+- Images: import from src/assets and size with getImage/<Image> at the
+  width they're displayed (about 2x for retina).
 
 ## Conventions
 - I'm a designer, first web build. Explain non-obvious choices briefly

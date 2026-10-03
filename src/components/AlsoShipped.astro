@@ -207,7 +207,7 @@ const items: Project[] = await Promise.all([
 					</div>
 				</div>
 
-				<div class="ship-carousel__dots" role="tablist" aria-label={`${item.title} images`}>
+				<div class="ship-carousel__dots" role="group" aria-label={`${item.title} images`}>
 					{item.media.map((_, i) => (
 						<button
 							type="button"
@@ -233,7 +233,7 @@ const items: Project[] = await Promise.all([
 			<div class="ship-carousel ship-lightbox__carousel">
 				<div class="ship-carousel__strip" id="ship-lightbox-strip"></div>
 			</div>
-			<div class="ship-carousel__dots" id="ship-lightbox-dots" role="tablist" aria-label="Lightbox images"></div>
+			<div class="ship-carousel__dots" id="ship-lightbox-dots" role="group" aria-label="Lightbox images"></div>
 		</div>
 	</div>
 	<script>

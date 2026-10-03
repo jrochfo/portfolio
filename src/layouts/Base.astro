@@ -2,12 +2,11 @@
 import '../styles/global.css';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
-import FontAudition from '../components/FontAudition.astro';
-import FontVariationTuner from '../components/FontVariationTuner.astro';
-import ColorExploration from '../components/_archive/ColorExploration.astro';
-import ColorFavorites from '../components/ColorFavorites.astro';
-import PaletteAudition from '../components/PaletteAudition.astro';
-import DevPhonePreview from '../components/DevPhonePreview.astro';
+// Dev-only tools (src/components/dev/), never in the built site.
+import FontAudition from '../components/dev/FontAudition.astro';
+import FontVariationTuner from '../components/dev/FontVariationTuner.astro';
+import PaletteAudition from '../components/dev/PaletteAudition.astro';
+import DevPhonePreview from '../components/dev/DevPhonePreview.astro';
 
 interface Props {
 	title?: string;
@@ -46,18 +45,6 @@ const FONT_AUDITION_ENABLED = false;
 // alternate letterforms read too casual, plain SOFT read best too).
 // Tuner off; flip true to revisit.
 const FONT_VARIATION_TUNER_ENABLED = false;
-
-// Superseded by ColorFavorites below — Jake narrowed the open-ended
-// exploration down to four favorites, so the full tinkering tool
-// (sliders, open Accent grid, unlimited saves) is retired. Kept in
-// _archive/ rather than deleted in case wide-open exploration is ever
-// useful again; flip true to bring it back.
-const COLOR_EXPLORATION_ENABLED = false;
-
-// Neutral/ink/accent tokens are down to a shortlist of four favorites
-// (Rust/Teal/Moss/Cobalt). Off while PaletteAudition below explores
-// bolder directions; flip back to compare.
-const COLOR_FAVORITES_ENABLED = false;
 
 // Light/dark palette duos, applied live — the exploration that picked
 // Butter Ceremonial (now the defaults in global.css). Dev-only; off.
@@ -152,8 +139,6 @@ const PHONE_MODE_AUTO = true;
 
 		{FONT_AUDITION_ENABLED && import.meta.env.DEV && <FontAudition />}
 		{FONT_VARIATION_TUNER_ENABLED && import.meta.env.DEV && <FontVariationTuner />}
-		{COLOR_EXPLORATION_ENABLED && import.meta.env.DEV && <ColorExploration />}
-		{COLOR_FAVORITES_ENABLED && import.meta.env.DEV && <ColorFavorites />}
 		{PALETTE_AUDITION_ENABLED && import.meta.env.DEV && <PaletteAudition />}
 		{import.meta.env.DEV && <DevPhonePreview />}
 

@@ -719,7 +719,18 @@ const PHONE_START = items.length - 1;
 			// last. (`order` itself is declared further up, alongside the
 			// media controllers that read it.)
 			renderMobileDots(order[0]);
-			if (mobileQuery.matches) mediaControllers[order[0]].play();
+			// The front card only plays (and so only downloads its video)
+			// once the pile is near the screen, and stops when it scrolls
+			// away. Starting it on page load fetched the whole Raycat video
+			// before anyone had scrolled anywhere near it.
+			new IntersectionObserver(
+				([entry]) => {
+					if (!mobileQuery.matches) return;
+					if (entry.isIntersecting) mediaControllers[order[0]].play();
+					else mediaControllers[order[0]].stop();
+				},
+				{ rootMargin: '200px 0px' },
+			).observe(stack);
 
 			const RANKS = [
 				{ offsetY: 0, rot: 0, scale: 1, opacity: 1 },
