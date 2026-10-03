@@ -153,7 +153,26 @@ const PHONE_MODE_AUTO = false;
 					},
 					{ rootMargin: '0px 0px -6% 0px', threshold: 0.05 },
 				);
-				document.querySelectorAll('[data-reveal]').forEach((el) => observer.observe(el));
+				// Whatever's already on screen at load joins the load-in
+				// cascade straight away — the observer's bottom margin is for
+				// scroll-ins, and it was leaving copy pinned to the very
+				// bottom of the screen (phone mode's hero buttons) hidden.
+				// A frame later, so the layout's settled — --nav-height (which
+				// sizes the hero) is set by a script further down.
+				requestAnimationFrame(() => {
+				const onScreen: HTMLElement[] = [];
+				document.querySelectorAll<HTMLElement>('[data-reveal]').forEach((el) => {
+					const r = el.getBoundingClientRect();
+					if (r.top < window.innerHeight && r.bottom > 0 && getComputedStyle(el).display !== 'none') onScreen.push(el);
+					else observer.observe(el);
+				});
+				onScreen
+					.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
+					.forEach((el, i) => {
+						if (!el.style.getPropertyValue('--reveal-delay')) el.style.setProperty('--reveal-delay', `${i * STAGGER}ms`);
+						el.classList.add('is-revealed');
+					});
+				});
 			}
 		</script>
 	</body>
