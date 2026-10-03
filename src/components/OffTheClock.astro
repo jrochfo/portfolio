@@ -105,14 +105,15 @@ const items: Item[] = [
 		media: await video('raycat', raycatPoster),
 	},
 ];
+
+// The phone deck opens on Raycat (the last item) rather than Æ/Qoph,
+// then carries on in the usual order. Desktop's scatter is unaffected.
+const PHONE_START = items.length - 1;
 ---
 
 <section class="off-the-clock">
 	<div class="container">
 		<h2 class="type-h1" data-reveal>Off the clock.</h2>
-		<p class="type-h3 off-the-clock__subhead" data-reveal>
-			A typeface, a Twitch cat, some pottery. Not everything needs a business case.
-		</p>
 
 		<div class="otc-stack" data-reveal role="group" aria-label="Personal projects">
 			{items.map((item, i) => (
@@ -180,15 +181,11 @@ const items: Item[] = [
 			))}
 		</div>
 
-		<p class="type-body otc-caption-mobile" aria-live="polite">{items[0].caption}</p>
-		<div class="otc-dots otc-dots-mobile" id="otc-dots-mobile" aria-hidden="true"></div>
+		<p class="type-caption otc-caption-mobile" aria-live="polite">{items[PHONE_START].caption}</p>
+		<div class="otc-dots otc-dots-mobile" id="otc-dots-mobile" data-start={PHONE_START} aria-hidden="true"></div>
 	</div>
 
 	<style>
-		.off-the-clock__subhead {
-			margin-block-start: var(--space-s);
-		}
-
 		.otc-stack {
 			position: relative;
 			/* Keeps the cards' z-indexes (a hovered card climbs a running
@@ -324,7 +321,10 @@ const items: Item[] = [
 			margin-block-start: 4px;
 		}
 
-		.otc-dot {
+		/* :global because the phone row's dots are built by the script,
+		   so they don't carry this component's scoping attribute — a plain
+		   .otc-dot rule never reached them and they rendered unfilled. */
+		.otc-dots :global(.otc-dot) {
 			display: block;
 			width: 6px;
 			height: 6px;
@@ -341,7 +341,7 @@ const items: Item[] = [
 		   Do nav-pill and Also Shipped's carousel dots — color stays
 		   the same here, though, since this is just tracking along with
 		   the scrub, not something to navigate by. */
-		.otc-dot[data-active='true'] {
+		.otc-dots :global(.otc-dot[data-active='true']) {
 			width: 18px;
 		}
 
@@ -450,6 +450,10 @@ const items: Item[] = [
 			.otc-caption-mobile {
 				display: block;
 				margin-block-start: var(--space-l);
+				/* Phone mode trims paragraphs short of the container
+				   (global.css); this centres the trimmed box too, not
+				   just the text inside it. */
+				margin-inline: auto;
 				text-align: center;
 				transition: opacity 0.18s ease;
 			}
@@ -471,7 +475,7 @@ const items: Item[] = [
 				transform: none;
 			}
 
-			.otc-dot {
+			.otc-dots :global(.otc-dot) {
 				transition: none;
 			}
 		}
@@ -493,7 +497,8 @@ const items: Item[] = [
 		// image-sequence controllers built next can read it live via
 		// closure, the same way the desktop dots already track their own
 		// item's frame.
-		let order = items.map((_, i) => i);
+		const phoneStart = Number(mobileDots?.dataset.start ?? 0);
+		let order = items.map((_, i) => (i + phoneStart) % items.length);
 
 		// Rebuilds the dot row for whichever item is now front: a plain
 		// static row when it's a video well (nothing to count), one dot
@@ -807,8 +812,44 @@ const items: Item[] = [
 				}, SPRING_MS);
 			}
 
+			// A one-time hint the first time the pile scrolls into view:
+			// the front card leans a little to the left and settles back,
+			// so it reads as something you can drag. Skipped under
+			// reduced motion, and cancelled if a drag starts first.
+			const NUDGE_DELAY_MS = 500;
+			const NUDGE_MS = 1000;
+			let nudge: Animation | null = null;
+			let nudged = false;
+			if (!reduceMotionQuery.matches) {
+				const nudgeObserver = new IntersectionObserver(
+					(entries) => {
+						if (!entries[0].isIntersecting || !mobileQuery.matches) return;
+						nudgeObserver.disconnect();
+						window.setTimeout(() => {
+							if (nudged || drag) return;
+							nudged = true;
+							const rest = 'translate(-50%, -50%)';
+							nudge = items[order[0]].animate(
+								[
+									{ transform: rest },
+									{ transform: `${rest} translateX(-14%) rotate(-4deg)`, offset: 0.4 },
+									{ transform: `${rest} translateX(1.5%) rotate(0.5deg)`, offset: 0.75 },
+									{ transform: rest },
+								],
+								{ duration: NUDGE_MS, easing: 'ease-in-out' },
+							);
+							nudge.onfinish = () => (nudge = null);
+						}, NUDGE_DELAY_MS);
+					},
+					{ threshold: 0.7 },
+				);
+				nudgeObserver.observe(stack);
+			}
+
 			stack.addEventListener('pointerdown', (e) => {
 				if (!mobileQuery.matches || drag) return;
+				nudged = true;
+				nudge?.cancel();
 				const itemIndex = order[0];
 				const item = items[itemIndex];
 				drag = { pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, itemIndex };

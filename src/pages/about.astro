@@ -9,13 +9,20 @@ import AboutRing from '../components/AboutRing.astro';
 			<AboutRing />
 			<h1 class="type-display about__headline">About</h1>
 			<div class="about__bio">
-				<p class="type-h3">I'm a brand and motion designer in Chicago.</p>
 				<p class="type-h3">
-					For the last five years I've been at Stack Overflow, first helping rebuild the brand
-					with Koto, then running it across everything the company ships: product, marketing,
-					events, and a lot of animation.
+					I’m a brand and motion designer in Chicago, and Brand Manager at Stack Overflow. Since
+					2022 I’ve helped rebuild its brand with Koto, then apply it across everything the company
+					ships: product, marketing, events, and a lot of animation.
 				</p>
-				<p class="type-h3">Off the clock I run, climb, pet my dog, and animate a Twitch cat.</p>
+				<p class="type-h3">
+					I like stress-testing systems so they hold up for the long haul. I don’t cut corners,
+					because doing it right pays off for everyone.
+				</p>
+				<p class="type-h3">
+					I studied Anthropology and Graphic Design at Tufts University and the School of the
+					Museum of Fine Arts, Boston. Off the clock I run, climb, pet my dog, and animate a Twitch
+					cat.
+				</p>
 			</div>
 			<div class="about__actions">
 				<a href="/jake-rochford-resume.pdf" class="button type-caption">Resume</a>
@@ -81,12 +88,34 @@ import AboutRing from '../components/AboutRing.astro';
 		margin-block-start: var(--space-m);
 	}
 
+	/* A centred column, justified inside it like a newspaper column,
+	   while the box itself stays on the page's centre axis with the
+	   headline and buttons. 66ch is tuned to the copy: it's the width
+	   where the justified lines' word spaces stretch least (at most
+	   ~1.6x a normal space; 60ch stretched some to nearly 3x, which
+	   opens up rivers). Retune if the copy changes. */
 	.about__bio {
-		/* Wider than Hero's subhead (also 60ch) — this copy is longer
-		   and was wrapping into awkward single-word orphan lines at
-		   the same width. */
-		max-width: 70ch;
+		max-width: 66ch;
 		margin-block-start: var(--space-s);
+		margin-inline: auto;
+		text-align: left;
+	}
+
+	/* Keeps a paragraph from ending on a lone word, without shortening
+	   every line the way `balance` does. */
+	.about__bio p {
+		text-align: justify;
+		hyphens: auto;
+		text-wrap: pretty;
+	}
+
+	/* Too narrow on phones to justify without big gaps between words,
+	   so the copy stays flush left there. */
+	@media (max-width: 768px) {
+		.about__bio p {
+			text-align: left;
+			hyphens: manual;
+		}
 	}
 
 	.about__bio p + p {

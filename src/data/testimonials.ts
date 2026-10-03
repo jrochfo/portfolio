@@ -27,7 +27,7 @@ export const testimonials = [
 		logo: logoPega,
 		company: 'Pegasystems',
 		quote:
-			"I could put him in a room with a senior leader without hesitation and he'd hold his own with ease. If I had a full-time design position open, I would hire Jake immediately.",
+			"I could put him in a room with a senior leader without hesitation and he’d hold his own with ease. If I had a full-time design position open, I would hire Jake immediately.",
 		name: 'Molly Sullivan',
 		title: 'Vice President, Brand',
 		connector: ', ',
@@ -47,7 +47,7 @@ export const testimonials = [
 		logo: logoTulip,
 		company: 'Tulip',
 		quote:
-			"Jake's systematic approach was critical to Tulip's brand update. His token-based asset templates made it easy for the team to produce on-brand materials independently.",
+			"Jake’s systematic approach was critical to Tulip’s brand update. His token-based asset templates made it easy for the team to produce on-brand materials independently.",
 		name: 'Madilynn Castillo',
 		title: 'Chief Marketing Officer',
 		connector: ', ',

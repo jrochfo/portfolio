@@ -3,7 +3,7 @@ import Base from '../../layouts/Base.astro';
 import DocHero from '../../components/DocHero.astro';
 ---
 
-<Base title="Looping a Carousel That Can't Be Looped — Jake Rochford" navLabel="Home" navHref="/">
+<Base title="Looping a Carousel That Can’t Be Looped — Jake Rochford" navLabel="Home" navHref="/">
 	<section class="doc">
 		<div class="container doc__inner">
 			<header class="doc__header">
@@ -12,13 +12,13 @@ import DocHero from '../../components/DocHero.astro';
 						><span class="doc__eyebrow-arrow" aria-hidden="true">← </span>Documentation</a
 					>
 				</p>
-				<h1 class="type-display">Looping a carousel that can't be looped</h1>
+				<h1 class="type-display">Looping a carousel that can’t be looped</h1>
 				<p class="type-h3 doc__dek">
 					<code>scrollLeft</code> has a hard ceiling. The Also Shipped carousel needed to scroll past it
 					anyway — so it built somewhere further to go.
 				</p>
 				<p class="type-caption doc__meta">
-					Field notes on jakerochford.com — the agent's account of a bug it hit building the Also
+					Field notes on jakerochford.com — the agent’s account of a bug it hit building the Also
 					Shipped carousel, written up with Jake.
 				</p>
 			</header>
@@ -60,17 +60,17 @@ import DocHero from '../../components/DocHero.astro';
 				</details>
 
 				<p class="type-body">
-					Every carousel on this site — What I Do's service cards, and now Also Shipped's project
+					Every carousel on this site — What I Do’s service cards, and now Also Shipped’s project
 					cards — shares one module, <a href="#reading-the-code"><code>src/scripts/carousel.ts</code></a
-					>. It handles the part browsers don't give you for free: dragging with a mouse. Touch already
-					scrolls a row like this natively, but desktop browsers don't turn a mouse drag into a scroll on
+					>. It handles the part browsers don’t give you for free: dragging with a mouse. Touch already
+					scrolls a row like this natively, but desktop browsers don’t turn a mouse drag into a scroll on
 					their own, so the module adds that — track the pointer, move <code>scrollLeft</code> to match,
 					then ease the strip to whichever slide the drag ended nearest.
 				</p>
 
 				<p class="type-body">
 					That was enough for What I Do, where dragging past the last card just stops — a reasonable
-					default. But once Also Shipped's real content landed (four projects, each with five or six
+					default. But once Also Shipped’s real content landed (four projects, each with five or six
 					images and videos), a real question followed: dragging past the last image should keep
 					scrubbing into the first one, not just snap there. It should feel like the strip never ends.
 				</p>
@@ -91,17 +91,17 @@ import DocHero from '../../components/DocHero.astro';
 				</div>
 
 				<p class="type-body">
-					It stops dead at 4. Which makes sense — there's nothing after it. <code>scrollLeft</code> is a
-					real, physically bounded number, and the browser will not move it past the strip's actual
+					It stops dead at 4. Which makes sense — there’s nothing after it. <code>scrollLeft</code> is a
+					real, physically bounded number, and the browser will not move it past the strip’s actual
 					scrollable width no matter what value your code tries to hand it. You could set
 					<code>strip.scrollLeft = 99999</code> and it would land in exactly the same place: clamped at
-					the edge. Making the loop "feel infinite" isn't a bigger-number problem. It's a
-					not-enough-content problem — there's genuinely nothing there to scroll into.
+					the edge. Making the loop "feel infinite" isn’t a bigger-number problem. It’s a
+					not-enough-content problem — there’s genuinely nothing there to scroll into.
 				</p>
 
 				<p class="type-body">
 					So give it something. Clone the first slide, and drop that clone <em>after</em> the last one.
-					Now there's real, physical, scrollable content past the end — it just happens to be pixel-identical
+					Now there’s real, physical, scrollable content past the end — it just happens to be pixel-identical
 					to slide 1. Do the same in reverse at the front, with a clone of the last slide. The strip goes
 					from four elements to six:
 				</p>
@@ -126,7 +126,7 @@ import DocHero from '../../components/DocHero.astro';
 				</div>
 				<p class="type-caption loop-diagram__caption">
 					Six DOM nodes, four real indices. The dashed boxes are the only new thing — actual elements
-					with actual width, which is the only reason there's anywhere left to scroll.
+					with actual width, which is the only reason there’s anywhere left to scroll.
 				</p>
 
 				<p class="type-body">
@@ -137,11 +137,11 @@ import DocHero from '../../components/DocHero.astro';
 					re-points <code>scrollLeft</code> at the <em>real</em> slide 1, sitting in the exact same
 					visual position. Because the clone and the real slide are identical, nothing appears to move.
 					The swap is imperceptible. Try it below — same drag, same everything, except this time it
-					doesn't stop:
+					doesn’t stop:
 				</p>
 
 				<div class="loop-demo" data-loop-demo="true" aria-hidden="true">
-					<p class="type-caption loop-demo__label">loop: true — Also Shipped's carousels, today</p>
+					<p class="type-caption loop-demo__label">loop: true — Also Shipped’s carousels, today</p>
 					<div class="loop-demo__strip" data-loop-strip>
 						<div class="loop-demo__slide" data-slide-index="0"><span class="type-h1">1</span></div>
 						<div class="loop-demo__slide" data-slide-index="1"><span class="type-h1">2</span></div>
@@ -152,7 +152,7 @@ import DocHero from '../../components/DocHero.astro';
 				</div>
 
 				<p class="type-caption loop-demo__note">
-					Both demos above are the real <code>createCarousel</code> from this site's own
+					Both demos above are the real <code>createCarousel</code> from this site’s own
 					<code>carousel.ts</code>, imported unmodified — the only difference between them is one flag,
 					<code>loop: true</code>.
 				</p>
@@ -180,8 +180,8 @@ import DocHero from '../../components/DocHero.astro';
 					announced to a screen reader. <code>markAsPhantom</code> strips that back off — <code
 						>role</code
 					>, <code>tabindex</code>, <code>aria-label</code>, and the <code>data-slide-index</code>
-					attribute this page comes back to below — and walks the clone's own descendants (a video
-					slide's play button, say) to pull them out of the tab order too. A phantom is real DOM, but it
+					attribute this page comes back to below — and walks the clone’s own descendants (a video
+					slide’s play button, say) to pull them out of the tab order too. A phantom is real DOM, but it
 					should be invisible to everything except the scrollbar.
 				</p>
 
@@ -207,7 +207,7 @@ function toDomPos(realIndex: number): number {
 				<p class="type-body">
 					A caller asking to go to slide 0 gets DOM position 1 (past the lead phantom sitting at 0). A
 					drag that lands on DOM position 0 is reported back as real index <code>items.length - 1</code>
-					— the last slide, exactly as it should read, since visually that's what's showing.
+					— the last slide, exactly as it should read, since visually that’s what’s showing.
 				</p>
 
 				<h3 class="type-h2">The invisible swap</h3>
@@ -234,10 +234,10 @@ function toDomPos(realIndex: number): number {
 
 				<h3 class="type-h2">A bug: landing on slide 2 instead of slide 1</h3>
 				<p class="type-body">
-					The first working version of this loaded Also Shipped's carousels sitting on the <em
+					The first working version of this loaded Also Shipped’s carousels sitting on the <em
 						>second</em
 					>
-					slide, not the first — the lead phantom's clone-of-the-last-slide was visible on load instead.
+					slide, not the first — the lead phantom’s clone-of-the-last-slide was visible on load instead.
 					The fix ended up being one character, but the reasoning behind it is worth keeping:
 				</p>
 				<pre class="doc__code"><code>{`if (loop) {
@@ -248,17 +248,17 @@ function toDomPos(realIndex: number): number {
 					already is — every other call site in the module adds it to the current value, never assigns
 					it directly. The original version of this one line broke that pattern and assigned instead,
 					which happened to work when <code>scrollLeft</code> started at exactly <code>0</code> — except
-					it doesn't reliably start at <code>0</code>. Some browsers apply <em>scroll anchoring</em>: when
+					it doesn’t reliably start at <code>0</code>. Some browsers apply <em>scroll anchoring</em>: when
 					content is inserted before the current scroll position (the lead phantom, inserted right
 					before slide 1, is exactly that), the browser nudges <code>scrollLeft</code> on its own to keep
-					whatever was visually on screen still on screen. By the time this line runs, "current" isn't
+					whatever was visually on screen still on screen. By the time this line runs, "current" isn’t
 					reliably zero anymore — so the fix was just making this line consistent with every other
-					offset calculation in the file: add, don't assign.
+					offset calculation in the file: add, don’t assign.
 				</p>
 
 				<h3 class="type-h2">A bug: the lightbox counted the clones too</h3>
 				<p class="type-body">
-					Also Shipped's lightbox rebuilds its own strip by cloning whatever slides are currently in a
+					Also Shipped’s lightbox rebuilds its own strip by cloning whatever slides are currently in a
 					project card. The first version of that query picked up all eight DOM children — six real
 					images plus the two loop phantoms — and opened on whichever one the phantom math happened to
 					land on, with two extra, silently-broken dots in the nav. The fix leaned on the same attribute
@@ -275,19 +275,19 @@ const sourceSlides = [...card.querySelectorAll<HTMLElement>('.ship-carousel__sli
 				<p class="type-body">
 					Nothing about this bug lived inside <code>carousel.ts</code> at all — the module did exactly
 					what it promised. It surfaced one layer up, in code that shared a CSS class with the phantoms
-					without knowing they existed. That's the actual cost of the technique: every future consumer of
+					without knowing they existed. That’s the actual cost of the technique: every future consumer of
 					a looping strip has to remember phantoms are in there, sharing selectors with the real thing,
 					unless it specifically asks for <code>[data-slide-index]</code> the way the phantoms themselves
 					were told to give up.
 				</p>
 
 				<p class="type-body doc__closing">
-					One honest limit, straight from the module's own comment: this only loops a mouse drag.
-					Touch scrolling on mobile never runs through <code>createCarousel</code> at all — it's native
+					One honest limit, straight from the module’s own comment: this only loops a mouse drag.
+					Touch scrolling on mobile never runs through <code>createCarousel</code> at all — it’s native
 					browser scroll-snap, full stop — so a real swipe past the last image on a phone still just
 					stops. Fixing that would mean either reimplementing the whole phantom-and-correction dance on
-					top of native touch scrolling, or deciding a mobile carousel doesn't need to loop the same way
-					a desktop drag does. Neither happened yet. It's on the list, not solved — which is a fine place
+					top of native touch scrolling, or deciding a mobile carousel doesn’t need to loop the same way
+					a desktop drag does. Neither happened yet. It’s on the list, not solved — which is a fine place
 					to end a page about a trick that only works because there was somewhere further to go.
 				</p>
 			</div>

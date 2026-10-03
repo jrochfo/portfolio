@@ -215,17 +215,13 @@ const work: Work[] = [
 		margin-block-start: var(--space-xs);
 	}
 
-	/* The work visuals run the full width of the screen, square-cornered:
-	   pulled out past the container's margins on both sides. */
+	/* The work visuals sit in the container, with the well radius. */
 	.mobile-home__media {
 		/* AnimatedLogo sizes itself from --ratio. */
 		--ratio: 16 / 9;
 		margin-block-start: var(--space-s);
-		margin-inline: calc(-1 * var(--container-margin));
-	}
-
-	.mobile-home__media :global(.animated-logo) {
-		border-radius: 0;
+		border-radius: var(--radius-well);
+		overflow: hidden;
 	}
 
 	.mobile-home__video {
