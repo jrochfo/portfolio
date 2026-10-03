@@ -38,8 +38,7 @@ const isHome = Astro.url.pathname === '/';
 			>
 				<span class="site-nav__theme-icon" style={`--icon-src: url(${iconDarkMode.src})`} aria-hidden="true" />
 			</button>
-			{/* No About page in phone mode (see MobileHome), so no link to it. */}
-			<a href={href} class:list={['button type-caption', { 'desktop-only': href === '/about' }]}>{label}</a>
+			<a href={href} class="button type-caption">{label}</a>
 		</div>
 	</div>
 </nav>
@@ -166,22 +165,29 @@ const isHome = Astro.url.pathname === '/';
 	// actual colors can react — for now, the dev palette panel, which
 	// also asks for changes through 'theme-set'.
 	const themeToggle = document.querySelector<HTMLButtonElement>('#theme-toggle');
-	const THEME_STORE = 'theme';
+	// Only a mode picked with the toggle is remembered; otherwise the site
+	// follows the device's light/dark setting, live. (The key changed from
+	// 'theme', which also saved the device's mode on a first visit and so
+	// stopped following it — renaming resets those to following again.)
+	const THEME_STORE = 'theme-choice';
 	const html = document.documentElement;
-	function setTheme(mode: 'light' | 'dark', animate: boolean) {
+	function setTheme(mode: 'light' | 'dark', animate: boolean, remember = false) {
 		if (animate && document.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-			document.startViewTransition(() => applyTheme(mode));
+			document.startViewTransition(() => applyTheme(mode, remember));
 		} else {
-			applyTheme(mode);
+			applyTheme(mode, remember);
 		}
 	}
 
-	function applyTheme(mode: 'light' | 'dark') {
+	function applyTheme(mode: 'light' | 'dark', remember: boolean) {
 		html.dataset.theme = mode;
 		themeToggle?.setAttribute('aria-pressed', String(mode === 'dark'));
-		try {
-			localStorage.setItem(THEME_STORE, mode);
-		} catch {}
+		if (remember) {
+			storedTheme = mode;
+			try {
+				localStorage.setItem(THEME_STORE, mode);
+			} catch {}
+		}
 		window.dispatchEvent(new CustomEvent('theme-change', { detail: { mode } }));
 	}
 
@@ -189,18 +195,20 @@ const isHome = Astro.url.pathname === '/';
 	try {
 		storedTheme = localStorage.getItem(THEME_STORE);
 	} catch {}
+	const systemDark = window.matchMedia('(prefers-color-scheme: dark)');
 	setTheme(
-		storedTheme === 'dark' || storedTheme === 'light'
-			? storedTheme
-			: window.matchMedia('(prefers-color-scheme: dark)').matches
-				? 'dark'
-				: 'light',
+		storedTheme === 'dark' || storedTheme === 'light' ? storedTheme : systemDark.matches ? 'dark' : 'light',
 		false,
 	);
-	themeToggle?.addEventListener('click', () => setTheme(html.dataset.theme === 'dark' ? 'light' : 'dark', true));
+	// The device switching modes (e.g. automatic dark mode at sunset)
+	// carries the page with it, unless a mode was picked with the toggle.
+	systemDark.addEventListener('change', (e) => {
+		if (storedTheme !== 'dark' && storedTheme !== 'light') setTheme(e.matches ? 'dark' : 'light', true);
+	});
+	themeToggle?.addEventListener('click', () => setTheme(html.dataset.theme === 'dark' ? 'light' : 'dark', true, true));
 	window.addEventListener('theme-set', (e) => {
 		const mode = (e as CustomEvent<{ mode: 'light' | 'dark' }>).detail?.mode;
-		if (mode) setTheme(mode, true);
+		if (mode) setTheme(mode, true, true);
 	});
 
 	document.querySelector<HTMLButtonElement>('#nav-scroll-top')?.addEventListener('click', () => {

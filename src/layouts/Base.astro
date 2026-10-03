@@ -87,7 +87,7 @@ const PHONE_MODE_AUTO = true;
 			(function () {
 				var mode = null;
 				try {
-					mode = localStorage.getItem('theme');
+					mode = localStorage.getItem('theme-choice');
 				} catch (e) {}
 				if (mode !== 'dark' && mode !== 'light') {
 					mode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';

@@ -123,19 +123,16 @@ const items = await Promise.all(
 
 		// From the real item size: the ring's sides sit at the top of the
 		// box and the front dips below them, and the box is exactly as
-		// tall as that, so the copy underneath clears it. Phones get a
-		// ring wider than the screen (the sides run off the edges, as on
-		// the hero) so the photos aren't piled on top of each other.
+		// tall as that, so the copy underneath clears it.
 		function measure() {
 			const w = root!.clientWidth;
 			const itemH = items[0].offsetHeight;
 			const front = DEPTH / (DEPTH - 1);
 			const small = window.matchMedia('(max-width: 768px)').matches;
-			// Phone mode keeps the wide ring; a narrow desktop window gets a
-			// tighter one, so it stays a dense fan like the full-width ring
-			// rather than three big photos spread across the screen.
-			const phone = document.documentElement.classList.contains('mobile-view');
-			radius = w * (!small ? 0.44 : phone ? 0.95 : 0.6);
+			// Narrow screens (phones included) get a tighter ring than the
+			// screen-wide one, so it stays a dense fan like the full-width
+			// ring rather than three big photos spread across the screen.
+			radius = w * (small ? 0.6 : 0.44);
 			perspective = radius * DEPTH;
 			tilt = itemH * 0.75;
 			// The sides (a quarter turn round) sit on the center line, so
