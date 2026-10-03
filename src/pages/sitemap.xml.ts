@@ -5,7 +5,8 @@ import type { APIRoute } from 'astro';
 // and the resume redirect are left out.
 // Only the file names are used.
 const pages = import.meta.glob(['./**/*.astro', '!./**/_*.astro', '!./**/_*/**']);
-const SKIP = new Set(['/resume/']);
+// The rebrand page is phone mode's copy of a homepage section.
+const SKIP = new Set(['/resume/', '/work/stack-overflow-rebrand/']);
 
 export const GET: APIRoute = ({ site }) => {
 	const paths = Object.keys(pages)

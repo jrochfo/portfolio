@@ -16,6 +16,7 @@ import logoFreed from '../assets/testimonials/logos/Logo_Quote_Freed.svg';
 import logoTulip from '../assets/testimonials/logos/Logo_Quote_Tulip.svg';
 import freedPoster from '../assets/work/what-i-do/posters/motion-freed-poster.jpg';
 import tulipPoster from '../assets/work/what-i-do/posters/systems-tulip-poster.jpg';
+import iconArrow from '../assets/icons/functions/arrow-forward.svg';
 
 const poster = async (src: ImageMetadata) => (await getImage({ src, format: 'webp', width: 900, quality: 80 })).src;
 
@@ -31,6 +32,8 @@ type Work = {
 	earlier?: string[];
 	line: string;
 	media: { kind: 'animated-logo' } | { kind: 'video'; path: string; poster: string };
+	// A link on to more of the project, under the visual.
+	more?: { href: string; label: string };
 };
 
 const work: Work[] = [
@@ -43,6 +46,7 @@ const work: Work[] = [
 		earlier: ['Senior Brand Designer, 2024–2026', 'Brand Designer, 2022–2024'],
 		line: 'Led a rebrand and identity evolution with agency Koto, from first workshops to full rollout, now running the brand across product and marketing.',
 		media: { kind: 'animated-logo' },
+		more: { href: '/work/stack-overflow-rebrand/', label: 'See the rebrand' },
 	},
 	{
 		logo: logoFreed,
@@ -109,6 +113,12 @@ const work: Work[] = [
 								/>
 							)}
 						</div>
+						{w.more && (
+							<a href={w.more.href} class="type-caption mobile-home__more">
+								{w.more.label}
+								<span class="mobile-home__more-icon" style={`--icon-src: url(${iconArrow.src})`} aria-hidden="true" />
+							</a>
+						)}
 					</li>
 				))}
 			</ol>
@@ -213,6 +223,25 @@ const work: Work[] = [
 		margin-block-start: var(--space-s);
 		border-radius: var(--radius-well);
 		overflow: hidden;
+	}
+
+	/* "See the rebrand →": the hero's "See more" link, pointing on. */
+	.mobile-home__more {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2xs);
+		margin-block-start: var(--space-s);
+		color: var(--color-ink-muted);
+		text-decoration: none;
+	}
+
+	.mobile-home__more-icon {
+		display: block;
+		width: 16px;
+		height: 16px;
+		background-color: currentColor;
+		-webkit-mask: var(--icon-src) center / contain no-repeat;
+		mask: var(--icon-src) center / contain no-repeat;
 	}
 
 	.mobile-home__video {

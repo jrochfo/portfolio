@@ -33,7 +33,10 @@ covers the structure, hosting, domain and dev tools.
 - Phone mode: phones (detected by device in Base.astro's head script,
   not by width) get `<html class="mobile-view">` — a shorter homepage.
   Hero becomes a vertical ring, MobileHome replaces What I Do /
-  Rebrand / Also Shipped, Off the Clock is a swipe deck. Use
+  Rebrand / Also Shipped, Off the Clock is a swipe deck. The Rebrand
+  section is still reachable on phones at /work/stack-overflow-rebrand/
+  (`<Rebrand standalone />`, which phone mode doesn't hide; desktop is
+  redirected to /#rebrand). The About page and links show in both modes. Use
   `.mobile-only` / `.desktop-only` and `:root.mobile-view` for phone
   branches. `?mobile=1` / `?mobile=0` force it; PHONE_MODE_AUTO turns
   detection off. Tablets and narrow desktop windows get the responsive

@@ -1,0 +1,22 @@
+---
+// Phone mode's way into the rebrand: the homepage's Rebrand section on
+// its own page, linked from the Stack Overflow entry in Selected work.
+// Desktop already has the section on the homepage, so desktop visitors
+// are sent there instead.
+import Base from '../../layouts/Base.astro';
+import Rebrand from '../../components/Rebrand.astro';
+---
+
+<Base
+	title="The Stack Overflow rebrand — Jake Rochford"
+	description="How Stack Overflow’s brand was rebuilt with Koto, from first workshops to full rollout."
+	navLabel="Home"
+	navHref="/"
+	noindex
+>
+	<script is:inline>
+		// Runs after the head script has decided phone mode.
+		if (!document.documentElement.classList.contains('mobile-view')) location.replace('/#rebrand');
+	</script>
+	<Rebrand standalone />
+</Base>

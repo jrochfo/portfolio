@@ -13,6 +13,7 @@ Live at **https://jakerochford.com**.
 | :--- | :--- |
 | `/` | The homepage, one long scroll. On phones it switches to a shorter phone layout (see below). |
 | `/about/` | Bio, photo ring, resume / LinkedIn / email |
+| `/work/stack-overflow-rebrand/` | Phone mode only: the Rebrand section on its own page, linked from the Stack Overflow entry ("See the rebrand →"). Desktop visitors are sent to `/#rebrand`. Not in the sitemap, and marked noindex. |
 | `/documentation/` | Field notes on how the site gets built |
 | `/documentation/looping-a-carousel/` | The first write-up |
 | `/resume` | Opens the resume PDF. It's an HTML page so the visit shows up in analytics. |

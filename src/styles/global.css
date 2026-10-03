@@ -575,7 +575,7 @@ main:has(> .close:last-child) {
 :root:not(.mobile-view) .mobile-only,
 :root.mobile-view .desktop-only,
 :root.mobile-view main > .what-i-do,
-:root.mobile-view main > .rebrand,
+:root.mobile-view main > .rebrand:not(.rebrand--page),
 :root.mobile-view main > .also-shipped,
 :root.mobile-view .hero__clients {
 	display: none !important;

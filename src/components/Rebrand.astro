@@ -3,6 +3,14 @@ import { getImage } from 'astro:assets';
 import GlyphViewer from './GlyphViewer.astro';
 import AnimatedLogo from './AnimatedLogo.astro';
 import DeckScrub from './DeckScrub.astro';
+
+// standalone: the section on its own page (/work/stack-overflow-rebrand/,
+// phone mode's way in). Phone mode hides it on the homepage; the
+// standalone copy stays visible.
+interface Props {
+	standalone?: boolean;
+}
+const { standalone = false } = Astro.props;
 import rfpCoverSvg from '../assets/work/so-rebrand/direction/rfp.svg';
 import londonConference from '../assets/work/so-rebrand/direction/london-1.jpg';
 import londonPlacard from '../assets/work/so-rebrand/direction/london-2.jpg';
@@ -456,7 +464,7 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 };
 ---
 
-<section class="rebrand">
+<section class:list={['rebrand', { 'rebrand--page': standalone }]} id={standalone ? undefined : 'rebrand'}>
 	<div class="rebrand__pinned-title">
 		<div class="container">
 			<h1 class="type-h1" data-reveal>The Stack Overflow rebrand.</h1>
@@ -572,6 +580,8 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 	<style>
 	.rebrand {
 		position: relative;
+		/* Lands below the sticky nav when linked to (/#rebrand). */
+		scroll-margin-top: var(--nav-height, 0px);
 		/* Bottom slightly less than top — equal padding around a single
 		   line of type reads as too much air underneath it. */
 		--title-padding-top: var(--space-s);
@@ -1022,9 +1032,10 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 	// title is already position: absolute at the section's top, so
 	// without JS pinning it just scrolls normally with the page —
 	// same static fallback used everywhere else.
-	// Phone mode hides this section, so there's nothing to pin there.
-	const phoneMode = document.documentElement.classList.contains('mobile-view');
-	if (!reduceMotionQuery.matches && !phoneMode) {
+	// Nothing to pin while the section is hidden (phone mode's homepage).
+	const rebrandSection = document.querySelector<HTMLElement>('.rebrand');
+	const hidden = !rebrandSection || getComputedStyle(rebrandSection).display === 'none';
+	if (!reduceMotionQuery.matches && !hidden) {
 		gsap.registerPlugin(ScrollTrigger);
 
 		function navHeight() {
