@@ -95,7 +95,7 @@ import DocHero from '../../components/DocHero.astro';
 					real, physically bounded number, and the browser will not move it past the strip’s actual
 					scrollable width no matter what value your code tries to hand it. You could set
 					<code>strip.scrollLeft = 99999</code> and it would land in exactly the same place: clamped at
-					the edge. Making the loop "feel infinite" isn’t a bigger-number problem. It’s a
+					the edge. Making the loop “feel infinite” isn’t a bigger-number problem. It’s a
 					not-enough-content problem — there’s genuinely nothing there to scroll into.
 				</p>
 
@@ -132,7 +132,7 @@ import DocHero from '../../components/DocHero.astro';
 				<p class="type-body">
 					A drag can now scrub straight off the end of slide 4 and onto that trailing clone — same
 					motion, same easing, nothing special happens. The moment it settles there, though, something
-					has to happen: the outside world (the dots, anything tracking "which slide is active") should
+					has to happen: the outside world (the dots, anything tracking “which slide is active”) should
 					never learn a clone exists. So the instant the strip stops on it, the code silently
 					re-points <code>scrollLeft</code> at the <em>real</em> slide 1, sitting in the exact same
 					visual position. Because the clone and the real slide are identical, nothing appears to move.
@@ -185,9 +185,9 @@ import DocHero from '../../components/DocHero.astro';
 					should be invisible to everything except the scrollbar.
 				</p>
 
-				<h3 class="type-h2">Two different numbers for "which slide"</h3>
+				<h3 class="type-h2">Two different numbers for “which slide”</h3>
 				<p class="type-body">
-					With two extra nodes in the strip, "the third element in the DOM" and "slide index 2" stop
+					With two extra nodes in the strip, “the third element in the DOM” and “slide index 2” stop
 					being the same number. The module keeps them apart deliberately — everything outside it
 					only ever deals in the second kind:
 				</p>
@@ -251,7 +251,7 @@ function toDomPos(realIndex: number): number {
 					it doesn’t reliably start at <code>0</code>. Some browsers apply <em>scroll anchoring</em>: when
 					content is inserted before the current scroll position (the lead phantom, inserted right
 					before slide 1, is exactly that), the browser nudges <code>scrollLeft</code> on its own to keep
-					whatever was visually on screen still on screen. By the time this line runs, "current" isn’t
+					whatever was visually on screen still on screen. By the time this line runs, “current” isn’t
 					reliably zero anymore — so the fix was just making this line consistent with every other
 					offset calculation in the file: add, don’t assign.
 				</p>
