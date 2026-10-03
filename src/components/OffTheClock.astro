@@ -788,7 +788,14 @@ const PHONE_START = items.length - 1;
 				mobileCaption.style.minHeight = `${tallest}px`;
 			}
 			reserveCaptionHeight();
-			window.addEventListener('resize', reserveCaptionHeight);
+			// Width changes only — the toolbar sliding away mid-scroll
+			// resizes the window too, and re-measuring then cost a hitch.
+			let captionWidth = window.innerWidth;
+			window.addEventListener('resize', () => {
+				if (window.innerWidth === captionWidth) return;
+				captionWidth = window.innerWidth;
+				reserveCaptionHeight();
+			});
 
 			function setCaption(text: string, animate: boolean) {
 				if (!mobileCaption) return;

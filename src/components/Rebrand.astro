@@ -1021,7 +1021,9 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 	// title is already position: absolute at the section's top, so
 	// without JS pinning it just scrolls normally with the page —
 	// same static fallback used everywhere else.
-	if (!reduceMotionQuery.matches) {
+	// Phone mode hides this section, so there's nothing to pin there.
+	const phoneMode = document.documentElement.classList.contains('mobile-view');
+	if (!reduceMotionQuery.matches && !phoneMode) {
 		gsap.registerPlugin(ScrollTrigger);
 
 		function navHeight() {
@@ -1066,7 +1068,15 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 		});
 
 		window.addEventListener('load', () => ScrollTrigger.refresh());
-		window.addEventListener('resize', () => ScrollTrigger.refresh());
+		// Only when the width changes. A height-only resize is a phone or
+		// tablet browser's toolbar sliding away as you scroll, and a full
+		// refresh there stalled the scroll mid-swipe.
+		let lastWidth = window.innerWidth;
+		window.addEventListener('resize', () => {
+			if (window.innerWidth === lastWidth) return;
+			lastWidth = window.innerWidth;
+			ScrollTrigger.refresh();
+		});
 	}
 
 	// Every pinboard video: lazy-loaded on first approach, autoplaying

@@ -152,7 +152,12 @@ import { testimonials } from '../data/testimonials';
 
 		@media (max-width: 768px) {
 			.testimonials__strip {
+				--card-w: min(80vw, 420px);
 				scroll-snap-type: x mandatory;
+				/* Room after the last card for it to snap to the left edge
+				   of the container like the others, instead of stopping
+				   with its right edge at the container's right edge. */
+				padding-inline-end: calc(100% - var(--strip-inset) - var(--card-w));
 			}
 
 			/* Phones and tablets: the content sets the height (no fixed
@@ -164,7 +169,7 @@ import { testimonials } from '../data/testimonials';
 			.testimonial-card {
 				/* Capped so a tablet in portrait doesn't get one huge,
 				   mostly empty card. */
-				width: min(80vw, 420px);
+				width: var(--card-w);
 				aspect-ratio: auto;
 				display: grid;
 				grid-template-columns: 1fr auto;

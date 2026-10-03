@@ -296,14 +296,28 @@ const ring: RingItem[] = [
 
 	/* The strip also fades out toward its top and bottom edges, so the
 	   neighbours peeking in soften into the page instead of ending at a
-	   hard clip. */
+	   hard clip. The fade covers just the part of them that shows
+	   (--ring-fade, set by layoutPhone), so they read as trimmed slivers
+	   and the front item can be bigger. */
 	:global(:root.mobile-view) .hero__ring {
 		inset: auto 0;
 		top: var(--ring-top, 0px);
 		height: var(--ring-h, 50%);
 		overflow: clip;
-		-webkit-mask-image: linear-gradient(to bottom, transparent, black 16%, black 84%, transparent);
-		mask-image: linear-gradient(to bottom, transparent, black 16%, black 84%, transparent);
+		-webkit-mask-image: linear-gradient(
+			to bottom,
+			transparent,
+			black var(--ring-fade, 16%),
+			black calc(100% - var(--ring-fade, 16%)),
+			transparent
+		);
+		mask-image: linear-gradient(
+			to bottom,
+			transparent,
+			black var(--ring-fade, 16%),
+			black calc(100% - var(--ring-fade, 16%)),
+			transparent
+		);
 	}
 
 	/* "See more", to the right of the buttons: on to the work. */
@@ -695,17 +709,21 @@ const ring: RingItem[] = [
 			const zoneTop = token('--space-s');
 			const zoneBottom = headlineTop - stageTop - token('--space-m');
 			const zoneH = Math.max(0, zoneBottom - zoneTop);
-			// The front item spans the container (16:9), or half the strip
-			// if that's smaller.
+			// The front item spans the container (16:9), or 70% of the strip
+			// if that's smaller — the neighbours only need a sliver.
 			const inner = w - 2 * token('--container-margin');
-			const front = Math.min((inner * 9) / 16, zoneH * 0.5);
+			const front = Math.min((inner * 9) / 16, zoneH * 0.7);
 			const itemH = front / frontScale;
 			stage!.style.setProperty('--item-h', `${itemH.toFixed(1)}px`);
-			// The neighbours (one step round) sit so their outer edges just
-			// meet the strip's edges.
+			// The neighbours (one step round) sit a small gap past the
+			// front item's edges; whatever of them fits in the strip shows,
+			// fading out toward its edge (--ring-fade), the rest is clipped.
 			const side = 4 / (4 - Math.cos(STEP));
-			const offset = Math.max(front * 0.5, zoneH / 2 - (itemH * side) / 2);
+			const gap = token('--space-xs');
+			const offset = front * 0.5 + gap + (itemH * side) / 2;
 			radius = offset / (Math.sin(STEP) * side);
+			const peek = Math.max(0, zoneH / 2 - front / 2 - gap);
+			stage!.style.setProperty('--ring-fade', `${peek.toFixed(1)}px`);
 			perspective = radius * 4;
 			vertical = true;
 			centerY = 0;
