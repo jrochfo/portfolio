@@ -423,6 +423,12 @@ const items: Item[] = [
 					opacity 0.35s ease;
 			}
 
+			/* Phone mode: the front card spans the container, like the other
+			   phone-mode visuals. */
+			:global(:root.mobile-view) .otc-stack {
+				max-width: none;
+			}
+
 			/* No hover on touch — the well never lifts/dims on its own. */
 			.otc-item:hover .otc-well {
 				transform: none;
