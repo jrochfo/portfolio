@@ -3,7 +3,12 @@ import Base from '../layouts/Base.astro';
 import AboutRing from '../components/AboutRing.astro';
 ---
 
-<Base title="About — Jake Rochford" navLabel="Home" navHref="/">
+<Base
+	title="About — Jake Rochford"
+	description="Jake Rochford is a brand and motion designer in Chicago and Brand Manager at Stack Overflow, where he helped rebuild the brand with Koto."
+	navLabel="Home"
+	navHref="/"
+>
 	<section class="about">
 		<div class="container about__inner">
 			<AboutRing />
@@ -25,7 +30,7 @@ import AboutRing from '../components/AboutRing.astro';
 				</p>
 			</div>
 			<div class="about__actions">
-				<a href="/jake-rochford-resume.pdf" class="button type-caption">Resume</a>
+				<a href="/resume" class="button type-caption">Resume</a>
 				<a
 					href="https://www.linkedin.com/in/jakerochford/"
 					target="_blank"

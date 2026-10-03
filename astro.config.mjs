@@ -3,6 +3,9 @@ import { defineConfig } from 'astro/config';
 
 // https://astro.build/config
 export default defineConfig({
+	// The canonical address: page links, the link-preview image URL, and
+	// the sitemap are built from it.
+	site: 'https://jakerochford.com',
 	image: {
 		// Needed to rasterize the AnimatedLogo ascii/terminal visual
 		// (systems-1-scrub-3.svg) to webp — it's flat, hard-edged local

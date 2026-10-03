@@ -8,9 +8,29 @@ import AlsoShipped from '../components/AlsoShipped.astro';
 import Testimonials from '../components/Testimonials.astro';
 import OffTheClock from '../components/OffTheClock.astro';
 import Close from '../components/Close.astro';
+
+// Tells search engines who this site is about, and ties it to the
+// LinkedIn profile, so a search for the name lands here.
+const person = {
+	'@context': 'https://schema.org',
+	'@type': 'Person',
+	name: 'Jake Rochford',
+	url: 'https://jakerochford.com',
+	image: 'https://jakerochford.com/og.png',
+	jobTitle: 'Brand Manager',
+	worksFor: { '@type': 'Organization', name: 'Stack Overflow', url: 'https://stackoverflow.com' },
+	address: { '@type': 'PostalAddress', addressLocality: 'Chicago', addressRegion: 'IL', addressCountry: 'US' },
+	alumniOf: [
+		{ '@type': 'CollegeOrUniversity', name: 'Tufts University' },
+		{ '@type': 'CollegeOrUniversity', name: 'School of the Museum of Fine Arts at Tufts' },
+	],
+	knowsAbout: ['Brand design', 'Motion design', 'Brand systems', 'Visual identity'],
+	sameAs: ['https://www.linkedin.com/in/jakerochford/'],
+};
 ---
 
-<Base title="Jake Rochford">
+<Base title="Jake Rochford — Brand and motion designer">
+	<script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(person)} />
 	<Hero />
 	<!-- Phone mode only (see Base.astro): the short work list stands in
 	     for What I Do, Rebrand and Also Shipped, which phone mode hides. -->

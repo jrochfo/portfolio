@@ -11,11 +11,27 @@ import DevPhonePreview from '../components/DevPhonePreview.astro';
 
 interface Props {
 	title?: string;
+	// One or two sentences: the search-result snippet and the link
+	// preview's description.
+	description?: string;
 	navLabel?: string;
 	navHref?: string;
+	// Pages that shouldn't show up in search (e.g. the resume redirect).
+	noindex?: boolean;
 }
 
-const { title = 'Jake Rochford', navLabel, navHref } = Astro.props;
+const {
+	title = 'Jake Rochford',
+	description = 'Jake Rochford is a brand and motion designer in Chicago, and Brand Manager at Stack Overflow.',
+	navLabel,
+	navHref,
+	noindex = false,
+} = Astro.props;
+
+// Link previews (Slack, LinkedIn, iMessage, email): one shared card,
+// public/og.png, 1200x630.
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL('/og.png', Astro.site);
 
 // Type decision is locked (Fraunces + Schibsted Grotesk, both
 // self-hosted — see the Fonts section of global.css), so the
@@ -60,6 +76,23 @@ const PHONE_MODE_AUTO = true;
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
+		<meta name="description" content={description} />
+		<link rel="canonical" href={canonical} />
+		{noindex && <meta name="robots" content="noindex" />}
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="Jake Rochford" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonical} />
+		<meta property="og:image" content={ogImage} />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta
+			property="og:image:alt"
+			content="Jake Rochford — I make brands move. Brand and motion designer, Brand Manager at Stack Overflow."
+		/>
+		<meta name="twitter:card" content="summary_large_image" />
+		<slot name="head" />
 		<!-- Applies a stored or system dark-mode preference before first
 		     paint, so a dark-mode visitor never sees a flash of the light
 		     page. The nav toggle takes over from here. -->

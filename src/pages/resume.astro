@@ -1,0 +1,46 @@
+---
+// The Resume buttons link here rather than straight to the PDF, so a
+// resume open counts as a page visit in Cloudflare Web Analytics (its
+// beacon only runs on HTML pages). The page hands straight off to the
+// PDF; the link is a fallback if the redirect doesn't run.
+import '../styles/global.css';
+const pdf = '/jake-rochford-resume.pdf';
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="robots" content="noindex" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<title>Resume — Jake Rochford</title>
+		<!-- No-script fallback: a plain redirect after a beat. -->
+		<noscript><meta http-equiv="refresh" content="0; url=/jake-rochford-resume.pdf" /></noscript>
+		<script is:inline define:vars={{ pdf }}>
+			// A short beat after load, so the analytics beacon reports the
+			// visit before the page is replaced by the PDF. replace() keeps
+			// this page out of the back-button history.
+			window.addEventListener('load', function () {
+				setTimeout(function () {
+					location.replace(pdf);
+				}, 400);
+			});
+		</script>
+	</head>
+	<body>
+		<p class="type-body resume-redirect">
+			Opening Jake’s resume… <a href={pdf}>Open the PDF</a>
+		</p>
+	</body>
+</html>
+
+<style>
+	body {
+		margin: 0;
+		min-height: 100vh;
+		display: grid;
+		place-items: center;
+		background: var(--color-bg);
+		color: var(--color-ink);
+	}
+</style>
