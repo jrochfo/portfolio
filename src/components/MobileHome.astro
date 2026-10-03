@@ -115,6 +115,44 @@ const work: Work[] = [
 		</div>
 
 	</div>
+	<script>
+		// The work videos load when they near the screen and play only while
+		// they're on it; never on their own under reduced motion.
+		const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const videos = [...document.querySelectorAll<HTMLVideoElement>('.mobile-home__video')];
+		const load = (v: HTMLVideoElement) => {
+			if (v.dataset.loaded) return;
+			v.dataset.loaded = 'true';
+			for (const [src, type] of [
+				[v.dataset.webm, 'video/webm'],
+				[v.dataset.mp4, 'video/mp4'],
+			]) {
+				if (!src) continue;
+				const s = document.createElement('source');
+				s.src = src;
+				s.type = type!;
+				v.appendChild(s);
+			}
+			v.load();
+		};
+		if (document.documentElement.classList.contains('mobile-view')) {
+			const io = new IntersectionObserver(
+				(entries) => {
+					for (const e of entries) {
+						const v = e.target as HTMLVideoElement;
+						if (e.isIntersecting) {
+							load(v);
+							if (!reduceMotion && e.intersectionRatio > 0.3) v.play().catch(() => {});
+						} else {
+							v.pause();
+						}
+					}
+				},
+				{ threshold: [0, 0.3] },
+			);
+			videos.forEach((v) => io.observe(v));
+		}
+	</script>
 </section>
 
 <style>
@@ -202,41 +240,3 @@ const work: Work[] = [
 
 </style>
 
-<script>
-	// The work videos load when they near the screen and play only while
-	// they're on it; never on their own under reduced motion.
-	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-	const videos = [...document.querySelectorAll<HTMLVideoElement>('.mobile-home__video')];
-	const load = (v: HTMLVideoElement) => {
-		if (v.dataset.loaded) return;
-		v.dataset.loaded = 'true';
-		for (const [src, type] of [
-			[v.dataset.webm, 'video/webm'],
-			[v.dataset.mp4, 'video/mp4'],
-		]) {
-			if (!src) continue;
-			const s = document.createElement('source');
-			s.src = src;
-			s.type = type!;
-			v.appendChild(s);
-		}
-		v.load();
-	};
-	if (document.documentElement.classList.contains('mobile-view')) {
-		const io = new IntersectionObserver(
-			(entries) => {
-				for (const e of entries) {
-					const v = e.target as HTMLVideoElement;
-					if (e.isIntersecting) {
-						load(v);
-						if (!reduceMotion && e.intersectionRatio > 0.3) v.play().catch(() => {});
-					} else {
-						v.pause();
-					}
-				}
-			},
-			{ threshold: [0, 0.3] },
-		);
-		videos.forEach((v) => io.observe(v));
-	}
-</script>

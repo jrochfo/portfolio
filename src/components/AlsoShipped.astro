@@ -236,6 +236,383 @@ const items: Project[] = await Promise.all([
 			<div class="ship-carousel__dots" id="ship-lightbox-dots" role="tablist" aria-label="Lightbox images"></div>
 		</div>
 	</div>
+	<script>
+		import { createCarousel, type CarouselHandle } from '../scripts/carousel';
+		import { wireImageLazyLoad } from '../scripts/lazyMedia';
+	
+		const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+	
+		interface SlideController {
+			setActive(index: number): void;
+			destroy(): void;
+		}
+	
+		// Wires one carousel's video slides to the shared "which slide is
+		// active" state. Any device: the active slide's video autoplays
+		// automatically (no hover requirement — it's already a deliberate
+		// navigation action, same logic on desktop as touch). An
+		// IntersectionObserver additionally pauses it once the carousel
+		// itself scrolls out of view, so a video left active doesn't keep
+		// decoding indefinitely as the page scrolls past it. Reduced
+		// motion: never autoplays either way; the always-visible-on-touch,
+		// hover-revealed-on-desktop play button is the only way to start it.
+		function wireVideoSlides(carouselEl: HTMLElement): SlideController {
+			const videos = [...carouselEl.querySelectorAll<HTMLVideoElement>('video')];
+			let activeIndex = 0;
+			// Starts false, not true: IntersectionObserver's first callback
+			// fires asynchronously, never synchronously on observe() — so an
+			// initial `true` here left a real window (from page load until
+			// that first callback) where an active slide's video would start
+			// loading/playing even while its carousel was still off-screen.
+			// Same false-until-observed pattern the Hero and About rings use
+			// for their own IntersectionObservers.
+			let isVisible = false;
+	
+			const visibilityObserver = new IntersectionObserver(
+				([entry]) => {
+					isVisible = entry.isIntersecting;
+					refresh();
+				},
+				{ threshold: 0.01 },
+			);
+			visibilityObserver.observe(carouselEl);
+	
+			function ensureLoaded(video: HTMLVideoElement) {
+				if (video.dataset.loaded) return;
+				const mp4 = video.dataset.mp4;
+				const webm = video.dataset.webm;
+				if (webm) {
+					const sourceWebm = document.createElement('source');
+					sourceWebm.src = webm;
+					sourceWebm.type = 'video/webm';
+					video.appendChild(sourceWebm);
+				}
+				if (mp4) {
+					const sourceMp4 = document.createElement('source');
+					sourceMp4.src = mp4;
+					sourceMp4.type = 'video/mp4';
+					video.appendChild(sourceMp4);
+				}
+				video.load();
+				video.dataset.loaded = 'true';
+			}
+	
+			function playBtnFor(video: HTMLVideoElement) {
+				return video.nextElementSibling as HTMLButtonElement | null;
+			}
+	
+			function syncButton(video: HTMLVideoElement) {
+				const btn = playBtnFor(video);
+				if (btn) btn.setAttribute('aria-pressed', String(!video.paused));
+			}
+	
+			// Matches stroke-dasharray in the CSS above — 2 * PI * r(15).
+			const RING_CIRCUMFERENCE = 94.2478;
+	
+			function syncProgressRing(video: HTMLVideoElement) {
+				const bar = playBtnFor(video)?.querySelector<SVGCircleElement>('.ship-carousel__progress-ring-bar');
+				if (!bar) return;
+				const progress = video.duration ? video.currentTime / video.duration : 0;
+				bar.style.strokeDashoffset = String(RING_CIRCUMFERENCE * (1 - progress));
+			}
+	
+			videos.forEach((video) => {
+				video.addEventListener('play', () => syncButton(video));
+				video.addEventListener('pause', () => syncButton(video));
+				video.addEventListener('timeupdate', () => syncProgressRing(video));
+	
+				const btn = playBtnFor(video);
+				btn?.addEventListener('click', (e) => {
+					e.stopPropagation();
+					ensureLoaded(video);
+					if (video.paused) {
+						video.play().catch(() => {});
+					} else {
+						video.pause();
+					}
+				});
+			});
+	
+			function refresh() {
+				videos.forEach((video) => {
+					const slide = video.closest<HTMLElement>('.ship-carousel__slide');
+					const index = Number(slide?.dataset.slideIndex ?? -1);
+					const isActive = index === activeIndex;
+	
+					if (!isActive || !isVisible || reduceMotionQuery.matches) {
+						if (!video.paused) video.pause();
+						return;
+					}
+	
+					ensureLoaded(video);
+					video.play().catch(() => {});
+				});
+			}
+	
+			refresh();
+	
+			return {
+				setActive(index) {
+					activeIndex = index;
+					refresh();
+				},
+				destroy() {
+					visibilityObserver.disconnect();
+					videos.forEach((video) => {
+						video.pause();
+					});
+				},
+			};
+		}
+	
+		function wireCardCarousel(card: HTMLElement) {
+			const carouselEl = card.querySelector<HTMLElement>('.ship-carousel');
+			const strip = card.querySelector<HTMLElement>('.ship-carousel__strip');
+			const slides = strip ? [...strip.querySelectorAll<HTMLElement>('.ship-carousel__slide')] : [];
+			const dots = [...card.querySelectorAll<HTMLButtonElement>('.ship-carousel__dot')];
+			if (!carouselEl || !strip || slides.length === 0) return null;
+	
+			function setActiveDot(index: number) {
+				dots.forEach((dot, i) => {
+					if (i === index) {
+						dot.setAttribute('aria-current', 'true');
+					} else {
+						dot.removeAttribute('aria-current');
+					}
+				});
+			}
+	
+			const videoController = wireVideoSlides(carouselEl);
+	
+			const carousel = createCarousel({
+				strip,
+				items: slides,
+				loop: true,
+				onActiveChange: (index) => {
+					setActiveDot(index);
+					videoController.setActive(index);
+				},
+			});
+	
+			// After createCarousel, not before (unlike wireVideoSlides above) —
+			// this one should catch the loop's phantom clones too, so
+			// scrubbing into one during a drag doesn't show a blank slide.
+			// Phantoms carry no click/keydown listeners either way, so unlike
+			// video there's no interactivity concern in including them here.
+			wireImageLazyLoad(carouselEl);
+	
+			dots.forEach((dot, i) => {
+				dot.addEventListener('click', () => carousel.goTo(i));
+			});
+	
+			return { carousel, videoController };
+		}
+	
+		const cardCarousels = new Map<string, ReturnType<typeof wireCardCarousel>>();
+		document.querySelectorAll<HTMLElement>('.ship-card').forEach((card) => {
+			const slug = card.dataset.project;
+			if (slug) cardCarousels.set(slug, wireCardCarousel(card));
+		});
+	
+		// --- Lightbox --------------------------------------------------------
+		const lightbox = document.querySelector<HTMLElement>('#ship-lightbox');
+		const lightboxTitle = document.querySelector<HTMLElement>('#ship-lightbox-title');
+		const lightboxDesc = document.querySelector<HTMLElement>('#ship-lightbox-desc');
+		const lightboxStrip = document.querySelector<HTMLElement>('#ship-lightbox-strip');
+		const lightboxCarouselEl = document.querySelector<HTMLElement>('.ship-lightbox__carousel');
+		const lightboxDotsWrap = document.querySelector<HTMLElement>('#ship-lightbox-dots');
+		const lightboxClose = document.querySelector<HTMLButtonElement>('.ship-lightbox__close');
+	
+		let lightboxCarousel: CarouselHandle | null = null;
+		let lightboxVideoController: SlideController | null = null;
+		let originCard: HTMLElement | null = null;
+		let originOpener: HTMLElement | null = null;
+	
+		function focusableElements(container: HTMLElement) {
+			return [...container.querySelectorAll<HTMLElement>('button, [href], [tabindex]:not([tabindex="-1"])')].filter(
+				(el) => !el.hasAttribute('disabled'),
+			);
+		}
+	
+		function openLightbox(card: HTMLElement, opener: HTMLElement, startIndex: number) {
+			if (!lightbox || !lightboxStrip || !lightboxDotsWrap || !lightboxTitle || !lightboxDesc || !lightboxCarouselEl) return;
+	
+			originCard = card;
+			originOpener = opener;
+	
+			const titleText = card.querySelector('.type-h3')?.textContent ?? '';
+			const descText = card.querySelector('.ship-card__desc')?.textContent ?? '';
+			lightboxTitle.textContent = titleText;
+			lightboxDesc.textContent = descText;
+	
+			lightboxStrip.innerHTML = '';
+			// [data-slide-index] excludes the inline carousel's own loop
+			// phantoms (carousel.ts strips that attribute specifically so
+			// real slides stay distinguishable from their clones) — without
+			// it this picks up all 8 DOM children (6 real + 2 phantoms), not
+			// the 6 real slides, which is exactly the extra-dots/wrong-
+			// starting-slide bug.
+			const sourceSlides = [...card.querySelectorAll<HTMLElement>('.ship-carousel__slide[data-slide-index]')];
+			sourceSlides.forEach((slide) => {
+				const clone = slide.cloneNode(true) as HTMLElement;
+				// The clone is a display-only slide inside the lightbox (no
+				// "open a lightbox from within the lightbox" concept) — strip
+				// the interactive-button semantics cloneNode copied over,
+				// rather than leaving an inert focusable element behind.
+				clone.removeAttribute('role');
+				clone.removeAttribute('tabindex');
+				clone.removeAttribute('aria-label');
+				lightboxStrip.appendChild(clone);
+			});
+	
+			lightboxDotsWrap.innerHTML = '';
+			sourceSlides.forEach((_, i) => {
+				const dot = document.createElement('button');
+				dot.type = 'button';
+				dot.className = 'ship-carousel__dot';
+				dot.dataset.dotIndex = String(i);
+				dot.setAttribute('aria-label', `Image ${i + 1} of ${sourceSlides.length}`);
+				if (i === startIndex) dot.setAttribute('aria-current', 'true');
+				lightboxDotsWrap.appendChild(dot);
+			});
+			const lightboxDots = [...lightboxDotsWrap.querySelectorAll<HTMLButtonElement>('.ship-carousel__dot')];
+	
+			function setActiveDot(index: number) {
+				lightboxDots.forEach((dot, i) => {
+					if (i === index) dot.setAttribute('aria-current', 'true');
+					else dot.removeAttribute('aria-current');
+				});
+			}
+	
+			lightboxVideoController?.destroy();
+			lightboxVideoController = wireVideoSlides(lightboxCarouselEl);
+	
+			lightboxCarousel?.destroy();
+			const lightboxSlides = [...lightboxStrip.querySelectorAll<HTMLElement>('.ship-carousel__slide')];
+			lightboxCarousel = createCarousel({
+				strip: lightboxStrip,
+				items: lightboxSlides,
+				loop: true,
+				onActiveChange: (index) => {
+					setActiveDot(index);
+					lightboxVideoController?.setActive(index);
+				},
+			});
+	
+			// The lightbox is always fully in view once open, so this fires
+			// immediately — but the cloned slides' data-src/data-poster may
+			// not have been resolved yet if the inline well never scrolled
+			// close enough to trigger its own lazy-load first.
+			wireImageLazyLoad(lightboxCarouselEl);
+	
+			lightboxDots.forEach((dot, i) => {
+				dot.addEventListener('click', () => lightboxCarousel?.goTo(i));
+			});
+	
+			lightbox.hidden = false;
+			// Force layout before adding the class so the open transition
+			// actually runs instead of starting from the final state.
+			lightbox.getBoundingClientRect();
+			lightbox.classList.add('is-open');
+			document.body.style.overflow = 'hidden';
+	
+			lightboxCarousel.goTo(startIndex);
+			lightboxClose?.focus();
+		}
+	
+		function closeLightbox() {
+			if (!lightbox) return;
+	
+			// Leave the inline well wherever the lightbox navigated to.
+			if (originCard && lightboxCarousel) {
+				const slug = originCard.dataset.project;
+				const entry = slug ? cardCarousels.get(slug) : null;
+				entry?.carousel.goTo(lightboxCarousel.getActive());
+			}
+	
+			lightbox.classList.remove('is-open');
+			document.body.style.overflow = '';
+			lightboxVideoController?.destroy();
+			lightboxVideoController = null;
+	
+			const finish = () => {
+				if (lightbox) lightbox.hidden = true;
+			};
+			if (reduceMotionQuery.matches) {
+				finish();
+			} else {
+				lightbox.addEventListener('transitionend', finish, { once: true });
+			}
+	
+			originOpener?.focus();
+			originOpener = null;
+			originCard = null;
+		}
+	
+		function openFromSlide(slide: HTMLElement) {
+			const card = slide.closest<HTMLElement>('.ship-card');
+			const index = Number(slide.dataset.slideIndex ?? 0);
+			if (card) openLightbox(card, slide, index);
+		}
+	
+		// data-slide-index excludes the loop phantoms (carousel.ts strips it
+		// specifically so real slides stay distinguishable from their
+		// clones) — this runs after all the carousels above already exist,
+		// so without the filter this would also wire up the (inert, but
+		// better to just never attach anything to in the first place)
+		// phantom copies.
+		document.querySelectorAll<HTMLElement>('.ship-carousel__slide[data-slide-index]').forEach((slide) => {
+			// Video slides open the lightbox from the slide itself (not the
+			// media element), so a click doesn't fight the play button sitting
+			// on top of it.
+			slide.addEventListener('click', (e) => {
+				if ((e.target as HTMLElement).closest('.ship-carousel__playbtn')) return;
+				openFromSlide(slide);
+			});
+	
+			// Slides are `role="button" tabindex="0"` (a plain <div> can't be
+			// a real <button> here — it contains the play button on video
+			// slides, and buttons can't nest) — Enter/Space activation is
+			// otherwise free on a real button but has to be wired by hand here.
+			slide.addEventListener('keydown', (e) => {
+				if ((e.target as HTMLElement).closest('.ship-carousel__playbtn')) return;
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					openFromSlide(slide);
+				}
+			});
+		});
+	
+		lightboxClose?.addEventListener('click', closeLightbox);
+	
+		lightbox?.querySelector('.ship-lightbox__backdrop')?.addEventListener('click', closeLightbox);
+	
+		document.addEventListener('keydown', (e) => {
+			if (!lightbox || lightbox.hidden) return;
+	
+			if (e.key === 'Escape') {
+				closeLightbox();
+				return;
+			}
+	
+			if (e.key === 'Tab') {
+				const panel = lightbox.querySelector<HTMLElement>('.ship-lightbox__panel');
+				if (!panel) return;
+				const focusable = focusableElements(panel);
+				if (focusable.length === 0) return;
+				const first = focusable[0];
+				const last = focusable[focusable.length - 1];
+	
+				if (e.shiftKey && document.activeElement === first) {
+					e.preventDefault();
+					last.focus();
+				} else if (!e.shiftKey && document.activeElement === last) {
+					e.preventDefault();
+					first.focus();
+				}
+			}
+		});
+	</script>
 </section>
 
 <style>
@@ -574,380 +951,3 @@ const items: Project[] = await Promise.all([
 	}
 </style>
 
-<script>
-	import { createCarousel, type CarouselHandle } from '../scripts/carousel';
-	import { wireImageLazyLoad } from '../scripts/lazyMedia';
-
-	const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-
-	interface SlideController {
-		setActive(index: number): void;
-		destroy(): void;
-	}
-
-	// Wires one carousel's video slides to the shared "which slide is
-	// active" state. Any device: the active slide's video autoplays
-	// automatically (no hover requirement — it's already a deliberate
-	// navigation action, same logic on desktop as touch). An
-	// IntersectionObserver additionally pauses it once the carousel
-	// itself scrolls out of view, so a video left active doesn't keep
-	// decoding indefinitely as the page scrolls past it. Reduced
-	// motion: never autoplays either way; the always-visible-on-touch,
-	// hover-revealed-on-desktop play button is the only way to start it.
-	function wireVideoSlides(carouselEl: HTMLElement): SlideController {
-		const videos = [...carouselEl.querySelectorAll<HTMLVideoElement>('video')];
-		let activeIndex = 0;
-		// Starts false, not true: IntersectionObserver's first callback
-		// fires asynchronously, never synchronously on observe() — so an
-		// initial `true` here left a real window (from page load until
-		// that first callback) where an active slide's video would start
-		// loading/playing even while its carousel was still off-screen.
-		// Same false-until-observed pattern the Hero and About rings use
-		// for their own IntersectionObservers.
-		let isVisible = false;
-
-		const visibilityObserver = new IntersectionObserver(
-			([entry]) => {
-				isVisible = entry.isIntersecting;
-				refresh();
-			},
-			{ threshold: 0.01 },
-		);
-		visibilityObserver.observe(carouselEl);
-
-		function ensureLoaded(video: HTMLVideoElement) {
-			if (video.dataset.loaded) return;
-			const mp4 = video.dataset.mp4;
-			const webm = video.dataset.webm;
-			if (webm) {
-				const sourceWebm = document.createElement('source');
-				sourceWebm.src = webm;
-				sourceWebm.type = 'video/webm';
-				video.appendChild(sourceWebm);
-			}
-			if (mp4) {
-				const sourceMp4 = document.createElement('source');
-				sourceMp4.src = mp4;
-				sourceMp4.type = 'video/mp4';
-				video.appendChild(sourceMp4);
-			}
-			video.load();
-			video.dataset.loaded = 'true';
-		}
-
-		function playBtnFor(video: HTMLVideoElement) {
-			return video.nextElementSibling as HTMLButtonElement | null;
-		}
-
-		function syncButton(video: HTMLVideoElement) {
-			const btn = playBtnFor(video);
-			if (btn) btn.setAttribute('aria-pressed', String(!video.paused));
-		}
-
-		// Matches stroke-dasharray in the CSS above — 2 * PI * r(15).
-		const RING_CIRCUMFERENCE = 94.2478;
-
-		function syncProgressRing(video: HTMLVideoElement) {
-			const bar = playBtnFor(video)?.querySelector<SVGCircleElement>('.ship-carousel__progress-ring-bar');
-			if (!bar) return;
-			const progress = video.duration ? video.currentTime / video.duration : 0;
-			bar.style.strokeDashoffset = String(RING_CIRCUMFERENCE * (1 - progress));
-		}
-
-		videos.forEach((video) => {
-			video.addEventListener('play', () => syncButton(video));
-			video.addEventListener('pause', () => syncButton(video));
-			video.addEventListener('timeupdate', () => syncProgressRing(video));
-
-			const btn = playBtnFor(video);
-			btn?.addEventListener('click', (e) => {
-				e.stopPropagation();
-				ensureLoaded(video);
-				if (video.paused) {
-					video.play().catch(() => {});
-				} else {
-					video.pause();
-				}
-			});
-		});
-
-		function refresh() {
-			videos.forEach((video) => {
-				const slide = video.closest<HTMLElement>('.ship-carousel__slide');
-				const index = Number(slide?.dataset.slideIndex ?? -1);
-				const isActive = index === activeIndex;
-
-				if (!isActive || !isVisible || reduceMotionQuery.matches) {
-					if (!video.paused) video.pause();
-					return;
-				}
-
-				ensureLoaded(video);
-				video.play().catch(() => {});
-			});
-		}
-
-		refresh();
-
-		return {
-			setActive(index) {
-				activeIndex = index;
-				refresh();
-			},
-			destroy() {
-				visibilityObserver.disconnect();
-				videos.forEach((video) => {
-					video.pause();
-				});
-			},
-		};
-	}
-
-	function wireCardCarousel(card: HTMLElement) {
-		const carouselEl = card.querySelector<HTMLElement>('.ship-carousel');
-		const strip = card.querySelector<HTMLElement>('.ship-carousel__strip');
-		const slides = strip ? [...strip.querySelectorAll<HTMLElement>('.ship-carousel__slide')] : [];
-		const dots = [...card.querySelectorAll<HTMLButtonElement>('.ship-carousel__dot')];
-		if (!carouselEl || !strip || slides.length === 0) return null;
-
-		function setActiveDot(index: number) {
-			dots.forEach((dot, i) => {
-				if (i === index) {
-					dot.setAttribute('aria-current', 'true');
-				} else {
-					dot.removeAttribute('aria-current');
-				}
-			});
-		}
-
-		const videoController = wireVideoSlides(carouselEl);
-
-		const carousel = createCarousel({
-			strip,
-			items: slides,
-			loop: true,
-			onActiveChange: (index) => {
-				setActiveDot(index);
-				videoController.setActive(index);
-			},
-		});
-
-		// After createCarousel, not before (unlike wireVideoSlides above) —
-		// this one should catch the loop's phantom clones too, so
-		// scrubbing into one during a drag doesn't show a blank slide.
-		// Phantoms carry no click/keydown listeners either way, so unlike
-		// video there's no interactivity concern in including them here.
-		wireImageLazyLoad(carouselEl);
-
-		dots.forEach((dot, i) => {
-			dot.addEventListener('click', () => carousel.goTo(i));
-		});
-
-		return { carousel, videoController };
-	}
-
-	const cardCarousels = new Map<string, ReturnType<typeof wireCardCarousel>>();
-	document.querySelectorAll<HTMLElement>('.ship-card').forEach((card) => {
-		const slug = card.dataset.project;
-		if (slug) cardCarousels.set(slug, wireCardCarousel(card));
-	});
-
-	// --- Lightbox --------------------------------------------------------
-	const lightbox = document.querySelector<HTMLElement>('#ship-lightbox');
-	const lightboxTitle = document.querySelector<HTMLElement>('#ship-lightbox-title');
-	const lightboxDesc = document.querySelector<HTMLElement>('#ship-lightbox-desc');
-	const lightboxStrip = document.querySelector<HTMLElement>('#ship-lightbox-strip');
-	const lightboxCarouselEl = document.querySelector<HTMLElement>('.ship-lightbox__carousel');
-	const lightboxDotsWrap = document.querySelector<HTMLElement>('#ship-lightbox-dots');
-	const lightboxClose = document.querySelector<HTMLButtonElement>('.ship-lightbox__close');
-
-	let lightboxCarousel: CarouselHandle | null = null;
-	let lightboxVideoController: SlideController | null = null;
-	let originCard: HTMLElement | null = null;
-	let originOpener: HTMLElement | null = null;
-
-	function focusableElements(container: HTMLElement) {
-		return [...container.querySelectorAll<HTMLElement>('button, [href], [tabindex]:not([tabindex="-1"])')].filter(
-			(el) => !el.hasAttribute('disabled'),
-		);
-	}
-
-	function openLightbox(card: HTMLElement, opener: HTMLElement, startIndex: number) {
-		if (!lightbox || !lightboxStrip || !lightboxDotsWrap || !lightboxTitle || !lightboxDesc || !lightboxCarouselEl) return;
-
-		originCard = card;
-		originOpener = opener;
-
-		const titleText = card.querySelector('.type-h3')?.textContent ?? '';
-		const descText = card.querySelector('.ship-card__desc')?.textContent ?? '';
-		lightboxTitle.textContent = titleText;
-		lightboxDesc.textContent = descText;
-
-		lightboxStrip.innerHTML = '';
-		// [data-slide-index] excludes the inline carousel's own loop
-		// phantoms (carousel.ts strips that attribute specifically so
-		// real slides stay distinguishable from their clones) — without
-		// it this picks up all 8 DOM children (6 real + 2 phantoms), not
-		// the 6 real slides, which is exactly the extra-dots/wrong-
-		// starting-slide bug.
-		const sourceSlides = [...card.querySelectorAll<HTMLElement>('.ship-carousel__slide[data-slide-index]')];
-		sourceSlides.forEach((slide) => {
-			const clone = slide.cloneNode(true) as HTMLElement;
-			// The clone is a display-only slide inside the lightbox (no
-			// "open a lightbox from within the lightbox" concept) — strip
-			// the interactive-button semantics cloneNode copied over,
-			// rather than leaving an inert focusable element behind.
-			clone.removeAttribute('role');
-			clone.removeAttribute('tabindex');
-			clone.removeAttribute('aria-label');
-			lightboxStrip.appendChild(clone);
-		});
-
-		lightboxDotsWrap.innerHTML = '';
-		sourceSlides.forEach((_, i) => {
-			const dot = document.createElement('button');
-			dot.type = 'button';
-			dot.className = 'ship-carousel__dot';
-			dot.dataset.dotIndex = String(i);
-			dot.setAttribute('aria-label', `Image ${i + 1} of ${sourceSlides.length}`);
-			if (i === startIndex) dot.setAttribute('aria-current', 'true');
-			lightboxDotsWrap.appendChild(dot);
-		});
-		const lightboxDots = [...lightboxDotsWrap.querySelectorAll<HTMLButtonElement>('.ship-carousel__dot')];
-
-		function setActiveDot(index: number) {
-			lightboxDots.forEach((dot, i) => {
-				if (i === index) dot.setAttribute('aria-current', 'true');
-				else dot.removeAttribute('aria-current');
-			});
-		}
-
-		lightboxVideoController?.destroy();
-		lightboxVideoController = wireVideoSlides(lightboxCarouselEl);
-
-		lightboxCarousel?.destroy();
-		const lightboxSlides = [...lightboxStrip.querySelectorAll<HTMLElement>('.ship-carousel__slide')];
-		lightboxCarousel = createCarousel({
-			strip: lightboxStrip,
-			items: lightboxSlides,
-			loop: true,
-			onActiveChange: (index) => {
-				setActiveDot(index);
-				lightboxVideoController?.setActive(index);
-			},
-		});
-
-		// The lightbox is always fully in view once open, so this fires
-		// immediately — but the cloned slides' data-src/data-poster may
-		// not have been resolved yet if the inline well never scrolled
-		// close enough to trigger its own lazy-load first.
-		wireImageLazyLoad(lightboxCarouselEl);
-
-		lightboxDots.forEach((dot, i) => {
-			dot.addEventListener('click', () => lightboxCarousel?.goTo(i));
-		});
-
-		lightbox.hidden = false;
-		// Force layout before adding the class so the open transition
-		// actually runs instead of starting from the final state.
-		lightbox.getBoundingClientRect();
-		lightbox.classList.add('is-open');
-		document.body.style.overflow = 'hidden';
-
-		lightboxCarousel.goTo(startIndex);
-		lightboxClose?.focus();
-	}
-
-	function closeLightbox() {
-		if (!lightbox) return;
-
-		// Leave the inline well wherever the lightbox navigated to.
-		if (originCard && lightboxCarousel) {
-			const slug = originCard.dataset.project;
-			const entry = slug ? cardCarousels.get(slug) : null;
-			entry?.carousel.goTo(lightboxCarousel.getActive());
-		}
-
-		lightbox.classList.remove('is-open');
-		document.body.style.overflow = '';
-		lightboxVideoController?.destroy();
-		lightboxVideoController = null;
-
-		const finish = () => {
-			if (lightbox) lightbox.hidden = true;
-		};
-		if (reduceMotionQuery.matches) {
-			finish();
-		} else {
-			lightbox.addEventListener('transitionend', finish, { once: true });
-		}
-
-		originOpener?.focus();
-		originOpener = null;
-		originCard = null;
-	}
-
-	function openFromSlide(slide: HTMLElement) {
-		const card = slide.closest<HTMLElement>('.ship-card');
-		const index = Number(slide.dataset.slideIndex ?? 0);
-		if (card) openLightbox(card, slide, index);
-	}
-
-	// data-slide-index excludes the loop phantoms (carousel.ts strips it
-	// specifically so real slides stay distinguishable from their
-	// clones) — this runs after all the carousels above already exist,
-	// so without the filter this would also wire up the (inert, but
-	// better to just never attach anything to in the first place)
-	// phantom copies.
-	document.querySelectorAll<HTMLElement>('.ship-carousel__slide[data-slide-index]').forEach((slide) => {
-		// Video slides open the lightbox from the slide itself (not the
-		// media element), so a click doesn't fight the play button sitting
-		// on top of it.
-		slide.addEventListener('click', (e) => {
-			if ((e.target as HTMLElement).closest('.ship-carousel__playbtn')) return;
-			openFromSlide(slide);
-		});
-
-		// Slides are `role="button" tabindex="0"` (a plain <div> can't be
-		// a real <button> here — it contains the play button on video
-		// slides, and buttons can't nest) — Enter/Space activation is
-		// otherwise free on a real button but has to be wired by hand here.
-		slide.addEventListener('keydown', (e) => {
-			if ((e.target as HTMLElement).closest('.ship-carousel__playbtn')) return;
-			if (e.key === 'Enter' || e.key === ' ') {
-				e.preventDefault();
-				openFromSlide(slide);
-			}
-		});
-	});
-
-	lightboxClose?.addEventListener('click', closeLightbox);
-
-	lightbox?.querySelector('.ship-lightbox__backdrop')?.addEventListener('click', closeLightbox);
-
-	document.addEventListener('keydown', (e) => {
-		if (!lightbox || lightbox.hidden) return;
-
-		if (e.key === 'Escape') {
-			closeLightbox();
-			return;
-		}
-
-		if (e.key === 'Tab') {
-			const panel = lightbox.querySelector<HTMLElement>('.ship-lightbox__panel');
-			if (!panel) return;
-			const focusable = focusableElements(panel);
-			if (focusable.length === 0) return;
-			const first = focusable[0];
-			const last = focusable[focusable.length - 1];
-
-			if (e.shiftKey && document.activeElement === first) {
-				e.preventDefault();
-				last.focus();
-			} else if (!e.shiftKey && document.activeElement === last) {
-				e.preventDefault();
-				first.focus();
-			}
-		}
-	});
-</script>
