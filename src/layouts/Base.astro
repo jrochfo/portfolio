@@ -48,9 +48,9 @@ const COLOR_FAVORITES_ENABLED = false;
 const PALETTE_AUDITION_ENABLED = false;
 
 // Phone mode (MobileHome.astro): whether real phones get it
-// automatically. Off while it's being reviewed — ?mobile=1 (or the dev
-// "Phone view" button) shows it in the meantime.
-const PHONE_MODE_AUTO = false;
+// automatically. On since 2026-10-03; set false to send phones back to
+// the responsive desktop site (?mobile=1 still forces phone mode).
+const PHONE_MODE_AUTO = true;
 ---
 
 <html lang="en">
@@ -86,9 +86,9 @@ const PHONE_MODE_AUTO = false;
 				var phone =
 					(uaData && uaData.mobile === true) ||
 					/iPhone|iPod|Android.+Mobile|Windows Phone/i.test(navigator.userAgent);
-				// Automatic detection stays off until phone mode is signed off
-				// (PHONE_MODE_AUTO, in the frontmatter) — until then only ?mobile=1 and the
-				// dev preview turn it on.
+				// Automatic detection can be switched off with PHONE_MODE_AUTO
+				// (in the frontmatter), leaving only ?mobile=1 and the dev
+				// preview.
 				var auto = document.currentScript && document.currentScript.dataset.phoneAuto === 'true';
 				if (force === '1' || (force !== '0' && auto && phone)) document.documentElement.classList.add('mobile-view');
 				// Soft reveals — skipped under reduced motion, and on
