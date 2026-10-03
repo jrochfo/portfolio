@@ -516,7 +516,13 @@ const ring: RingItem[] = [
 
 		// angle: the ring's rotation; item i sits at angle + i * STEP, and
 		// whichever item is at 0 (mod TAU) is front and center.
-		const state = { angle: 0 };
+		// The item in front on load: the first one, except in phone mode,
+		// where the drum opens on the "What's missing? → Trust" clip.
+		const PHONE_START = 'so-rebrand/rollout-3-2';
+		const startIndex = isPhoneMode
+			? Math.max(0, items.findIndex((el) => el.querySelector(`source[src*="${PHONE_START}"]`)))
+			: 0;
+		const state = { angle: -startIndex * STEP };
 		let radius = 0;
 		let tilt = 0;
 		let centerY = 0;
@@ -763,7 +769,7 @@ const ring: RingItem[] = [
 			else video.pause();
 		}
 
-		let focus = 0;
+		let focus = startIndex;
 		let timeline: gsap.core.Animation | null = null;
 		let pending: gsap.core.Tween | null = null;
 
