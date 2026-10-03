@@ -458,9 +458,18 @@ const PHONE_START = items.length - 1;
 				transition: opacity 0.18s ease;
 			}
 
+			/* The row keeps its height when hidden (video cards have no
+			   frames to count), so swiping between a video and a slideshow
+			   doesn't shift the Close band below. min-height is one dot. */
 			.otc-dots-mobile {
 				display: flex;
+				min-height: 6px;
 				margin-block-start: var(--space-2xs);
+			}
+
+			.otc-dots-mobile[hidden] {
+				display: flex;
+				visibility: hidden;
 			}
 		}
 
@@ -750,6 +759,25 @@ const PHONE_START = items.length - 1;
 					item.style.setProperty('--stack-z', String(RANKS.length - rank));
 				});
 			}
+
+			// The caption box holds the height of the longest caption, so a
+			// caption that wraps to two lines on a narrow phone doesn't push
+			// the Close band below down when it comes up. Re-measured on
+			// resize, since what wraps depends on the width.
+			function reserveCaptionHeight() {
+				if (!mobileCaption || !mobileQuery.matches) return;
+				const current = mobileCaption.textContent;
+				mobileCaption.style.minHeight = '';
+				let tallest = 0;
+				for (const text of captionsByIndex) {
+					mobileCaption.textContent = text;
+					tallest = Math.max(tallest, mobileCaption.offsetHeight);
+				}
+				mobileCaption.textContent = current;
+				mobileCaption.style.minHeight = `${tallest}px`;
+			}
+			reserveCaptionHeight();
+			window.addEventListener('resize', reserveCaptionHeight);
 
 			function setCaption(text: string, animate: boolean) {
 				if (!mobileCaption) return;
