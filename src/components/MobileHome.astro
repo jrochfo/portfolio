@@ -1,23 +1,22 @@
 ---
 // The phone homepage's middle (the bio is in the hero): a reverse-chronological
-// work list with one visual each, and a few kind words. Shown only in
-// phone mode (see Base.astro); it stands in for What I Do, the Rebrand
-// case study, Also Shipped and the testimonial cards, which phone mode
-// hides. A phone visitor mostly wants who / is it good / how to reach
-// — so this is a summary, not the desktop site squeezed down.
-//
-// Copy is drafted from the resume (with the September 2026 Brand
-// Manager promotion) — to be revisited in the copywriting sweep.
+// work list with one visual each (the testimonial cards follow it).
+// Shown only in phone mode (see Base.astro); it stands in for What I
+// Do, the Rebrand case study and Also Shipped, which phone mode hides.
+// A phone visitor mostly wants who / is it good / how to reach — so
+// this is a summary, not the desktop site squeezed down. Dates and
+// roles are from the resume (with the September 2026 Brand Manager
+// promotion).
 import { getImage } from 'astro:assets';
 import AnimatedLogo from './AnimatedLogo.astro';
-import { testimonials } from '../data/testimonials';
-import logoStack from '../assets/logos/Logo_Stack.svg';
-import logoFreed from '../assets/logos/Logo_Freed.svg';
-import logoTulip from '../assets/logos/Logo_Tulip.svg';
+// The testimonial cards' logo files — tighter bounds than the hero
+// row's, so they size and align more predictably here.
+import logoStack from '../assets/testimonials/logos/Logo_Quote_Stack.svg';
+import logoFreed from '../assets/testimonials/logos/Logo_Quote_Freed.svg';
+import logoTulip from '../assets/testimonials/logos/Logo_Quote_Tulip.svg';
 import freedPoster from '../assets/work/what-i-do/posters/motion-freed-poster.jpg';
 import tulipPoster from '../assets/work/what-i-do/posters/systems-tulip-poster.jpg';
 
-const headshot = async (src: ImageMetadata) => (await getImage({ src, format: 'webp', width: 96, quality: 80 })).src;
 const poster = async (src: ImageMetadata) => (await getImage({ src, format: 'webp', width: 900, quality: 80 })).src;
 
 type Work = {
@@ -38,7 +37,7 @@ const work: Work[] = [
 		dates: '2022 – now',
 		role: 'Brand Manager',
 		earlier: ['Senior Brand Designer, 2024–2026', 'Brand Designer, 2022–2024'],
-		line: 'Led the rebrand with Koto, from the first workshops to full rollout, and now run the brand across product and marketing.',
+		line: 'Led a rebrand and identity evolution with agency Koto, from first workshops to full rollout, now running the brand across product and marketing.',
 		media: { kind: 'animated-logo' },
 	},
 	{
@@ -46,7 +45,7 @@ const work: Work[] = [
 		name: 'Freed',
 		dates: '2025 – 2026',
 		role: 'Freelance Designer',
-		line: 'Animated ads, product visuals, and spot illustration for an AI scribe built for clinicians.',
+		line: 'Animations, ads, product mocks, and spot illustrations for a clinician-focused AI scribe.',
 		media: { kind: 'video', path: 'what-i-do/motion-freed', poster: await poster(freedPoster) },
 	},
 	{
@@ -54,18 +53,11 @@ const work: Work[] = [
 		name: 'Tulip Interfaces',
 		dates: '2020 – 2021',
 		role: 'Graphic Designer',
-		line: 'Grew a Series A brand into a system that held up through Series C, as a team of one.',
+		line: 'Matured the brand and visual language of a modern manufacturing company in a competitive category into a scalable system across product, marketing, and web, as a team of one.',
 		media: { kind: 'video', path: 'what-i-do/systems-tulip', poster: await poster(tulipPoster) },
 	},
 ];
 
-// Three of the four, one from each kind of relationship.
-const quotes = await Promise.all(
-	['David Longworth', 'Molly Sullivan', 'Madilynn Castillo']
-		.map((name) => testimonials.find((t) => t.name === name))
-		.filter((t): t is (typeof testimonials)[number] => Boolean(t))
-		.map(async (t) => ({ ...t, face: await headshot(t.headshot) })),
-);
 ---
 
 <section class="mobile-home mobile-only">
@@ -118,24 +110,6 @@ const quotes = await Promise.all(
 			</ol>
 		</div>
 
-		<div class="mobile-home__group">
-			<h2 class="type-h1" data-reveal>Kind words.</h2>
-			<ul class="mobile-home__quotes">
-				{quotes.map((q) => (
-					<li class="mobile-home__quote" data-reveal>
-						<p class="type-body">“{q.quote}”</p>
-						<div class="mobile-home__credit-row">
-							<img class="mobile-home__face" src={q.face} alt="" width="48" height="48" loading="lazy" decoding="async" />
-							<p class="type-caption mobile-home__credit">
-								<span class="mobile-home__name">{q.name}</span>
-								<br />
-								{q.title} · {q.company}
-							</p>
-						</div>
-					</li>
-				))}
-			</ul>
-		</div>
 	</div>
 </section>
 
@@ -151,8 +125,7 @@ const quotes = await Promise.all(
 		gap: var(--space-2xl);
 	}
 
-	.mobile-home__work,
-	.mobile-home__quotes {
+	.mobile-home__work {
 		list-style: none;
 		margin: var(--space-m) 0 0;
 		padding: 0;
@@ -171,15 +144,14 @@ const quotes = await Promise.all(
 	/* The client logos, as on the hero: a mask over the logo color. */
 	.mobile-home__logo {
 		display: block;
-		height: 36px;
+		height: 28px;
 		background-color: var(--color-logo);
 		-webkit-mask: var(--logo-src) left center / contain no-repeat;
 		mask: var(--logo-src) left center / contain no-repeat;
 	}
 
 	.mobile-home__dates,
-	.mobile-home__earlier,
-	.mobile-home__credit {
+	.mobile-home__earlier {
 		color: var(--color-ink-muted);
 	}
 
@@ -222,24 +194,8 @@ const quotes = await Promise.all(
 		background: var(--color-neutral);
 	}
 
-	.mobile-home__credit-row {
-		display: flex;
-		align-items: center;
-		gap: var(--space-xs);
-		margin-block-start: var(--space-s);
-	}
 
-	.mobile-home__face {
-		flex-shrink: 0;
-		width: 48px;
-		height: 48px;
-		border-radius: var(--radius-well);
-		object-fit: cover;
-	}
 
-	.mobile-home__name {
-		color: var(--color-ink);
-	}
 </style>
 
 <script>

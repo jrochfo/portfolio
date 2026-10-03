@@ -131,7 +131,7 @@ const ring: RingItem[] = [
 			<div class="hero__actions" data-reveal style="--reveal-delay: 240ms">
 				<a href="/about" class="button type-caption desktop-only">Get in touch</a>
 				{/* Phone mode has no About page — the email, copied. */}
-				<CopyEmailButton class="mobile-only" />
+				<CopyEmailButton class="mobile-only" label="Get in touch" />
 				<a
 					href="/jake-rochford-resume.pdf"
 					target="_blank"
@@ -307,13 +307,8 @@ const ring: RingItem[] = [
 		top: var(--ring-top, 0px);
 		height: var(--ring-h, 50%);
 		overflow: clip;
-		-webkit-mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
-		mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
-	}
-
-	/* Square-cornered in the drum, like the full-width work visuals. */
-	:global(:root.mobile-view) .hero__ring-item {
-		border-radius: 0;
+		-webkit-mask-image: linear-gradient(to bottom, transparent, black 16%, black 84%, transparent);
+		mask-image: linear-gradient(to bottom, transparent, black 16%, black 84%, transparent);
 	}
 
 	/* "See more", to the right of the buttons: on to the work. */
@@ -696,10 +691,10 @@ const ring: RingItem[] = [
 			const zoneTop = token('--space-s');
 			const zoneBottom = headlineTop - stageTop - token('--space-m');
 			const zoneH = Math.max(0, zoneBottom - zoneTop);
-			// The front item spans the full screen width (16:9), like the
-			// work visuals below; the neighbours, further back, come out a
-			// little narrower.
-			const front = (w * 9) / 16;
+			// The front item spans the container (16:9), or half the strip
+			// if that's smaller.
+			const inner = w - 2 * token('--container-margin');
+			const front = Math.min((inner * 9) / 16, zoneH * 0.5);
 			const itemH = front / frontScale;
 			stage!.style.setProperty('--item-h', `${itemH.toFixed(1)}px`);
 			// The neighbours (one step round) sit so their outer edges just

@@ -535,7 +535,6 @@ main:has(> .close:last-child) {
 :root.mobile-view main > .what-i-do,
 :root.mobile-view main > .rebrand,
 :root.mobile-view main > .also-shipped,
-:root.mobile-view main > .testimonials,
 :root.mobile-view .hero__clients {
 	display: none !important;
 }
@@ -553,3 +552,12 @@ main:has(> .close:last-child) {
 :root.mobile-view .hero {
 	min-height: calc(100svh - var(--nav-height, 0px));
 }
+
+/* Phone mode keeps the wide (tight-margin) container for visuals, but
+   running text stops a step short of its right edge — on such a narrow
+   screen, lines that reach all the way across read cramped. */
+/* (Not inside the testimonial cards, which don't span the container.) */
+:root.mobile-view main :is(p, h1, h2):not(.testimonial-card *) {
+	max-width: calc(100% - var(--space-m));
+}
+
