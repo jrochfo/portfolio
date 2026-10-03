@@ -1002,6 +1002,7 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 </style>
 
 <script>
+	import { setVideoSources } from '../scripts/lazyMedia';
 	import { gsap } from 'gsap';
 	import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -1086,15 +1087,7 @@ const pinboardsByAct: Record<string, ActPinboard> = {
 	// (the featured Rollout clips), which then starts it on request.
 	function setSources(video: HTMLVideoElement, mp4: string, webm: string) {
 		video.querySelectorAll('source').forEach((el) => el.remove());
-		const webmSource = document.createElement('source');
-		webmSource.src = webm;
-		webmSource.type = 'video/webm';
-		video.appendChild(webmSource);
-		const mp4Source = document.createElement('source');
-		mp4Source.src = mp4;
-		mp4Source.type = 'video/mp4';
-		video.appendChild(mp4Source);
-		video.load();
+		setVideoSources(video, webm, mp4);
 	}
 
 	// Matches stroke-dasharray in the CSS — 2 * PI * r(15).

@@ -185,6 +185,7 @@ const scrubVisualsData = SCRUB_VISUALS.map((v) => ({ color: v.color, overlay: v.
 </style>
 
 <script>
+	import { setVideoSources } from '../scripts/lazyMedia';
 	const FPS = 24;
 	const FRAME_MS = 1000 / FPS;
 	const IMAGE_HOLD_MS = 1000;
@@ -334,21 +335,7 @@ const scrubVisualsData = SCRUB_VISUALS.map((v) => ({ color: v.color, overlay: v.
 		// video actually becomes the active background, not on page load.
 		function ensureVideoLoaded(video: HTMLVideoElement) {
 			if (video.dataset.loaded) return;
-			const webm = video.dataset.webm;
-			const mp4 = video.dataset.mp4;
-			if (webm) {
-				const source = document.createElement('source');
-				source.src = webm;
-				source.type = 'video/webm';
-				video.appendChild(source);
-			}
-			if (mp4) {
-				const source = document.createElement('source');
-				source.src = mp4;
-				source.type = 'video/mp4';
-				video.appendChild(source);
-			}
-			video.load();
+			setVideoSources(video, video.dataset.webm, video.dataset.mp4);
 			video.dataset.loaded = 'true';
 		}
 
@@ -431,8 +418,35 @@ const scrubVisualsData = SCRUB_VISUALS.map((v) => ({ color: v.color, overlay: v.
 				rafId = requestAnimationFrame(tick);
 			}
 
+			// Each scrub clip is 1s long and gets a 1s slot, so loading it
+			// only when its slot starts meant it was never ready in time —
+			// iPhone Safari won't buffer a video until it's played, and just
+			// showed the poster. The first time the logo comes into view,
+			// both (tiny) clips are loaded and played muted for a moment to
+			// get them buffered, then paused at the start until their slot.
+			let warmed = false;
+			function warmVideos() {
+				if (warmed) return;
+				warmed = true;
+				for (const layer of bgLayers) {
+					if (!(layer instanceof HTMLVideoElement)) continue;
+					ensureVideoLoaded(layer);
+					layer.muted = true;
+					layer
+						.play()
+						.then(() => {
+							if (layer.hidden) {
+								layer.pause();
+								layer.currentTime = 0;
+							}
+						})
+						.catch(() => {});
+				}
+			}
+
 			function start() {
 				if (rafId !== null) return;
+				warmVideos();
 				lastTimestamp = null;
 				rafId = requestAnimationFrame(tick);
 			}

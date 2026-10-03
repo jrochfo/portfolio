@@ -483,6 +483,17 @@ const ring: RingItem[] = [
 
 	<script>
 		import { gsap } from 'gsap';
+		import { orderVideoSources, prefersMp4 } from '../scripts/lazyMedia';
+
+		// Apple devices play the ring's MP4s (see lazyMedia). The sources
+		// are in the markup, so they're reordered here and the choice
+		// re-run; preload="none" means nothing has downloaded yet.
+		if (prefersMp4) {
+			document.querySelectorAll<HTMLVideoElement>('.hero__ring-item video').forEach((video) => {
+				orderVideoSources(video);
+				video.load();
+			});
+		}
 
 		// "See more" glides down to the work (jumps under reduced motion).
 		document.querySelector('[data-see-more]')?.addEventListener('click', (e) => {

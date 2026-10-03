@@ -472,7 +472,7 @@ const sections = [
 
 <script>
 	import { createCarousel } from '../scripts/carousel';
-	import { wireImageLazyLoad } from '../scripts/lazyMedia';
+	import { setVideoSources, wireImageLazyLoad } from '../scripts/lazyMedia';
 
 	const strip = document.querySelector<HTMLElement>('.card-strip');
 	const cards = strip ? [...strip.querySelectorAll<HTMLElement>('.card')] : [];
@@ -508,21 +508,7 @@ const sections = [
 
 		function ensureLoaded(video: HTMLVideoElement) {
 			if (video.dataset.loaded) return;
-			const webm = video.dataset.webm;
-			const mp4 = video.dataset.mp4;
-			if (webm) {
-				const source = document.createElement('source');
-				source.src = webm;
-				source.type = 'video/webm';
-				video.appendChild(source);
-			}
-			if (mp4) {
-				const source = document.createElement('source');
-				source.src = mp4;
-				source.type = 'video/mp4';
-				video.appendChild(source);
-			}
-			video.load();
+			setVideoSources(video, video.dataset.webm, video.dataset.mp4);
 			video.dataset.loaded = 'true';
 		}
 

@@ -238,7 +238,7 @@ const items: Project[] = await Promise.all([
 	</div>
 	<script>
 		import { createCarousel, type CarouselHandle } from '../scripts/carousel';
-		import { wireImageLazyLoad } from '../scripts/lazyMedia';
+		import { setVideoSources, wireImageLazyLoad } from '../scripts/lazyMedia';
 	
 		const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 	
@@ -279,21 +279,7 @@ const items: Project[] = await Promise.all([
 	
 			function ensureLoaded(video: HTMLVideoElement) {
 				if (video.dataset.loaded) return;
-				const mp4 = video.dataset.mp4;
-				const webm = video.dataset.webm;
-				if (webm) {
-					const sourceWebm = document.createElement('source');
-					sourceWebm.src = webm;
-					sourceWebm.type = 'video/webm';
-					video.appendChild(sourceWebm);
-				}
-				if (mp4) {
-					const sourceMp4 = document.createElement('source');
-					sourceMp4.src = mp4;
-					sourceMp4.type = 'video/mp4';
-					video.appendChild(sourceMp4);
-				}
-				video.load();
+				setVideoSources(video, video.dataset.webm, video.dataset.mp4);
 				video.dataset.loaded = 'true';
 			}
 	

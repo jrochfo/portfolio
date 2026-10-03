@@ -493,7 +493,7 @@ const PHONE_START = items.length - 1;
 	</style>
 
 	<script>
-		import { wireImageLazyLoad } from '../scripts/lazyMedia';
+		import { setVideoSources, wireImageLazyLoad } from '../scripts/lazyMedia';
 
 		const stack = document.querySelector<HTMLElement>('.otc-stack');
 		const items = stack ? [...stack.querySelectorAll<HTMLElement>('.otc-item')] : [];
@@ -564,21 +564,7 @@ const PHONE_START = items.length - 1;
 		function wireVideoWell(video: HTMLVideoElement): MediaController {
 			function ensureLoaded() {
 				if (video.dataset.loaded) return;
-				const webm = video.dataset.webm;
-				const mp4 = video.dataset.mp4;
-				if (webm) {
-					const source = document.createElement('source');
-					source.src = webm;
-					source.type = 'video/webm';
-					video.appendChild(source);
-				}
-				if (mp4) {
-					const source = document.createElement('source');
-					source.src = mp4;
-					source.type = 'video/mp4';
-					video.appendChild(source);
-				}
-				video.load();
+				setVideoSources(video, video.dataset.webm, video.dataset.mp4);
 				video.dataset.loaded = 'true';
 			}
 

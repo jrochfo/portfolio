@@ -33,3 +33,37 @@ export function wireImageLazyLoad(root: HTMLElement, rootMargin = '200px') {
 	);
 	observer.observe(root);
 }
+
+// Apple devices — Safari on a Mac, and every browser on iPhone/iPad (they
+// all run on Safari's engine) — get the H.264 MP4 first: it's their
+// native, hardware-decoded format. Given a WebM first, iPhone Safari
+// would sometimes pick it and then fail to play it, leaving just the
+// poster. Everyone else gets the (smaller) VP9 WebM first.
+const ua = typeof navigator === 'undefined' ? '' : navigator.userAgent;
+export const prefersMp4 = /AppleWebKit/.test(ua) && !/Chrome|Chromium|Android/.test(ua);
+
+// Adds a video's sources in the right order for this device and starts
+// loading it. Skips any that are missing.
+export function setVideoSources(video: HTMLVideoElement, webm?: string, mp4?: string) {
+	const pairs: [string | undefined, string][] = [
+		[webm, 'video/webm'],
+		[mp4, 'video/mp4'],
+	];
+	if (prefersMp4) pairs.reverse();
+	for (const [src, type] of pairs) {
+		if (!src) continue;
+		const source = document.createElement('source');
+		source.src = src;
+		source.type = type;
+		video.appendChild(source);
+	}
+	video.load();
+}
+
+// For videos whose <source>s are already in the markup (WebM first):
+// moves the MP4 to the front on Apple devices. Call before they load.
+export function orderVideoSources(video: HTMLVideoElement) {
+	if (!prefersMp4) return;
+	const mp4 = video.querySelector('source[type="video/mp4"]');
+	if (mp4 && video.firstElementChild !== mp4) video.prepend(mp4);
+}

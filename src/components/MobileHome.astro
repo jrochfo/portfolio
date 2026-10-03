@@ -116,6 +116,7 @@ const work: Work[] = [
 
 	</div>
 	<script>
+	import { setVideoSources } from '../scripts/lazyMedia';
 		// The work videos load when they near the screen and play only while
 		// they're on it; never on their own under reduced motion.
 		const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -123,17 +124,7 @@ const work: Work[] = [
 		const load = (v: HTMLVideoElement) => {
 			if (v.dataset.loaded) return;
 			v.dataset.loaded = 'true';
-			for (const [src, type] of [
-				[v.dataset.webm, 'video/webm'],
-				[v.dataset.mp4, 'video/mp4'],
-			]) {
-				if (!src) continue;
-				const s = document.createElement('source');
-				s.src = src;
-				s.type = type!;
-				v.appendChild(s);
-			}
-			v.load();
+			setVideoSources(v, v.dataset.webm, v.dataset.mp4);
 		};
 		if (document.documentElement.classList.contains('mobile-view')) {
 			const io = new IntersectionObserver(
