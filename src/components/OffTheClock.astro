@@ -418,9 +418,11 @@ const PHONE_START = items.length - 1;
 					rotate(var(--stack-rot, 0deg)) scale(var(--stack-scale, 1));
 				opacity: var(--stack-opacity, 1);
 				z-index: var(--stack-z, var(--z));
+				/* Unhurried, settling softly into place (the same curve the
+				   toss uses in the script). */
 				transition:
-					transform 0.35s ease,
-					opacity 0.35s ease;
+					transform 0.6s cubic-bezier(0.25, 1, 0.5, 1),
+					opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1);
 			}
 
 			/* Phone mode: the front card spans the container, like the other
@@ -455,7 +457,7 @@ const PHONE_START = items.length - 1;
 				   just the text inside it. */
 				margin-inline: auto;
 				text-align: center;
-				transition: opacity 0.18s ease;
+				transition: opacity 0.26s ease;
 			}
 
 			/* The row keeps its height when hidden (video cards have no
@@ -745,18 +747,26 @@ const PHONE_START = items.length - 1;
 			// sooner (short opacity duration) — it reads as "gone" well
 			// before its flight finishes, which is what actually sells
 			// the motion rather than a fast, jarring exit.
-			const FLY_MS = 600;
-			const FADE_MS = 200;
-			const CAPTION_FADE_MS = 160;
-			const SPRING_MS = 260;
+			// Tuned for calm rather than snappy: a slower, shorter toss and
+			// a gentle settle (the first pass read as frantic on a phone).
+			const FLY_MS = 950;
+			const FADE_MS = 420;
+			const CAPTION_FADE_MS = 260;
+			const SPRING_MS = 450;
+			// Starts at speed, then eases off a long way (an ease-out-quart).
+			const EASE = 'cubic-bezier(0.25, 1, 0.5, 1)';
+			// How far the tossed card travels, as a share of its width, and
+			// how much it tips as it goes.
+			const FLY_DISTANCE = 85;
+			const FLY_TILT = 5;
 			// Distance to drag before release commits to a toss instead
 			// of springing back.
 			const COMMIT_THRESHOLD = 90;
 			// How far the card rotates per pixel dragged, like it's
 			// pivoting in a hand — capped so a long drag doesn't spin it
 			// past a natural angle.
-			const DRAG_ROTATION_PER_PX = 0.06;
-			const DRAG_ROTATION_MAX = 18;
+			const DRAG_ROTATION_PER_PX = 0.04;
+			const DRAG_ROTATION_MAX = 10;
 
 			function layoutMobile(skipIndex?: number) {
 				order.forEach((itemIndex, rank) => {
@@ -833,8 +843,8 @@ const PHONE_START = items.length - 1;
 				renderMobileDots(order[0]);
 				mediaControllers[order[0]].play();
 
-				item.style.transition = `transform ${FLY_MS}ms ease-out, opacity ${FADE_MS}ms ease-out`;
-				item.style.transform = `translate(-50%, -50%) translateX(${dir * 120}%) rotate(${dir * 8}deg)`;
+				item.style.transition = `transform ${FLY_MS}ms ${EASE}, opacity ${FADE_MS}ms ease-out`;
+				item.style.transform = `translate(-50%, -50%) translateX(${dir * FLY_DISTANCE}%) rotate(${dir * FLY_TILT}deg)`;
 				item.style.opacity = '0';
 
 				window.setTimeout(() => {
@@ -848,7 +858,7 @@ const PHONE_START = items.length - 1;
 			}
 
 			function springBack(item: HTMLElement) {
-				item.style.transition = `transform ${SPRING_MS}ms ease-out, opacity ${SPRING_MS}ms ease-out`;
+				item.style.transition = `transform ${SPRING_MS}ms ${EASE}, opacity ${SPRING_MS}ms ${EASE}`;
 				item.style.transform = 'translate(-50%, -50%)';
 				item.style.opacity = '1';
 				window.setTimeout(() => {
