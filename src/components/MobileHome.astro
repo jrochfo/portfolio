@@ -21,6 +21,9 @@ const poster = async (src: ImageMetadata) => (await getImage({ src, format: 'web
 
 type Work = {
 	logo: ImageMetadata;
+	// Optical size adjustment, where a wordmark reads small at the
+	// shared height.
+	logoHeight?: number;
 	name: string;
 	dates: string;
 	role: string;
@@ -33,6 +36,7 @@ type Work = {
 const work: Work[] = [
 	{
 		logo: logoStack,
+		logoHeight: 32,
 		name: 'Stack Overflow',
 		dates: '2022 – now',
 		role: 'Brand Manager',
@@ -73,7 +77,7 @@ const work: Work[] = [
 								class="mobile-home__logo"
 								role="img"
 								aria-label={w.name}
-								style={`--logo-src: url(${w.logo.src}); aspect-ratio: ${w.logo.width} / ${w.logo.height};`}
+								style={`--logo-src: url(${w.logo.src}); aspect-ratio: ${w.logo.width} / ${w.logo.height};${w.logoHeight ? ` height: ${w.logoHeight}px;` : ''}`}
 							/>
 							<span class="type-caption mobile-home__dates">{w.dates}</span>
 						</div>
