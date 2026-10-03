@@ -612,8 +612,11 @@ const ring: RingItem[] = [
 			// big monitor), up to 60% approaching the phone breakpoint.
 			// Within that it grows with the window's height, filling the
 			// space it's given.
+			// Past 1600px wide (a big monitor) the cap stops growing, so the
+			// photos don't dwarf the 1200px text column.
 			const minItemH = small ? 80 : 140;
-			const capItemH = ((small ? Math.min(w * 0.86, 460) : w * (0.48 + 0.12 * widen)) * 9) / 16 / frontScale;
+			const capItemH =
+				((small ? Math.min(w * 0.86, 460) : Math.min(w, 1600) * (0.48 + 0.12 * widen)) * 9) / 16 / frontScale;
 			// The hero's height is set by the screen (see the CSS), not by
 			// the ring, so on some windows the ring doesn't fit (a short
 			// laptop, a tiny phone: the front item would overlap the
