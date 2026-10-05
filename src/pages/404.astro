@@ -1,0 +1,57 @@
+---
+// Cloudflare Pages serves this, with a real 404 status, for any address
+// that isn't a page. Without it, Pages fell back to the homepage for
+// everything (typos, and the scanners probing for /.env and the like).
+import Base from '../layouts/Base.astro';
+---
+
+<Base
+	title="Page not found — Jake Rochford"
+	description="This page doesn’t exist."
+	navLabel="Home"
+	navHref="/"
+	noindex
+>
+	<section class="not-found">
+		<div class="container not-found__inner">
+			<h1 class="type-display">Page not found.</h1>
+			<p class="type-h3 not-found__line">There’s nothing at this address. It may have moved, or the link has a typo.</p>
+			<a href="/" class="button type-caption not-found__home">Back to the homepage</a>
+		</div>
+	</section>
+</Base>
+
+<style>
+	/* Same sticky-footer pattern as the About page: the page fills the
+	   screen so the footer sits at the bottom. */
+	:global(body) {
+		display: flex;
+		flex-direction: column;
+		min-height: 100vh;
+	}
+
+	:global(body > main) {
+		flex: 1;
+		display: flex;
+	}
+
+	.not-found {
+		flex: 1;
+		display: flex;
+		align-items: center;
+	}
+
+	.not-found__inner {
+		width: 100%;
+		padding-block: var(--space-2xl);
+	}
+
+	.not-found__line {
+		max-width: 40ch;
+		margin-block-start: var(--space-s);
+	}
+
+	.not-found__home {
+		margin-block-start: var(--space-m);
+	}
+</style>
